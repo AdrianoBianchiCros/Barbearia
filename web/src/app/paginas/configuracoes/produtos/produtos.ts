@@ -91,6 +91,8 @@ const compraVazia = (): FormCompra => ({
                       {{ lv.lote ? 'Lote ' + lv.lote : 'Lote não informado' }} · {{ lv.quantidade }} un.
                       @if (diasAte(lv.validade!) < 0) {
                         · <span class="negativo">vencido</span>
+                      } @else if (diasAte(lv.validade!) === 0) {
+                        · vence hoje
                       } @else if (diasAte(lv.validade!) <= 30) {
                         · vence em {{ diasAte(lv.validade!) }} dia(s)
                       }
@@ -162,13 +164,21 @@ const compraVazia = (): FormCompra => ({
         </form>
 
         @if (editando(); as p) {
-          <section class="passo secao-compras">
-            <h3>Registrar compra</h3>
-            <p class="texto-suave pequeno">A quantidade comprada soma ao estoque atual ({{ p.estoque ?? 0 }} un.).</p>
+          <section class="passo secao-compras" [class.editando-compra]="compraEmEdicao()" #secaoCompra>
+            @if (compraEmEdicao(); as ce) {
+              <h3>Editar compra de {{ ce.data_compra + 'T12:00:00' | date: 'dd/MM/yyyy' }}</h3>
+              <p class="texto-suave pequeno">Se a quantidade mudar, o estoque é ajustado pela diferença (hoje: {{ p.estoque ?? 0 }} un.).</p>
+            } @else {
+              <h3>Registrar compra</h3>
+              <p class="texto-suave pequeno">A quantidade comprada soma ao estoque atual ({{ p.estoque ?? 0 }} un.).</p>
+            }
             <ng-container *ngTemplateOutlet="camposCompra" />
             <div class="rodape-secao">
+              @if (compraEmEdicao()) {
+                <button class="botao botao-secundario botao-auto" type="button" (click)="cancelarEdicaoCompra()">Cancelar edição</button>
+              }
               <button class="botao botao-auto" type="button" [disabled]="!compra.quantidade || salvando()" (click)="lancarCompra(p)">
-                Lançar compra
+                {{ compraEmEdicao() ? 'Salvar alteração' : 'Lançar compra' }}
               </button>
             </div>
           </section>
@@ -196,7 +206,10 @@ const compraVazia = (): FormCompra => ({
                       </span>
                     }
                   </div>
-                  <button class="botao-link perigo" type="button" (click)="excluirCompra(p, e)" title="Excluir compra lançada por engano">Excluir</button>
+                  <span class="acoes-compra">
+                    <button class="botao-link" type="button" (click)="editarCompra(e, secaoCompra)">Editar</button>
+                    <button class="botao-link perigo" type="button" (click)="excluirCompra(p, e)" title="Excluir compra lançada por engano">Excluir</button>
+                  </span>
                 </li>
               }
             </ul>
@@ -261,6 +274,8 @@ export class Produtos implements OnInit {
   protected readonly erro = signal('');
   protected readonly errosApi = signal<Record<string, string>>({});
   protected compra: FormCompra = compraVazia();
+  /** Compra do histórico sendo corrigida (null = lançando uma nova). */
+  protected readonly compraEmEdicao = signal<EntradaProduto | null>(null);
 
   protected readonly form = inject(FormBuilder).group({
     nome: ['', [Validators.required, Validators.maxLength(120)]],
@@ -295,6 +310,7 @@ export class Produtos implements OnInit {
     this.erro.set('');
     this.errosApi.set({});
     this.compra = compraVazia();
+    this.compraEmEdicao.set(null);
     this.entradas.set([]);
     this.form.reset({
       nome: produto?.nome ?? '',
@@ -332,18 +348,45 @@ export class Produtos implements OnInit {
     });
   }
 
+  /** Carrega a compra no formulário para correção. */
+  editarCompra(e: EntradaProduto, secao: HTMLElement): void {
+    this.compraEmEdicao.set(e);
+    this.errosApi.set({});
+    this.compra = {
+      data_compra: e.data_compra,
+      fornecedor: e.fornecedor ?? '',
+      numero_nota: e.numero_nota ?? '',
+      lote: e.lote ?? '',
+      quantidade: e.quantidade,
+      custo_unitario: e.custo_unitario != null ? +e.custo_unitario : null,
+      validade: e.validade ?? '',
+    };
+    secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  cancelarEdicaoCompra(): void {
+    this.compraEmEdicao.set(null);
+    this.compra = compraVazia();
+    this.errosApi.set({});
+  }
+
   lancarCompra(produto: Produto): void {
     this.salvando.set(true);
     this.erro.set('');
     this.errosApi.set({});
-    this.api.registrarEntrada(produto.id, this.dadosCompra()).subscribe({
+    const emEdicao = this.compraEmEdicao();
+    const pedido = emEdicao
+      ? this.api.editarEntrada(produto.id, emEdicao.id, this.dadosCompra())
+      : this.api.registrarEntrada(produto.id, this.dadosCompra());
+    pedido.subscribe({
       next: (r) => {
         this.salvando.set(false);
         this.api.entradasProduto(produto.id).subscribe((e) => this.entradas.set(e));
         this.editando.set(r.produto);
         this.form.patchValue({ estoque: r.produto.estoque, custo: r.produto.custo != null ? +r.produto.custo : null });
         this.compra = compraVazia();
-        this.aviso.sucesso(`Compra lançada. Estoque: ${r.produto.estoque} un.`);
+        this.compraEmEdicao.set(null);
+        this.aviso.sucesso(`${emEdicao ? 'Compra corrigida' : 'Compra lançada'}. Estoque: ${r.produto.estoque} un.`);
         this.carregar();
       },
       error: (e) => this.falhou(e),
@@ -354,6 +397,7 @@ export class Produtos implements OnInit {
     if (!confirm(`Excluir a compra de ${entrada.quantidade} un.? A quantidade será retirada do estoque.`)) return;
     this.api.excluirEntrada(produto.id, entrada.id).subscribe({
       next: (p) => {
+        if (this.compraEmEdicao()?.id === entrada.id) this.cancelarEdicaoCompra();
         this.api.entradasProduto(produto.id).subscribe((e) => this.entradas.set(e));
         this.editando.set(p);
         this.form.patchValue({ estoque: p.estoque });

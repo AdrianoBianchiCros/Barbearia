@@ -100,6 +100,32 @@ class ProdutosTest extends TestCase
             ->assertJsonPath('1.em_estoque', 0);
     }
 
+    public function test_editar_compra_ajusta_estoque_e_custo(): void
+    {
+        $usuario = $this->logarComo('dono');
+        $produto = $this->naEmpresa($usuario->empresa_id, fn () => Produto::create(['nome' => 'Pomada', 'preco' => 45, 'estoque' => 2]));
+        $id = $this->postJson("/api/produtos/{$produto->id}/entradas", [
+            'data_compra' => '2030-01-18', 'quantidade' => 10, 'custo_unitario' => 20, 'lote' => 'L1',
+        ])->assertCreated()->assertJsonPath('produto.estoque', 12)->json('entrada.id');
+
+        // Quantidade 10 → 6: estoque cai 4; custo e lote corrigidos
+        $this->putJson("/api/produtos/{$produto->id}/entradas/{$id}", [
+            'data_compra' => '2030-01-18', 'quantidade' => 6, 'custo_unitario' => 22, 'lote' => 'L1-A',
+            'fornecedor' => 'Novo fornecedor', 'validade' => '2031-01-01',
+        ])->assertOk()
+            ->assertJsonPath('entrada.quantidade', 6)
+            ->assertJsonPath('entrada.lote', 'L1-A')
+            ->assertJsonPath('produto.estoque', 8)
+            ->assertJsonPath('produto.custo', '22.00');
+
+        $this->putJson("/api/produtos/{$produto->id}/entradas/{$id}", ['data_compra' => '2030-01-18', 'quantidade' => 0])
+            ->assertUnprocessable()->assertJsonValidationErrors(['quantidade']);
+
+        // Compra de outro produto não pode ser editada por esta rota
+        $outro = $this->naEmpresa($usuario->empresa_id, fn () => Produto::create(['nome' => 'Outro', 'preco' => 1]));
+        $this->putJson("/api/produtos/{$outro->id}/entradas/{$id}", ['data_compra' => '2030-01-18', 'quantidade' => 1])->assertNotFound();
+    }
+
     public function test_validacoes_da_compra(): void
     {
         $usuario = $this->logarComo('dono');

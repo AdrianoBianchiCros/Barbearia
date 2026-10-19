@@ -430,3 +430,16 @@
   margin-top: 8px;
   border-top: 2px solid var(--cor-borda);
 }
+
+.acoes-compra {
+  display: flex;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.secao-compras.editando-compra {
+  padding: 12px;
+  margin: 8px -12px 0;
+  background: var(--cor-primaria-suave);
+  border-radius: 10px;
+}

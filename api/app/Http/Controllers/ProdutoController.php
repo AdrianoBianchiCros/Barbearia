@@ -79,6 +79,35 @@ class ProdutoController extends Controller
         ], 201);
     }
 
+    /**
+     * Corrige uma compra. Se a quantidade mudar, o estoque é ajustado pela diferença;
+     * se for a compra mais recente, o custo do produto acompanha o novo custo unitário.
+     */
+    public function editarEntrada(Request $request, Produto $produto, ProdutoEntrada $entrada): JsonResponse
+    {
+        abort_unless($entrada->produto_id === $produto->id, 404);
+        $dados = $this->validarEntrada($request);
+
+        DB::transaction(function () use ($produto, $entrada, $dados) {
+            $produto = Produto::whereKey($produto->id)->lockForUpdate()->firstOrFail();
+            $diferenca = (int) $dados['quantidade'] - $entrada->quantidade;
+
+            $entrada->update($dados);
+
+            $produto->estoque = ($produto->estoque ?? 0) + $diferenca;
+            $ultima = $produto->entradas()->orderByDesc('data_compra')->orderByDesc('id')->first();
+            if ($ultima?->id === $entrada->id && $entrada->custo_unitario !== null) {
+                $produto->custo = $entrada->custo_unitario;
+            }
+            $produto->save();
+        });
+
+        return response()->json([
+            'entrada' => $this->formatarEntrada($entrada->fresh('usuario:id,nome')),
+            'produto' => $this->formatar($produto->fresh(['ultimaEntrada', 'entradas'])),
+        ]);
+    }
+
     /** Exclui uma compra lançada por engano, devolvendo a quantidade do estoque. */
     public function excluirEntrada(Produto $produto, ProdutoEntrada $entrada): JsonResponse
     {

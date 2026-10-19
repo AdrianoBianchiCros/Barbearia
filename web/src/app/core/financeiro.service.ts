@@ -181,6 +181,9 @@ export class FinanceiroService {
   registrarEntrada(id: number, dados: object): Observable<{ entrada: EntradaProduto; produto: Produto }> {
     return this.http.post<{ entrada: EntradaProduto; produto: Produto }>(`${API}/produtos/${id}/entradas`, dados);
   }
+  editarEntrada(produtoId: number, entradaId: number, dados: object): Observable<{ entrada: EntradaProduto; produto: Produto }> {
+    return this.http.put<{ entrada: EntradaProduto; produto: Produto }>(`${API}/produtos/${produtoId}/entradas/${entradaId}`, dados);
+  }
   excluirEntrada(produtoId: number, entradaId: number): Observable<Produto> {
     return this.http.delete<Produto>(`${API}/produtos/${produtoId}/entradas/${entradaId}`);
   }

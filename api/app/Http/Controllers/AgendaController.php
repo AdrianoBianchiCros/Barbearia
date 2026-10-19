@@ -92,6 +92,54 @@ class AgendaController extends Controller
     }
 
     /**
+     * Busca agendamentos por nome ou telefone do cliente, ou pelo serviço.
+     * Devolve os próximos (a partir de hoje) e os dos últimos 60 dias.
+     */
+    public function busca(Request $request): JsonResponse
+    {
+        $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']]);
+
+        $termo = trim($request->input('q'));
+        $digitos = preg_replace('/\D/', '', $termo);
+        $fuso = $request->user()->empresa->fuso_horario;
+        $hoje = now($fuso)->startOfDay()->utc();
+
+        $base = fn () => Agendamento::query()
+            ->with(['cliente:id,nome,telefone', 'funcionario:id,nome', 'itens:id,agendamento_id,nome'])
+            ->where('status', '!=', 'cancelado')
+            ->where(function ($q) use ($termo, $digitos) {
+                $q->whereHas('cliente', function ($c) use ($termo, $digitos) {
+                    $c->where('nome', 'like', "%{$termo}%");
+                    if (strlen($digitos) >= 3) {
+                        $c->orWhere('telefone', 'like', "%{$digitos}%");
+                    }
+                })->orWhereHas('itens', fn ($i) => $i->where('nome', 'like', "%{$termo}%"));
+            });
+
+        $formatar = fn (Agendamento $a) => [
+            'id' => $a->id,
+            'data' => $a->inicio->copy()->setTimezone($fuso)->toDateString(),
+            'inicio' => $a->inicio->copy()->setTimezone($fuso)->toIso8601String(),
+            'fim' => $a->fim->copy()->setTimezone($fuso)->toIso8601String(),
+            'status' => $a->status,
+            'cliente' => $a->cliente?->only(['id', 'nome', 'telefone']),
+            'barbeiro' => $a->funcionario?->only(['id', 'nome']),
+            'servicos' => $a->itens->pluck('nome')->values(),
+        ];
+
+        return response()->json([
+            'proximos' => $base()->where('inicio', '>=', $hoje)->orderBy('inicio')->limit(15)->get()->map($formatar),
+            'anteriores' => $base()
+                ->where('inicio', '<', $hoje)
+                ->where('inicio', '>=', $hoje->copy()->subDays(60))
+                ->orderByDesc('inicio')
+                ->limit(10)
+                ->get()
+                ->map($formatar),
+        ]);
+    }
+
+    /**
      * Atualiza a situação do agendamento (confirmar, iniciar, concluir, faltou, cancelar).
      * Barbeiros só alteram os próprios agendamentos.
      */

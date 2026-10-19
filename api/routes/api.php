@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
 
     // Agenda do dia: qualquer perfil (barbeiro altera só os próprios atendimentos)
     Route::get('agenda/dia', [AgendaController::class, 'dia']);
+    Route::get('agenda/busca', [AgendaController::class, 'busca']);
     Route::patch('agendamentos/{agendamento}/status', [AgendaController::class, 'status']);
     Route::get('agenda/horarios', [AgendamentoController::class, 'horarios']);
     Route::post('agendamentos', [AgendamentoController::class, 'store']);

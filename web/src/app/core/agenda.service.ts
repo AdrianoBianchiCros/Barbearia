@@ -64,6 +64,22 @@ export interface DadosAgendamento {
   encaixe?: boolean;
 }
 
+export interface ResultadoBusca {
+  id: number;
+  data: string;
+  inicio: string;
+  fim: string;
+  status: StatusAgendamento;
+  cliente: { id: number; nome: string; telefone: string } | null;
+  barbeiro: { id: number; nome: string } | null;
+  servicos: string[];
+}
+
+export interface BuscaAgendamentos {
+  proximos: ResultadoBusca[];
+  anteriores: ResultadoBusca[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AgendaService {
   private readonly http = inject(HttpClient);
@@ -71,6 +87,13 @@ export class AgendaService {
   dia(data?: string): Observable<AgendaDia> {
     const params = data ? new HttpParams().set('data', data) : undefined;
     return this.http.get<AgendaDia>(`${environment.apiUrl}/agenda/dia`, { params });
+  }
+
+  /** Agendamentos por nome/telefone do cliente ou serviço: próximos e dos últimos 60 dias. */
+  buscar(termo: string): Observable<BuscaAgendamentos> {
+    return this.http.get<BuscaAgendamentos>(`${environment.apiUrl}/agenda/busca`, {
+      params: new HttpParams().set('q', termo),
+    });
   }
 
   /** Horários livres por barbeiro para os serviços escolhidos. */

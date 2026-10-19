@@ -1,11 +1,15 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   AgendaDia,
   AgendamentoDoDia,
   AgendaService,
+  BuscaAgendamentos,
+  ResultadoBusca,
   ColunaBarbeiro,
   hora,
   minutosDeHora,
@@ -80,6 +84,43 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         <button class="botao-icone-borda" type="button" (click)="mudarDia(1)" aria-label="Próximo dia">›</button>
         @if (!ehHoje()) {
           <button class="botao botao-secundario botao-auto" type="button" (click)="irPara(hoje())">Hoje</button>
+        }
+      </div>
+
+      <div class="agenda-busca" (keydown.escape)="limparBusca()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4" /></svg>
+        <input type="search" placeholder="Buscar cliente agendado (nome, telefone ou serviço)…" aria-label="Buscar cliente agendado"
+          [value]="termo()" (input)="digitarBusca($any($event.target).value)"
+          (focus)="buscaAberta.set(true)" (blur)="fecharBuscaDepois()" />
+        @if (buscaAberta() && termo().trim().length >= 2) {
+          <div class="busca-resultados" role="listbox">
+            @if (buscando()) {
+              <p class="busca-vazio">Buscando…</p>
+            } @else if (resultados(); as r) {
+              @if (!r.proximos.length && !r.anteriores.length) {
+                <p class="busca-vazio">Nenhum agendamento encontrado.</p>
+              }
+              @for (grupo of [{ titulo: 'Próximos', itens: r.proximos }, { titulo: 'Últimos 60 dias', itens: r.anteriores }]; track grupo.titulo) {
+                @if (grupo.itens.length) {
+                  <span class="busca-grupo">{{ grupo.titulo }}</span>
+                  @for (item of grupo.itens; track item.id) {
+                    <button type="button" class="busca-item" role="option" (mousedown)="$event.preventDefault()" (click)="irParaResultado(item)"
+                      [attr.aria-label]="item.cliente?.nome + ', ' + (item.data + 'T12:00:00' | date: 'dd/MM') + ' às ' + hora(item.inicio) + ', ' + item.barbeiro?.nome + ', ' + statusRotulo[item.status]">
+                      <span class="busca-data">
+                        <strong>{{ item.data + 'T12:00:00' | date: 'dd/MM' }}</strong>
+                        <small>{{ item.data + 'T12:00:00' | date: 'EEE' }} · {{ hora(item.inicio) }}</small>
+                      </span>
+                      <span class="busca-info">
+                        <strong>{{ item.cliente?.nome }}</strong>
+                        <small>{{ item.servicos.join(' + ') }} · {{ item.barbeiro?.nome }}</small>
+                      </span>
+                      <span class="etiqueta-status st-{{ item.status }}">{{ statusRotulo[item.status] }}</span>
+                    </button>
+                  }
+                }
+              }
+            }
+          </div>
         }
       </div>
 
@@ -164,6 +205,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
                 }
                 @for (k of c.cartoes; track k.ag.id) {
                   <button type="button" class="cartao-agendamento st-{{ k.ag.status }}" [class.compacto]="k.compacto"
+                    [class.apagado]="termoLocal() && !combina(k.ag)" [class.encontrado]="termoLocal() && combina(k.ag)"
                     [style.top.px]="k.topo" [style.height.px]="k.altura"
                     [style.left]="'calc(' + (100 / k.colunas) * k.coluna + '% + 3px)'"
                     [style.width]="'calc(' + 100 / k.colunas + '% - 6px)'"
@@ -259,6 +301,20 @@ export class Agenda implements OnInit, OnDestroy {
   protected readonly agenda = signal<AgendaDia | null>(null);
   protected readonly data = signal('');
   protected readonly filtro = signal('todos');
+
+  // Busca de cliente agendado
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly busca$ = new Subject<string>();
+  protected readonly termo = signal('');
+  protected readonly buscaAberta = signal(false);
+  protected readonly buscando = signal(false);
+  protected readonly resultados = signal<BuscaAgendamentos | null>(null);
+  /** Termo normalizado usado para destacar os cartões do dia exibido. */
+  protected readonly termoLocal = computed(() => {
+    const t = this.termo().trim();
+    return t.length >= 2 ? normalizar(t) : '';
+  });
+  private abrirAoCarregar: number | null = null;
   protected readonly selecionado = signal<{ ag: AgendamentoDoDia; barbeiro: ColunaBarbeiro } | null>(null);
   protected readonly alterando = signal(false);
   protected readonly formulario = signal<InicioFormulario | null>(null);
@@ -363,6 +419,24 @@ export class Agenda implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.busca$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((t) => {
+          this.buscando.set(t.length >= 2);
+          return t.length >= 2 ? this.api.buscar(t) : of(null);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (r) => {
+          this.resultados.set(r);
+          this.buscando.set(false);
+        },
+        error: () => this.buscando.set(false),
+      });
+
     this.carregar();
     this.timer = setInterval(() => {
       this.tique.set(Date.now());
@@ -379,6 +453,7 @@ export class Agenda implements OnInit, OnDestroy {
       next: (a) => {
         const primeiraCarga = !this.agenda();
         this.agenda.set(a);
+        this.abrirPendente(a);
         this.data.set(a.data);
         this.relogio.set({ min: this.minutosRelogio(a.agora, a.data), em: Date.now() });
         this.tique.set(Date.now());
@@ -413,6 +488,58 @@ export class Agenda implements OnInit, OnDestroy {
 
   abrir(ag: AgendamentoDoDia, barbeiro: ColunaBarbeiro): void {
     this.selecionado.set({ ag, barbeiro });
+  }
+
+  digitarBusca(valor: string): void {
+    this.termo.set(valor);
+    this.buscaAberta.set(true);
+    this.busca$.next(valor.trim());
+  }
+
+  limparBusca(): void {
+    this.termo.set('');
+    this.resultados.set(null);
+    this.busca$.next('');
+  }
+
+  fecharBuscaDepois(): void {
+    setTimeout(() => this.buscaAberta.set(false), 150);
+  }
+
+  /** Vai para o dia do agendamento encontrado e abre o detalhe. */
+  irParaResultado(item: ResultadoBusca): void {
+    this.buscaAberta.set(false);
+    this.filtro.set('todos');
+    this.abrirAoCarregar = item.id;
+    if (item.data === this.data()) {
+      this.abrirPendente(this.agenda());
+    } else {
+      this.irPara(item.data);
+    }
+  }
+
+  private abrirPendente(a: AgendaDia | null): void {
+    if (!a || this.abrirAoCarregar === null) return;
+    for (const b of a.barbeiros) {
+      const ag = b.agendamentos.find((x) => x.id === this.abrirAoCarregar);
+      if (ag) {
+        this.abrirAoCarregar = null;
+        this.selecionado.set({ ag, barbeiro: b });
+        setTimeout(() => this.rolarPara(ag));
+        return;
+      }
+    }
+  }
+
+  /** Cartão combina com a busca por nome, telefone ou serviço. */
+  combina(ag: AgendamentoDoDia): boolean {
+    const t = this.termoLocal();
+    const digitos = t.replace(/\D/g, '');
+    return (
+      normalizar(ag.cliente?.nome ?? '').includes(t) ||
+      (digitos.length >= 3 && (ag.cliente?.telefone ?? '').includes(digitos)) ||
+      ag.servicos.some((s) => normalizar(s).includes(t))
+    );
   }
 
   novo(): void {
@@ -530,6 +657,12 @@ export class Agenda implements OnInit, OnDestroy {
     return proximo ? { rotulo: 'Próximo', ag: proximo } : null;
   }
 
+  private rolarPara(ag: AgendamentoDoDia): void {
+    const el = this.grade()?.nativeElement;
+    if (!el) return;
+    el.scrollTo({ top: Math.max((this.minNoDia(ag.inicio) - this.inicioGrade() - 60) * PX_POR_MINUTO, 0), behavior: 'smooth' });
+  }
+
   private rolarParaAgora(): void {
     const el = this.grade()?.nativeElement;
     if (!el) return;
@@ -538,4 +671,9 @@ export class Agenda implements OnInit, OnDestroy {
     const alvo = agora === null ? 0 : Math.max((agora - this.inicioGrade() - 60) * PX_POR_MINUTO, 0);
     el.scrollTo({ top: alvo });
   }
+}
+
+/** Minúsculas e sem acentos, para comparar "joao" com "João". */
+function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 }

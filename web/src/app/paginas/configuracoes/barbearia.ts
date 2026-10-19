@@ -4,6 +4,10 @@ import { AvisoService } from '../../core/aviso.service';
 import { CadastrosService } from '../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
 import { EmpresaCompleta } from '../../core/modelos';
+import { environment } from '../../../environments/environment';
+
+/** A página pública fica no mesmo domínio da API, sem o /api. */
+const ENDERECO_SITE = environment.apiUrl.replace(/\/api\/?$/, '');
 
 /** Dados da barbearia e conteúdo da página pública (somente dono). */
 @Component({
@@ -15,6 +19,9 @@ import { EmpresaCompleta } from '../../core/modelos';
         <h1>Barbearia e página</h1>
         <p class="texto-suave">Essas informações aparecem na página pública da barbearia, onde os clientes agendam.</p>
       </div>
+      @if (empresa(); as emp) {
+        <a class="botao botao-secundario botao-auto" [href]="enderecoSite + '/' + emp.slug" target="_blank" rel="noopener">Ver minha página</a>
+      }
     </div>
 
     @if (empresa(); as emp) {
@@ -58,7 +65,7 @@ import { EmpresaCompleta } from '../../core/modelos';
             </label>
             <label class="campo">
               <span>Endereço da página</span>
-              <div class="campo-prefixo"><span>seudominio.com.br/</span><input formControlName="slug" /></div>
+              <div class="campo-prefixo"><span>{{ dominio }}/</span><input formControlName="slug" /></div>
               @if (erroCampo('slug')) {<small class="erro-campo">{{ erroCampo('slug') }}</small>}
             </label>
           </div>
@@ -136,6 +143,8 @@ export class DadosBarbearia implements OnInit {
     { tipo: 'logo' as const, rotulo: 'Logo', dica: 'Quadrada, mínimo 300×300' },
     { tipo: 'capa' as const, rotulo: 'Foto de capa', dica: 'Horizontal, mínimo 1600×600' },
   ];
+  protected readonly enderecoSite = ENDERECO_SITE;
+  protected readonly dominio = ENDERECO_SITE.replace(/^https?:\/\//, '');
   protected readonly empresa = signal<EmpresaCompleta | null>(null);
   protected readonly salvando = signal(false);
   protected readonly erro = signal('');

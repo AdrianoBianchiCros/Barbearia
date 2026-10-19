@@ -35,5 +35,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('registro', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
+
+        // Agendamento pela página pública: evita que alguém lote a agenda com pedidos falsos.
+        RateLimiter::for('agendamento-publico', fn (Request $request) => Limit::perHour(10)->by($request->ip())
+            ->response(fn () => response()->json([
+                'message' => 'Muitos agendamentos seguidos. Tente novamente mais tarde ou fale com a barbearia.',
+            ], 429)));
     }
 }

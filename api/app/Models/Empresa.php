@@ -42,6 +42,9 @@ class Empresa extends Model
         return Attribute::get(fn () => $this->capa_path ? Storage::disk('public')->url($this->capa_path) : null);
     }
 
+    /** Endereços que não podem ser usados como página de barbearia (são rotas do sistema). */
+    public const SLUGS_RESERVADOS = ['api', 'up', 'storage', 'login', 'admin', 'app', 'painel'];
+
     public function usuarios(): HasMany
     {
         return $this->hasMany(User::class);
@@ -53,6 +56,9 @@ class Empresa extends Model
     public static function gerarSlug(string $nome): string
     {
         $base = Str::slug($nome) ?: 'barbearia';
+        if (in_array($base, self::SLUGS_RESERVADOS, true)) {
+            $base = "barbearia-{$base}";
+        }
         $slug = $base;
         $n = 2;
 

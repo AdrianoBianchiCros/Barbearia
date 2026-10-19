@@ -232,16 +232,7 @@ class AgendamentoController extends Controller
     /** Serviços com o preço/duração do barbeiro (ou o padrão do serviço). */
     private function itens(Funcionario $barbeiro, array $servicoIds): Collection
     {
-        return $barbeiro->servicos
-            ->whereIn('id', $servicoIds)
-            ->sortBy(fn ($s) => array_search($s->id, $servicoIds))
-            ->map(fn ($s) => [
-                'servico_id' => $s->id,
-                'nome' => $s->nome,
-                'preco' => (float) ($s->pivot->preco ?? $s->preco),
-                'duracao_minutos' => (int) ($s->pivot->duracao_minutos ?? $s->duracao_minutos),
-            ])
-            ->values();
+        return $barbeiro->itensDosServicos($servicoIds);
     }
 
     private function itensOuErro(Funcionario $barbeiro, array $servicoIds): Collection

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Empresa;
 use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class EmpresaController extends Controller
 
         $dados = $request->validate([
             'nome' => ['sometimes', 'required', 'string', 'max:120'],
-            'slug' => ['sometimes', 'required', 'alpha_dash:ascii', 'max:80', Rule::unique('empresas', 'slug')->ignore($empresa->id)],
+            'slug' => ['sometimes', 'required', 'alpha_dash:ascii', 'max:80', Rule::unique('empresas', 'slug')->ignore($empresa->id), Rule::notIn(Empresa::SLUGS_RESERVADOS)],
             'slogan' => ['nullable', 'string', 'max:160'],
             'descricao' => ['nullable', 'string', 'max:2000'],
             'documento' => ['nullable', 'string', 'max:20'],
@@ -61,6 +62,7 @@ class EmpresaController extends Controller
             'whatsapp.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
             'instagram.regex' => 'Informe apenas o usuário do Instagram (ex.: barbeariadoze).',
             'cor_primaria.regex' => 'Escolha uma cor válida.',
+            'slug.not_in' => 'Esse endereço é reservado pelo sistema. Escolha outro.',
         ], [
             'slug' => 'endereço da página',
             'cor_primaria' => 'cor principal',

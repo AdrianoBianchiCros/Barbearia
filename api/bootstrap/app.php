@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'empresa' => \App\Http\Middleware\DefinirEmpresaAtual::class,
             'perfil' => \App\Http\Middleware\ExigirPerfil::class,
+            'empresa.publica' => \App\Http\Middleware\DefinirEmpresaPublica::class,
         ]);
 
         // A barbearia precisa estar definida antes de carregar registros pela URL

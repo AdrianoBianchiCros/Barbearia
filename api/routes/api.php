@@ -11,6 +11,7 @@ use App\Http\Controllers\ComissaoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\LancamentoController;
+use App\Http\Controllers\PaginaPublicaController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\ServicoController;
@@ -19,6 +20,12 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('registrar', [AuthController::class, 'registrar'])->middleware('throttle:registro');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+});
+
+// Agendamento online pela página da barbearia (sem login).
+Route::prefix('publico/{slug}')->middleware('empresa.publica')->group(function () {
+    Route::get('horarios', [PaginaPublicaController::class, 'horarios'])->middleware('throttle:60,1');
+    Route::post('agendamentos', [PaginaPublicaController::class, 'agendar'])->middleware('throttle:agendamento-publico');
 });
 
 // Rotas da área logada: todas filtradas pela barbearia do usuário.

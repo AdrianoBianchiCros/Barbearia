@@ -41,7 +41,7 @@ class AgendaController extends Controller
             ->get();
 
         $agendamentos = Agendamento::query()
-            ->with(['cliente:id,nome,telefone,observacoes', 'itens:id,agendamento_id,nome,duracao_minutos'])
+            ->with(['cliente:id,nome,telefone,observacoes', 'itens:id,agendamento_id,servico_id,nome,duracao_minutos'])
             ->where('inicio', '<', $fimUtc)
             ->where('fim', '>', $inicioUtc)
             ->where('status', '!=', 'cancelado')
@@ -85,6 +85,7 @@ class AgendaController extends Controller
                         'observacoes' => $a->observacoes,
                         'cliente' => $a->cliente?->only(['id', 'nome', 'telefone', 'observacoes']),
                         'servicos' => $a->itens->pluck('nome')->values(),
+                        'servico_ids' => $a->itens->pluck('servico_id')->values(),
                     ])->values(),
             ])->values(),
         ]);

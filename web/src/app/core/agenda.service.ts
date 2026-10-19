@@ -15,6 +15,7 @@ export interface AgendamentoDoDia {
   observacoes: string | null;
   cliente: { id: number; nome: string; telefone: string; observacoes: string | null } | null;
   servicos: string[];
+  servico_ids: number[];
 }
 
 export interface ColunaBarbeiro {
@@ -43,6 +44,26 @@ export const STATUS_ROTULO: Record<StatusAgendamento, string> = {
   faltou: 'Faltou',
 };
 
+export interface OpcaoBarbeiro {
+  funcionario_id: number;
+  nome: string;
+  foto_url: string | null;
+  duracao_minutos: number;
+  valor_total: string;
+  horarios: string[];
+}
+
+export interface DadosAgendamento {
+  cliente_id?: number | null;
+  novo_cliente?: { nome: string; telefone: string; aceita_whatsapp: boolean } | null;
+  funcionario_id: number;
+  servico_ids: number[];
+  data: string;
+  hora: string;
+  observacoes?: string | null;
+  encaixe?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AgendaService {
   private readonly http = inject(HttpClient);
@@ -50,6 +71,22 @@ export class AgendaService {
   dia(data?: string): Observable<AgendaDia> {
     const params = data ? new HttpParams().set('data', data) : undefined;
     return this.http.get<AgendaDia>(`${environment.apiUrl}/agenda/dia`, { params });
+  }
+
+  /** Horários livres por barbeiro para os serviços escolhidos. */
+  horarios(data: string, servicoIds: number[], ignorarAgendamentoId?: number): Observable<OpcaoBarbeiro[]> {
+    let params = new HttpParams().set('data', data);
+    servicoIds.forEach((id) => (params = params.append('servico_ids[]', id)));
+    if (ignorarAgendamentoId) params = params.set('ignorar_agendamento_id', ignorarAgendamentoId);
+    return this.http.get<OpcaoBarbeiro[]>(`${environment.apiUrl}/agenda/horarios`, { params });
+  }
+
+  criar(dados: DadosAgendamento): Observable<{ id: number }> {
+    return this.http.post<{ id: number }>(`${environment.apiUrl}/agendamentos`, dados);
+  }
+
+  remarcar(id: number, dados: DadosAgendamento): Observable<{ id: number }> {
+    return this.http.put<{ id: number }>(`${environment.apiUrl}/agendamentos/${id}`, dados);
   }
 
   alterarStatus(id: number, status: StatusAgendamento): Observable<{ id: number; status: StatusAgendamento }> {

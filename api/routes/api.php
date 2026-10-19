@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgendaController;
+use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BloqueioAgendaController;
 use App\Http\Controllers\ClienteController;
@@ -22,6 +23,9 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
     // Agenda do dia: qualquer perfil (barbeiro altera só os próprios atendimentos)
     Route::get('agenda/dia', [AgendaController::class, 'dia']);
     Route::patch('agendamentos/{agendamento}/status', [AgendaController::class, 'status']);
+    Route::get('agenda/horarios', [AgendamentoController::class, 'horarios']);
+    Route::post('agendamentos', [AgendamentoController::class, 'store']);
+    Route::put('agendamentos/{agendamento}', [AgendamentoController::class, 'update']);
 
     // Leitura: qualquer perfil
     Route::get('empresa', [EmpresaController::class, 'show']);

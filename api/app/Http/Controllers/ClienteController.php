@@ -38,7 +38,14 @@ class ClienteController extends Controller
         $dados = $this->validar($request);
 
         $cliente = DB::transaction(function () use ($dados, $request) {
-            $cliente = Cliente::create($dados);
+            // Um cliente excluído com o mesmo telefone é reativado (o telefone é único no banco).
+            $cliente = Cliente::onlyTrashed()->where('telefone', $dados['telefone'])->first();
+            if ($cliente) {
+                $cliente->restore();
+                $cliente->update($dados);
+            } else {
+                $cliente = Cliente::create($dados);
+            }
             $this->registrarConsentimento($cliente, $request->boolean('aceita_whatsapp'));
 
             return $cliente;

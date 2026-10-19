@@ -16,6 +16,7 @@ import { AuthService } from '../../core/auth.service';
 import { AvisoService } from '../../core/aviso.service';
 import { mensagemDeErro } from '../../core/erros';
 import { TelefonePipe } from '../../core/telefone.pipe';
+import { FormularioAgendamento, InicioFormulario } from './formulario-agendamento';
 
 const PX_POR_HORA = 76;
 const PX_POR_MINUTO = PX_POR_HORA / 60;
@@ -67,7 +68,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe],
+  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento],
   template: `
     <div class="agenda-barra">
       <div class="agenda-navegacao">
@@ -90,7 +91,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
           }
         </select>
         <button class="botao-icone-borda" type="button" (click)="carregar()" title="Atualizar" aria-label="Atualizar">↻</button>
-        <button class="botao botao-auto" type="button" disabled title="Disponível na próxima etapa">+ Agendamento</button>
+        <button class="botao botao-auto" type="button" (click)="novo()">+ Agendamento</button>
       </div>
     </div>
 
@@ -148,7 +149,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
             </div>
 
             @for (c of colunas(); track c.barbeiro.id) {
-              <div class="agenda-coluna">
+              <div class="agenda-coluna" (click)="clicarHorario($event, c.barbeiro)">
                 @for (h of horas(); track h) {
                   <span class="linha-hora" [style.top.px]="(h - inicioGrade()) * pxMin"></span>
                   <span class="linha-meia" [style.top.px]="(h + 30 - inicioGrade()) * pxMin"></span>
@@ -157,7 +158,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
                   <div class="faixa-indisponivel" [style.top.px]="f.topo" [style.height.px]="f.altura"></div>
                 }
                 @for (b of c.bloqueios; track $index) {
-                  <div class="faixa-bloqueio" [style.top.px]="b.topo" [style.height.px]="b.altura">
+                  <div class="faixa-bloqueio" [style.top.px]="b.topo" [style.height.px]="b.altura" (click)="$event.stopPropagation()">
                     <span>{{ b.motivo || 'Bloqueado' }}</span>
                   </div>
                 }
@@ -166,7 +167,8 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
                     [style.top.px]="k.topo" [style.height.px]="k.altura"
                     [style.left]="'calc(' + (100 / k.colunas) * k.coluna + '% + 3px)'"
                     [style.width]="'calc(' + 100 / k.colunas + '% - 6px)'"
-                    (click)="abrir(k.ag, c.barbeiro)">
+                    [attr.aria-label]="(k.ag.cliente?.nome ?? 'Cliente') + ', ' + k.ag.servicos.join(' + ') + ', ' + hora(k.ag.inicio) + ' às ' + hora(k.ag.fim) + ', ' + statusRotulo[k.ag.status]"
+                    (click)="$event.stopPropagation(); abrir(k.ag, c.barbeiro)">
                     <span class="cartao-cliente">{{ k.ag.cliente?.nome ?? 'Cliente' }}</span>
                     <span class="cartao-servico">{{ k.ag.servicos.join(' + ') }}</span>
                     <span class="cartao-hora">{{ hora(k.ag.inicio) }} – {{ hora(k.ag.fim) }}</span>
@@ -220,6 +222,9 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
 
         @if (podeAlterar(sel.barbeiro)) {
           <div class="acoes-agendamento">
+            @if (sel.ag.status === 'agendado' || sel.ag.status === 'confirmado') {
+              <button type="button" class="botao botao-secundario" (click)="remarcar(sel.ag, sel.barbeiro)">Remarcar</button>
+            }
             @for (acao of acoes(sel.ag.status); track acao.status) {
               <button type="button" [disabled]="alterando()"
                 [class]="acao.estilo === 'primario' ? 'botao' : acao.estilo === 'perigo' ? 'botao botao-perigo' : 'botao botao-secundario'"
@@ -233,6 +238,10 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
           <button class="botao botao-secundario botao-auto" type="button" (click)="selecionado.set(null)">Fechar</button>
         </div>
       </aside>
+    }
+
+    @if (formulario(); as f) {
+      <app-formulario-agendamento [inicio]="f" (fechar)="formulario.set(null)" (salvo)="agendamentoSalvo()" />
     }
   `,
 })
@@ -252,6 +261,7 @@ export class Agenda implements OnInit, OnDestroy {
   protected readonly filtro = signal('todos');
   protected readonly selecionado = signal<{ ag: AgendamentoDoDia; barbeiro: ColunaBarbeiro } | null>(null);
   protected readonly alterando = signal(false);
+  protected readonly formulario = signal<InicioFormulario | null>(null);
   /** Minutos do relógio da barbearia, avançados localmente entre as atualizações. */
   private readonly relogio = signal<{ min: number; em: number } | null>(null);
   private readonly tique = signal(Date.now());
@@ -356,7 +366,7 @@ export class Agenda implements OnInit, OnDestroy {
     this.carregar();
     this.timer = setInterval(() => {
       this.tique.set(Date.now());
-      if (this.ehHoje() && !this.selecionado()) this.carregar(true);
+      if (this.ehHoje() && !this.selecionado() && !this.formulario()) this.carregar(true);
     }, ATUALIZAR_A_CADA_MS);
   }
 
@@ -403,6 +413,38 @@ export class Agenda implements OnInit, OnDestroy {
 
   abrir(ag: AgendamentoDoDia, barbeiro: ColunaBarbeiro): void {
     this.selecionado.set({ ag, barbeiro });
+  }
+
+  novo(): void {
+    const meu = this.agenda()?.meu_funcionario_id;
+    const filtro = this.filtro() === 'todos' ? null : Number(this.filtro());
+    this.formulario.set({ data: this.data(), funcionarioId: filtro ?? (this.ehBarbeiro() ? meu : null) });
+  }
+
+  /** Clique numa área vazia da coluna: abre o formulário com barbeiro e horário. */
+  clicarHorario(evento: MouseEvent, barbeiro: ColunaBarbeiro): void {
+    if (this.ehBarbeiro() && barbeiro.id !== this.agenda()?.meu_funcionario_id) return;
+    const alvo = evento.currentTarget as HTMLElement;
+    const y = evento.clientY - alvo.getBoundingClientRect().top;
+    const minuto = this.inicioGrade() + Math.floor(y / PX_POR_MINUTO / 15) * 15;
+    const h = `${String(Math.floor(minuto / 60)).padStart(2, '0')}:${String(minuto % 60).padStart(2, '0')}`;
+    this.formulario.set({ data: this.data(), funcionarioId: barbeiro.id, hora: h });
+  }
+
+  remarcar(ag: AgendamentoDoDia, barbeiro: ColunaBarbeiro): void {
+    this.selecionado.set(null);
+    this.formulario.set({ data: this.data(), funcionarioId: barbeiro.id, hora: hora(ag.inicio), agendamento: ag });
+  }
+
+  agendamentoSalvo(): void {
+    const remarcou = !!this.formulario()?.agendamento;
+    this.formulario.set(null);
+    this.aviso.sucesso(remarcou ? 'Agendamento remarcado.' : 'Agendamento criado.');
+    this.carregar(true);
+  }
+
+  private ehBarbeiro(): boolean {
+    return this.auth.sessao()?.usuario.perfil === 'barbeiro';
   }
 
   acoes(status: StatusAgendamento): Acao[] {

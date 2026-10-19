@@ -302,6 +302,7 @@
 .agenda-coluna {
   position: relative;
   border-left: 1px solid var(--cor-borda);
+  cursor: copy;
 }
 
 .linha-hora,
@@ -536,4 +537,243 @@
   .agenda-grade {
     max-height: calc(100dvh - 250px);
   }
+}
+
+// ---------- Formulário de agendamento ----------
+.painel-largo {
+  width: min(560px, 100%);
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.formulario-agendamento h2 {
+  margin: 0 0 12px;
+}
+
+.passo {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cor-borda);
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+  }
+
+  .campo {
+    margin-bottom: 8px;
+  }
+}
+
+.passo-numero {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  color: #fff;
+  background: var(--cor-primaria);
+  border-radius: 50%;
+}
+
+.campo-busca-cheio {
+  max-width: none;
+  margin-bottom: 8px;
+}
+
+.lista-resultados {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  overflow: hidden;
+
+  button {
+    width: 100%;
+    padding: 9px 12px;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 0;
+    border-bottom: 1px solid var(--cor-borda);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--cor-primaria-suave);
+    }
+  }
+
+  li:last-child button {
+    border-bottom: 0;
+  }
+}
+
+.cliente-escolhido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--cor-primaria-suave);
+  border-radius: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--cor-texto);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  cursor: pointer;
+
+  small {
+    color: var(--cor-texto-suave);
+    font-size: 0.72rem;
+  }
+
+  &:hover {
+    border-color: var(--cor-primaria);
+  }
+
+  &.selecionado {
+    color: var(--cor-primaria);
+    background: var(--cor-primaria-suave);
+    border-color: var(--cor-primaria);
+    font-weight: 600;
+  }
+}
+
+.linha-data {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .campo {
+    width: 180px;
+  }
+
+  input[type='date'] {
+    width: 100%;
+    padding: 9px 10px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+  }
+
+  .encaixe {
+    margin-bottom: 18px;
+  }
+}
+
+.encaixe-campos {
+  select,
+  input {
+    width: 100%;
+    padding: 9px 10px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+  }
+}
+
+.horarios-barbeiro {
+  margin-bottom: 12px;
+
+  p {
+    margin: 4px 0 0;
+  }
+}
+
+.horarios-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.grade-horarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.horario {
+  padding: 7px 0;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--cor-texto);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--cor-primaria);
+    color: var(--cor-primaria);
+  }
+
+  &.selecionado {
+    color: #fff;
+    background: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+    font-weight: 600;
+  }
+}
+
+.campo-texto {
+  width: 100%;
+  padding: 9px 10px;
+  font: inherit;
+  color: inherit;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.resumo-agendamento {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: auto -24px 0;
+  padding: 14px 24px;
+  background: var(--cor-superficie);
+  border-top: 1px solid var(--cor-borda);
+  box-shadow: 0 -6px 16px rgb(0 0 0 / 6%);
+
+  > div:first-child {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.resumo-botoes {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
 }

@@ -14,6 +14,7 @@ const SECOES: Secao[] = [
   { rota: 'barbeiros', titulo: 'Barbeiros', descricao: 'Equipe, expediente e folgas' },
   { rota: 'produtos', titulo: 'Produtos', descricao: 'Itens à venda e estoque' },
   { rota: 'barbearia', titulo: 'Barbearia e página', descricao: 'Dados, endereço e página pública', perfis: ['dono'] },
+  { rota: 'whatsapp', titulo: 'WhatsApp', descricao: 'Confirmação e lembretes automáticos', perfis: ['dono'] },
 ];
 
 /** Área de ajustes: agrupa as telas de cadastro em uma navegação própria. */

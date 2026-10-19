@@ -6,6 +6,7 @@ use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Funcionario;
 use App\Services\Disponibilidade;
+use App\Services\WhatsApp\Mensageiro;
 use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -113,7 +114,7 @@ class AgendamentoController extends Controller
         return response()->json($opcoes->first());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, Mensageiro $mensageiro): JsonResponse
     {
         $dados = $this->validar($request, novo: true);
         $barbeiro = $this->barbeiroPermitido($request, (int) $dados['funcionario_id']);
@@ -129,11 +130,13 @@ class AgendamentoController extends Controller
             ]), $request, $barbeiro, $dados, $itens);
         });
 
+        $mensageiro->agendamento($agendamento, 'confirmacao');
+
         return response()->json($this->resposta($agendamento), 201);
     }
 
     /** Remarcar: muda horário, barbeiro e/ou serviços de um agendamento ainda não atendido. */
-    public function update(Request $request, Agendamento $agendamento): JsonResponse
+    public function update(Request $request, Agendamento $agendamento, Mensageiro $mensageiro): JsonResponse
     {
         if (! in_array($agendamento->status, ['agendado', 'confirmado'], true)) {
             return response()->json(['message' => 'Só é possível remarcar agendamentos que ainda não foram atendidos.'], 422);
@@ -142,6 +145,7 @@ class AgendamentoController extends Controller
         $this->barbeiroPermitido($request, $agendamento->funcionario_id);
         $dados = $this->validar($request, novo: false);
         $barbeiro = $this->barbeiroPermitido($request, (int) $dados['funcionario_id']);
+        $inicioAnterior = $agendamento->inicio->copy();
 
         $agendamento = DB::transaction(function () use ($request, $agendamento, $dados, $barbeiro) {
             $itens = $this->itensOuErro($barbeiro, $dados['servico_ids']);
@@ -149,6 +153,10 @@ class AgendamentoController extends Controller
 
             return $this->gravar($agendamento, $request, $barbeiro, $dados, $itens);
         });
+
+        if (! $agendamento->inicio->equalTo($inicioAnterior)) {
+            $mensageiro->agendamento($agendamento, 'remarcacao');
+        }
 
         return response()->json($this->resposta($agendamento));
     }

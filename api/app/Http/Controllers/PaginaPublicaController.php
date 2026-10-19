@@ -9,6 +9,7 @@ use App\Models\Funcionario;
 use App\Models\GaleriaFoto;
 use App\Models\Servico;
 use App\Services\Disponibilidade;
+use App\Services\WhatsApp\Mensageiro;
 use App\Support\Telefone;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -123,7 +124,7 @@ class PaginaPublicaController extends Controller
      * fica com o primeiro que estiver livre no horário.
      * POST /api/publico/{slug}/agendamentos
      */
-    public function agendar(Request $request): JsonResponse
+    public function agendar(Request $request, Mensageiro $mensageiro): JsonResponse
     {
         $empresa = $this->empresa($request);
         $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
@@ -207,6 +208,7 @@ class PaginaPublicaController extends Controller
         });
 
         $agendamento->load('itens');
+        $mensageiro->agendamento($agendamento, 'confirmacao');
         $inicio = $agendamento->inicio->copy()->setTimezone($empresa->fuso_horario);
 
         return response()->json([

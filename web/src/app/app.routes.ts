@@ -97,6 +97,12 @@ export const routes: Routes = [
             title: 'Barbearia e página | Configurações',
             loadComponent: () => import('./paginas/configuracoes/barbearia').then((m) => m.DadosBarbearia),
           },
+          {
+            path: 'whatsapp',
+            canActivate: [exigePerfil('dono')],
+            title: 'WhatsApp | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/whatsapp').then((m) => m.ConfigWhatsappPagina),
+          },
         ],
       },
       // Endereços antigos

@@ -5,6 +5,7 @@ use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BloqueioAgendaController;
 use App\Http\Controllers\CaixaController;
+use App\Http\Controllers\ClienteAgendamentoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ComandaController;
 use App\Http\Controllers\ComissaoController;
@@ -16,6 +17,8 @@ use App\Http\Controllers\PaginaPublicaController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\ServicoController;
+use App\Http\Controllers\WebhookWhatsappController;
+use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -28,6 +31,20 @@ Route::prefix('publico/{slug}')->middleware('empresa.publica')->group(function (
     Route::get('horarios', [PaginaPublicaController::class, 'horarios'])->middleware('throttle:60,1');
     Route::post('agendamentos', [PaginaPublicaController::class, 'agendar'])->middleware('throttle:agendamento-publico');
 });
+
+// Link do cliente recebido no WhatsApp: confirmar, remarcar ou cancelar o horário.
+Route::prefix('a/{token}')->middleware('agendamento.token')->group(function () {
+    Route::get('horarios', [ClienteAgendamentoController::class, 'horarios'])->middleware('throttle:60,1');
+    Route::middleware('throttle:20,1')->group(function () {
+        Route::post('confirmar', [ClienteAgendamentoController::class, 'confirmar']);
+        Route::post('cancelar', [ClienteAgendamentoController::class, 'cancelar']);
+        Route::post('remarcar', [ClienteAgendamentoController::class, 'remarcar']);
+    });
+});
+
+// Webhook da WhatsApp Cloud API (status de entrega e respostas dos clientes).
+Route::get('webhooks/whatsapp', [WebhookWhatsappController::class, 'verificar']);
+Route::post('webhooks/whatsapp', [WebhookWhatsappController::class, 'receber']);
 
 // Rotas da área logada: todas filtradas pela barbearia do usuário.
 Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
@@ -59,6 +76,9 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::put('empresa', [EmpresaController::class, 'update']);
         Route::post('empresa/imagens/{tipo}', [EmpresaController::class, 'enviarImagem']);
         Route::delete('empresa/imagens/{tipo}', [EmpresaController::class, 'removerImagem']);
+        Route::get('whatsapp', [WhatsappController::class, 'show']);
+        Route::put('whatsapp', [WhatsappController::class, 'update']);
+        Route::get('whatsapp/mensagens', [WhatsappController::class, 'mensagens']);
         Route::get('galeria', [GaleriaController::class, 'index']);
         Route::post('galeria', [GaleriaController::class, 'store']);
         Route::put('galeria/{foto}', [GaleriaController::class, 'update']);

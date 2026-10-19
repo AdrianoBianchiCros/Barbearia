@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\WhatsApp\Enviador;
+use App\Services\WhatsApp\EnviadorCloudApi;
+use App\Services\WhatsApp\EnviadorTeste;
 use App\Support\EmpresaAtual;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -18,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // Uma instância por requisição (ou por job da fila).
         $this->app->scoped(EmpresaAtual::class);
+
+        // Modo de teste (só registra) ou envio real pela Cloud API da Meta.
+        $this->app->bind(Enviador::class, fn () => config('whatsapp.driver') === 'cloud'
+            ? new EnviadorCloudApi
+            : new EnviadorTeste);
     }
 
     /**

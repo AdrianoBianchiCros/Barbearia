@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
-import { AuthService } from './auth.service';
+import { AuthService, Perfil } from './auth.service';
 
 /** Área logada: sem sessão válida, vai para o login. */
 export const exigeLogin: CanActivateFn = () => {
@@ -16,3 +16,17 @@ export const somenteVisitante: CanActivateFn = () => {
   const router = inject(Router);
   return auth.carregarSessao().pipe(map((ok) => (ok ? router.createUrlTree(['/painel']) : true)));
 };
+
+/** Restringe a rota a determinados perfis (use depois de exigeLogin). */
+export const exigePerfil =
+  (...perfis: Perfil[]): CanActivateFn =>
+  () => {
+    const perfil = inject(AuthService).sessao()?.usuario.perfil;
+    return (perfil && perfis.includes(perfil)) || inject(Router).createUrlTree(['/painel']);
+  };
+
+/** Atalho usado nas telas para mostrar/ocultar botões de edição. */
+export function podeEditar(auth: AuthService, ...perfis: Perfil[]): boolean {
+  const perfil = auth.sessao()?.usuario.perfil;
+  return !!perfil && perfis.includes(perfil);
+}

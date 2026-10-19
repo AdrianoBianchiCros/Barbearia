@@ -1,4 +1,4 @@
-// Produção (HostGator): a API fica no subdomínio api.
+// Produção (HostGator): a API fica no domínio principal, em /api.
 export const environment = {
-  apiUrl: 'https://api.seudominio.com.br/api',
+  apiUrl: 'https://seudominio.com.br/api',
 };

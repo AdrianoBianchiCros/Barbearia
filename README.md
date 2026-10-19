@@ -50,6 +50,12 @@ automaticamente pela barbearia do usuário logado (middleware `empresa`) e receb
 
 ## Publicação (HostGator)
 
-Ver a seção 4 do documento de planejamento: Angular compilado no `public_html`,
-API no subdomínio `api.` apontando para `api/public`, fila processada pelo cron.
-Ajuste a URL da API em `web/src/environments/environment.ts` antes do build de produção.
+Ver a seção 4 do documento de planejamento (v4). Resumo:
+
+- `seudominio.com.br` → Laravel (`public_html` recebe o conteúdo de `api/public`): página de cada
+  barbearia em `/nome-da-barbearia` e a API em `/api`.
+- `app.seudominio.com.br` → painel Angular compilado.
+- Fila e lembretes processados pelo cron (PHP 8.3, `ea-php83`).
+
+Ajuste a URL da API em `web/src/environments/environment.ts` e `FRONTEND_URL` no `.env` antes do
+build de produção. Rode `php artisan storage:link` para servir logos e fotos enviadas.

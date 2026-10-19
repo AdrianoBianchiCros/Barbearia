@@ -17,6 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'empresa' => \App\Http\Middleware\DefinirEmpresaAtual::class,
             'perfil' => \App\Http\Middleware\ExigirPerfil::class,
         ]);
+
+        // A barbearia precisa estar definida antes de carregar registros pela URL
+        // (ex.: /clientes/5), senão o filtro por empresa não seria aplicado.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: \App\Http\Middleware\DefinirEmpresaAtual::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

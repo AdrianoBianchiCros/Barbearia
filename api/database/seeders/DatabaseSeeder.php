@@ -24,8 +24,18 @@ class DatabaseSeeder extends Seeder
         $empresa = Empresa::create([
             'nome' => 'Barbearia Demo',
             'slug' => 'barbearia-demo',
+            'slogan' => 'Corte clássico, atendimento de verdade',
+            'descricao' => 'Barbearia de bairro com ambiente descontraído, café e cerveja gelada.',
             'telefone' => '11999990000',
+            'whatsapp' => '11999990000',
             'email' => 'contato@demo.test',
+            'instagram' => 'barbeariademo',
+            'cep' => '01310-100',
+            'logradouro' => 'Avenida Paulista',
+            'numero' => '1000',
+            'bairro' => 'Bela Vista',
+            'cidade' => 'São Paulo',
+            'uf' => 'SP',
         ]);
 
         // A partir daqui, tudo o que for criado pertence à Barbearia Demo.

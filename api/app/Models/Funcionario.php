@@ -4,13 +4,15 @@ namespace App\Models;
 
 use App\Models\Concerns\PertenceAEmpresa;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['usuario_id', 'nome', 'telefone', 'email', 'tipo_vinculo', 'comissao_percentual', 'atende_clientes', 'ativo'])]
+#[Fillable(['usuario_id', 'nome', 'telefone', 'email', 'especialidades', 'tipo_vinculo', 'comissao_percentual', 'atende_clientes', 'ativo'])]
 class Funcionario extends Model
 {
     use PertenceAEmpresa, SoftDeletes;
@@ -24,6 +26,11 @@ class Funcionario extends Model
             'atende_clientes' => 'boolean',
             'ativo' => 'boolean',
         ];
+    }
+
+    protected function fotoUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->foto_path ? Storage::disk('public')->url($this->foto_path) : null);
     }
 
     public function usuario(): BelongsTo

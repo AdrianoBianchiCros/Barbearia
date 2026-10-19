@@ -82,6 +82,8 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::post('bloqueios', [BloqueioAgendaController::class, 'store']);
         Route::delete('bloqueios/{bloqueio}', [BloqueioAgendaController::class, 'destroy']);
 
+        Route::get('agenda/encaixe', [AgendamentoController::class, 'encaixe']);
+
         // Comandas e caixa
         Route::get('comandas', [ComandaController::class, 'index']);
         Route::post('comandas', [ComandaController::class, 'store']);

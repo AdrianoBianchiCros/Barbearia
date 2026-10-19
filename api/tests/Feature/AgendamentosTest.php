@@ -147,6 +147,41 @@ class AgendamentosTest extends TestCase
         $this->agendar(['hora' => '09:15', 'encaixe' => true])->assertUnprocessable();
     }
 
+    public function test_encaixe_sugere_primeiro_horario_sem_cliente(): void
+    {
+        // Carlos ocupado das 09:00 às 09:45; Rafael das 09:00 às 09:30 (dia seguinte ao "agora")
+        $this->agendar()->assertCreated();
+        $this->agendar(['funcionario_id' => $this->rafael->id])->assertCreated();
+
+        $query = fn (array $extra = []) => '/api/agenda/encaixe?'.http_build_query($extra + [
+            'data' => self::DIA, 'servico_ids' => [$this->corte->id],
+        ]);
+
+        // Qualquer barbeiro: Rafael fica livre antes (09:30)
+        $this->getJson($query())->assertOk()
+            ->assertJsonPath('funcionario_id', $this->rafael->id)
+            ->assertJsonPath('hora', '09:30')
+            ->assertJsonPath('duracao_minutos', 30);
+
+        // Barbeiro escolhido
+        $this->getJson($query(['funcionario_id' => $this->carlos->id]))->assertOk()
+            ->assertJsonPath('hora', '09:45')
+            ->assertJsonPath('valor_total', '50.00');
+
+        // Hoje (14/01, 12:00): a partir de agora, mesmo fora do expediente
+        $this->getJson($query(['data' => '2030-01-14', 'funcionario_id' => $this->carlos->id]))->assertOk()
+            ->assertJsonPath('hora', '12:00');
+
+        // De madrugada, hoje começa no início do expediente, não na hora atual
+        Carbon::setTestNow(Carbon::parse('2030-01-15 00:40', 'America/Sao_Paulo'));
+        $this->getJson($query(['funcionario_id' => $this->rafael->id]))->assertOk()
+            ->assertJsonPath('hora', '09:30');
+        Carbon::setTestNow(Carbon::parse('2030-01-14 12:00', 'America/Sao_Paulo'));
+
+        // Dia que já passou
+        $this->getJson($query(['data' => '2030-01-13']))->assertUnprocessable();
+    }
+
     public function test_barbeiro_que_nao_faz_o_servico_e_recusado(): void
     {
         $this->agendar(['funcionario_id' => $this->rafael->id, 'servico_ids' => [$this->barba->id]])

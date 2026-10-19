@@ -64,6 +64,55 @@ class AgendamentoController extends Controller
         })->values());
     }
 
+    /**
+     * Encaixe: primeiro horário sem cliente para os serviços escolhidos.
+     * Sem barbeiro informado, escolhe quem consegue atender mais cedo.
+     * GET /agenda/encaixe?data=2026-10-20&servico_ids[]=1[&funcionario_id=3][&ignorar_agendamento_id=9]
+     */
+    public function encaixe(Request $request): JsonResponse
+    {
+        $dados = $request->validate([
+            'data' => ['required', 'date_format:Y-m-d'],
+            'servico_ids' => ['required', 'array', 'min:1'],
+            'servico_ids.*' => ['integer', 'distinct'],
+            'funcionario_id' => ['nullable', 'integer'],
+            'ignorar_agendamento_id' => ['nullable', 'integer'],
+        ]);
+
+        $disponibilidade = $this->disponibilidade($request);
+        $servicoIds = array_map('intval', $dados['servico_ids']);
+
+        $opcoes = Funcionario::query()
+            ->where('ativo', true)
+            ->where('atende_clientes', true)
+            ->when($dados['funcionario_id'] ?? null, fn ($q, $id) => $q->where('id', $id))
+            ->with('servicos')
+            ->orderBy('nome')
+            ->get()
+            ->filter(fn ($f) => collect($servicoIds)->diff($f->servicos->pluck('id'))->isEmpty())
+            ->map(function (Funcionario $f) use ($servicoIds, $dados, $disponibilidade) {
+                $itens = $this->itens($f, $servicoIds);
+                $hora = $disponibilidade->primeiroEncaixe($f, $dados['data'], $itens->sum('duracao_minutos'), $dados['ignorar_agendamento_id'] ?? null);
+
+                return $hora === null ? null : [
+                    'funcionario_id' => $f->id,
+                    'nome' => $f->nome,
+                    'hora' => $hora,
+                    'duracao_minutos' => $itens->sum('duracao_minutos'),
+                    'valor_total' => number_format($itens->sum('preco'), 2, '.', ''),
+                ];
+            })
+            ->filter()
+            ->sortBy('hora')
+            ->values();
+
+        if ($opcoes->isEmpty()) {
+            return response()->json(['message' => 'Não há horário livre para encaixe neste dia.'], 422);
+        }
+
+        return response()->json($opcoes->first());
+    }
+
     public function store(Request $request): JsonResponse
     {
         $dados = $this->validar($request, novo: true);

@@ -54,6 +54,14 @@ export interface OpcaoBarbeiro {
   horarios: string[];
 }
 
+export interface SugestaoEncaixe {
+  funcionario_id: number;
+  nome: string;
+  hora: string;
+  duracao_minutos: number;
+  valor_total: string;
+}
+
 export interface DadosAgendamento {
   cliente_id?: number | null;
   novo_cliente?: { nome: string; telefone: string; aceita_whatsapp: boolean } | null;
@@ -103,6 +111,15 @@ export class AgendaService {
     servicoIds.forEach((id) => (params = params.append('servico_ids[]', id)));
     if (ignorarAgendamentoId) params = params.set('ignorar_agendamento_id', ignorarAgendamentoId);
     return this.http.get<OpcaoBarbeiro[]>(`${environment.apiUrl}/agenda/horarios`, { params });
+  }
+
+  /** Próximo horário sem cliente (encaixe); sem barbeiro, o mais cedo entre todos. */
+  encaixe(data: string, servicoIds: number[], funcionarioId: number | null, ignorarAgendamentoId?: number): Observable<SugestaoEncaixe> {
+    let params = new HttpParams().set('data', data);
+    servicoIds.forEach((id) => (params = params.append('servico_ids[]', id)));
+    if (funcionarioId) params = params.set('funcionario_id', funcionarioId);
+    if (ignorarAgendamentoId) params = params.set('ignorar_agendamento_id', ignorarAgendamentoId);
+    return this.http.get<SugestaoEncaixe>(`${environment.apiUrl}/agenda/encaixe`, { params });
   }
 
   criar(dados: DadosAgendamento): Observable<{ id: number }> {

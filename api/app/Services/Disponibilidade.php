@@ -51,6 +51,36 @@ class Disponibilidade
     }
 
     /**
+     * Primeiro horário do dia em que cabe um encaixe: sem sobrepor outro cliente,
+     * ignorando expediente e bloqueios. Começa no início do expediente (ou às 08:00 se o
+     * barbeiro não trabalha nesse dia); hoje, a partir de agora se já passou desse horário.
+     */
+    public function primeiroEncaixe(Funcionario $barbeiro, string $data, int $duracao, ?int $ignorarAgendamentoId = null): ?string
+    {
+        $dia = $this->inicioDoDia($data);
+        $agora = now($this->fuso);
+        if ($dia->lt($agora->copy()->startOfDay())) {
+            return null; // dia que já passou
+        }
+
+        $passo = 5;
+        $faixas = $this->expediente($barbeiro, $dia);
+        $inicio = $faixas[0][0] ?? 8 * 60;
+        if ($dia->isSameDay($agora)) {
+            $inicio = max($inicio, (int) ceil(($agora->hour * 60 + $agora->minute) / $passo) * $passo);
+        }
+
+        $ocupado = $this->agendamentos($barbeiro, $dia, $ignorarAgendamentoId);
+        for ($m = $inicio; $m + $duracao <= 24 * 60; $m += $passo) {
+            if (! $this->conflita($m, $m + $duracao, $ocupado)) {
+                return $this->formatar($m);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Verifica um horário específico. Devolve null se estiver livre ou o motivo do conflito.
      * No encaixe, a recepção pode agendar fora do expediente/bloqueio, mas nunca por cima
      * de outro cliente.

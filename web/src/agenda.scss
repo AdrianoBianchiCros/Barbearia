@@ -939,3 +939,25 @@
     background: var(--cor-fundo);
   }
 }
+
+// Sugestão de encaixe (horário definido automaticamente)
+.sugestao-encaixe {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--cor-primaria-suave);
+  border: 1px solid var(--cor-primaria);
+  border-radius: 10px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.sugestao-hora {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--cor-primaria);
+}

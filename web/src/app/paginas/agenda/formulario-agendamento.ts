@@ -3,7 +3,7 @@ import { Component, computed, DestroyRef, inject, input, OnInit, output, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
-import { AgendamentoDoDia, AgendaService, DadosAgendamento, OpcaoBarbeiro } from '../../core/agenda.service';
+import { AgendamentoDoDia, AgendaService, DadosAgendamento, OpcaoBarbeiro, SugestaoEncaixe } from '../../core/agenda.service';
 import { AuthService } from '../../core/auth.service';
 import { podeEditar } from '../../core/auth.guards';
 import { CadastrosService } from '../../core/cadastros.service';
@@ -90,8 +90,8 @@ export interface InicioFormulario {
           </label>
           @if (podeEncaixar) {
             <label class="campo-check encaixe">
-              <input type="checkbox" [ngModel]="encaixe()" (ngModelChange)="encaixe.set($event)" name="encaixe" />
-              Encaixe <small class="texto-suave">(qualquer horário sem cliente)</small>
+              <input type="checkbox" [ngModel]="encaixe()" (ngModelChange)="alternarEncaixe($event)" name="encaixe" />
+              Encaixe <small class="texto-suave">(próximo horário sem cliente)</small>
             </label>
           }
         </div>
@@ -104,25 +104,29 @@ export interface InicioFormulario {
           <p class="texto-suave pequeno">Nenhum barbeiro realiza todos os serviços escolhidos.</p>
         } @else {
           <div class="chips">
-            <button type="button" class="chip" [class.selecionado]="filtroBarbeiro() === null" (click)="filtroBarbeiro.set(null)">Qualquer barbeiro</button>
+            <button type="button" class="chip" [class.selecionado]="filtroBarbeiro() === null" (click)="qualquerBarbeiro()">Qualquer barbeiro</button>
             @for (o of opcoes(); track o.funcionario_id) {
               <button type="button" class="chip" [class.selecionado]="filtroBarbeiro() === o.funcionario_id" (click)="escolherBarbeiro(o.funcionario_id)">{{ o.nome }}</button>
             }
           </div>
 
           @if (encaixe()) {
-            <div class="grade-2 encaixe-campos">
-              <label class="campo">
-                <span>Barbeiro</span>
-                <select [ngModel]="funcionarioId()" (ngModelChange)="escolherBarbeiro(+$event)" name="barbeiroEncaixe">
-                  <option [ngValue]="null" disabled>Escolha</option>
-                  @for (o of opcoes(); track o.funcionario_id) {<option [ngValue]="o.funcionario_id">{{ o.nome }}</option>}
-                </select>
-              </label>
-              <label class="campo">
-                <span>Horário</span>
-                <input type="time" step="300" [ngModel]="horaEscolhida()" (ngModelChange)="horaEscolhida.set($event)" name="horaEncaixe" />
-              </label>
+            <!-- No encaixe o horário não é escolhido: vai para o próximo horário vago -->
+            <div class="sugestao-encaixe" role="status">
+              @if (carregandoEncaixe()) {
+                <span class="texto-suave">Procurando o próximo horário vago…</span>
+              } @else if (sugestaoEncaixe(); as e) {
+                <span class="sugestao-hora">{{ e.hora }}</span>
+                <div>
+                  <strong>Encaixe com {{ e.nome }}</strong>
+                  <small class="texto-suave">
+                    {{ filtroBarbeiro() === null ? 'Próximo horário vago entre todos os barbeiros' : 'Próximo horário vago de ' + e.nome }}
+                    · {{ e.duracao_minutos }} min · {{ +e.valor_total | currency: 'BRL' }}
+                  </small>
+                </div>
+              } @else {
+                <span class="erro-campo">{{ erroEncaixe() || 'Não há horário livre para encaixe neste dia.' }}</span>
+              }
             </div>
           } @else {
             @for (o of opcoesVisiveis(); track o.funcionario_id) {
@@ -208,6 +212,9 @@ export class FormularioAgendamento implements OnInit {
   protected readonly funcionarioId = signal<number | null>(null);
   protected readonly horaEscolhida = signal<string | null>(null);
   protected readonly encaixe = signal(false);
+  protected readonly sugestaoEncaixe = signal<SugestaoEncaixe | null>(null);
+  protected readonly carregandoEncaixe = signal(false);
+  protected readonly erroEncaixe = signal('');
   protected observacoes = '';
 
   protected readonly salvando = signal(false);
@@ -219,9 +226,10 @@ export class FormularioAgendamento implements OnInit {
     return f === null ? this.opcoes() : this.opcoes().filter((o) => o.funcionario_id === f);
   });
 
-  protected readonly escolha = computed(() =>
-    this.horaEscolhida() ? this.opcoes().find((o) => o.funcionario_id === this.funcionarioId()) ?? null : null,
-  );
+  protected readonly escolha = computed(() => {
+    if (this.encaixe()) return this.sugestaoEncaixe();
+    return this.horaEscolhida() ? this.opcoes().find((o) => o.funcionario_id === this.funcionarioId()) ?? null : null;
+  });
 
   protected readonly podeSalvar = computed(
     () => this.servicoIds().length > 0 && !!this.escolha() && (this.remarcando() || !!this.cliente() || this.novoCliente()),
@@ -265,6 +273,47 @@ export class FormularioAgendamento implements OnInit {
   alternarServico(id: number): void {
     this.servicoIds.update((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
     this.buscarHorarios(true);
+    this.buscarEncaixe();
+  }
+
+  alternarEncaixe(ativo: boolean): void {
+    this.encaixe.set(ativo);
+    this.horaEscolhida.set(null);
+    this.sugestaoEncaixe.set(null);
+    if (ativo) {
+      this.buscarEncaixe();
+    } else {
+      this.funcionarioId.set(this.filtroBarbeiro());
+    }
+  }
+
+  qualquerBarbeiro(): void {
+    this.filtroBarbeiro.set(null);
+    this.buscarEncaixe();
+  }
+
+  /** Encaixe: próximo horário vago do barbeiro escolhido ou, sem barbeiro, o mais cedo entre todos. */
+  private buscarEncaixe(): void {
+    if (!this.encaixe()) return;
+    const ids = this.servicoIds();
+    this.sugestaoEncaixe.set(null);
+    this.horaEscolhida.set(null);
+    this.erroEncaixe.set('');
+    if (!ids.length) return;
+
+    this.carregandoEncaixe.set(true);
+    this.agendaApi.encaixe(this.data(), ids, this.filtroBarbeiro(), this.inicio().agendamento?.id).subscribe({
+      next: (s) => {
+        this.carregandoEncaixe.set(false);
+        this.sugestaoEncaixe.set(s);
+        this.funcionarioId.set(s.funcionario_id);
+        this.horaEscolhida.set(s.hora);
+      },
+      error: (e) => {
+        this.carregandoEncaixe.set(false);
+        this.erroEncaixe.set(mensagemDeErro(e));
+      },
+    });
   }
 
   mudarData(data: string): void {
@@ -272,13 +321,18 @@ export class FormularioAgendamento implements OnInit {
     this.data.set(data);
     this.horaEscolhida.set(null);
     this.buscarHorarios(false);
+    this.buscarEncaixe();
   }
 
   escolherBarbeiro(id: number): void {
     this.filtroBarbeiro.set(id);
+    if (this.encaixe()) {
+      this.buscarEncaixe();
+      return;
+    }
     if (this.funcionarioId() !== id) {
       this.funcionarioId.set(id);
-      if (!this.encaixe()) this.horaEscolhida.set(null);
+      this.horaEscolhida.set(null);
     }
   }
 

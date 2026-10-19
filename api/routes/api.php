@@ -62,6 +62,9 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy']);
 
         Route::apiResource('produtos', ProdutoController::class)->only(['store', 'update', 'destroy']);
+        Route::get('produtos/{produto}/entradas', [ProdutoController::class, 'entradas']);
+        Route::post('produtos/{produto}/entradas', [ProdutoController::class, 'novaEntrada']);
+        Route::delete('produtos/{produto}/entradas/{entrada}', [ProdutoController::class, 'excluirEntrada']);
 
         Route::get('relatorios/resumo', [RelatorioController::class, 'resumo']);
         Route::get('relatorios/clientes', [RelatorioController::class, 'clientes']);

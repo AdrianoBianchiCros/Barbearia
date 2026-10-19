@@ -30,6 +30,19 @@ export interface Produto {
   estoque: number | null;
   comissao_percentual: string;
   ativo: boolean;
+  ultima_compra: { data_compra: string; fornecedor: string | null; numero_nota: string | null; validade: string | null } | null;
+}
+
+/** Compra de produto (entrada de estoque). */
+export interface EntradaProduto {
+  id: number;
+  data_compra: string;
+  fornecedor: string | null;
+  numero_nota: string | null;
+  quantidade: number;
+  custo_unitario: string | null;
+  validade: string | null;
+  usuario: string | null;
 }
 
 export interface ItemComanda {
@@ -149,6 +162,15 @@ export class FinanceiroService {
   }
   excluirProduto(id: number): Observable<void> {
     return this.http.delete<void>(`${API}/produtos/${id}`);
+  }
+  entradasProduto(id: number): Observable<EntradaProduto[]> {
+    return this.http.get<EntradaProduto[]>(`${API}/produtos/${id}/entradas`);
+  }
+  registrarEntrada(id: number, dados: object): Observable<{ entrada: EntradaProduto; produto: Produto }> {
+    return this.http.post<{ entrada: EntradaProduto; produto: Produto }>(`${API}/produtos/${id}/entradas`, dados);
+  }
+  excluirEntrada(produtoId: number, entradaId: number): Observable<Produto> {
+    return this.http.delete<Produto>(`${API}/produtos/${produtoId}/entradas/${entradaId}`);
   }
 
   // Comandas

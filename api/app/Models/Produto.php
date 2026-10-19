@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\PertenceAEmpresa;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['nome', 'preco', 'custo', 'estoque', 'comissao_percentual', 'ativo'])]
@@ -23,5 +25,16 @@ class Produto extends Model
             'comissao_percentual' => 'decimal:2',
             'ativo' => 'boolean',
         ];
+    }
+
+    public function entradas(): HasMany
+    {
+        return $this->hasMany(ProdutoEntrada::class);
+    }
+
+    /** Compra mais recente (por data da compra). */
+    public function ultimaEntrada(): HasOne
+    {
+        return $this->hasOne(ProdutoEntrada::class)->ofMany(['data_compra' => 'max', 'id' => 'max']);
     }
 }

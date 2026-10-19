@@ -106,13 +106,27 @@ class DatabaseSeeder extends Seeder
      */
     private function financeiroDeDemonstracao(Empresa $empresa, User $dono, $barbeiros): void
     {
+        // Produtos entram no estoque por compras (com fornecedor, nota e validade)
+        $hojeLocal = now($empresa->fuso_horario)->startOfDay();
         foreach ([
-            ['Pomada modeladora', 45, 20, 12, 10],
-            ['Shampoo para barba', 38, 15, 8, 10],
-            ['Cerveja long neck', 12, 5, 48, 0],
-            ['Refrigerante lata', 7, 3, 24, 0],
-        ] as [$nome, $preco, $custo, $estoque, $comissao]) {
-            Produto::create(compact('nome', 'preco', 'custo', 'estoque') + ['comissao_percentual' => $comissao]);
+            ['Pomada modeladora', 45, 20, 10, 'Distribuidora Barba Fina', [24, 12], 12],
+            ['Shampoo para barba', 38, 15, 10, 'Distribuidora Barba Fina', [12, 12], 18],
+            ['Cerveja long neck', 12, 5, 0, 'Atacadão Bebidas', [48, 24], 4],
+            ['Refrigerante lata', 7, 3, 0, 'Atacadão Bebidas', [24, 24], 6],
+        ] as $i => [$nome, $preco, $custo, $comissao, $fornecedor, $compras, $mesesValidade]) {
+            $produto = Produto::create(compact('nome', 'preco', 'custo') + ['comissao_percentual' => $comissao, 'estoque' => array_sum($compras)]);
+            foreach ([31, 10] as $j => $diasAtras) {
+                $data = $hojeLocal->copy()->subDays($diasAtras);
+                $produto->entradas()->create([
+                    'data_compra' => $data->toDateString(),
+                    'fornecedor' => $fornecedor,
+                    'numero_nota' => (string) (4100 + $i * 10 + $j),
+                    'quantidade' => $compras[$j],
+                    'custo_unitario' => $custo,
+                    'validade' => $data->copy()->addMonths($mesesValidade)->toDateString(),
+                    'usuario_id' => $dono->id,
+                ]);
+            }
         }
 
         $comandas = app(Comandas::class);

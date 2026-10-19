@@ -418,3 +418,15 @@
     margin-top: 0;
   }
 }
+
+// Validade de produtos
+.etiqueta.etiqueta-alerta {
+  color: var(--cor-texto);
+  border-color: var(--st-em_atendimento-bd);
+  background: var(--st-em_atendimento-bg);
+}
+
+.secao-compras {
+  margin-top: 8px;
+  border-top: 2px solid var(--cor-borda);
+}

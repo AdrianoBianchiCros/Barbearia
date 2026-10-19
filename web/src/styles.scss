@@ -1,0 +1,211 @@
+// Estilos globais do sistema.
+
+:root {
+  --cor-fundo: #f4f6f9;
+  --cor-superficie: #ffffff;
+  --cor-texto: #1d2733;
+  --cor-texto-suave: #5b6878;
+  --cor-borda: #d5dce5;
+  --cor-primaria: #1f3a5f;
+  --cor-primaria-hover: #17304f;
+  --cor-destaque: #c9a227;
+  --cor-erro: #b42318;
+  --cor-erro-fundo: #fdecea;
+  --raio: 10px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cor-fundo: #11161d;
+    --cor-superficie: #1a222c;
+    --cor-texto: #e6ebf1;
+    --cor-texto-suave: #9aa7b6;
+    --cor-borda: #2e3a48;
+    --cor-primaria: #5b8fd1;
+    --cor-primaria-hover: #79a6e0;
+    --cor-erro: #ff8a7a;
+    --cor-erro-fundo: #3a1f1c;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--cor-primaria);
+}
+
+// Telas de login e cadastro
+.tela-acesso {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.cartao {
+  width: 100%;
+  max-width: 400px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 32px 28px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
+}
+
+.marca {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  color: var(--cor-primaria);
+}
+
+.subtitulo {
+  margin: 0 0 24px;
+  color: var(--cor-texto-suave);
+}
+
+.campo {
+  display: block;
+  margin-bottom: 16px;
+
+  span {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  em {
+    font-weight: 400;
+    color: var(--cor-texto-suave);
+  }
+
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+
+    &:focus {
+      outline: 2px solid var(--cor-primaria);
+      outline-offset: 1px;
+    }
+
+    &.ng-touched.ng-invalid {
+      border-color: var(--cor-erro);
+    }
+  }
+}
+
+.erro-campo {
+  display: block;
+  margin-top: 4px;
+  color: var(--cor-erro);
+}
+
+.alerta {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.botao {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--cor-primaria);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--cor-primaria-hover);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: wait;
+  }
+}
+
+.botao-secundario {
+  width: auto;
+  padding: 8px 14px;
+  color: var(--cor-texto);
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+
+  &:hover:not(:disabled) {
+    background: var(--cor-fundo);
+  }
+}
+
+.rodape-cartao {
+  margin: 20px 0 0;
+  text-align: center;
+  color: var(--cor-texto-suave);
+}
+
+// Área logada
+.topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.marca-topo {
+  color: var(--cor-primaria);
+  margin-right: 8px;
+}
+
+.perfil {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto-suave);
+}
+
+.usuario-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.conteudo {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.link-publico code {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  padding: 2px 6px;
+}

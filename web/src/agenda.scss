@@ -909,3 +909,33 @@
     width: 100%;
   }
 }
+
+// Botão de mostrar/ocultar o valor previsto
+.botao-olho {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 2px;
+  padding: 0;
+  color: var(--cor-texto-suave);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    color: var(--cor-primaria);
+    background: var(--cor-fundo);
+  }
+}

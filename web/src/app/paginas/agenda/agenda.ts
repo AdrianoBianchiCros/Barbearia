@@ -144,7 +144,19 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         <span class="resumo-item"><span class="bolinha st-em_atendimento"></span><strong>{{ resumo().emAtendimento }}</strong> em atendimento</span>
         <span class="resumo-item"><span class="bolinha st-concluido"></span><strong>{{ resumo().concluidos }}</strong> concluídos</span>
         <span class="resumo-item"><span class="bolinha st-faltou"></span><strong>{{ resumo().faltas }}</strong> faltas</span>
-        <span class="resumo-item resumo-valor">Previsto: <strong>{{ resumo().previsto | currency: 'BRL' }}</strong></span>
+        <span class="resumo-item resumo-valor">
+          Previsto:
+          <strong>{{ mostrarPrevisto() ? (resumo().previsto | currency: 'BRL') : 'R$ ••••' }}</strong>
+          <button type="button" class="botao-olho" (click)="mostrarPrevisto.set(!mostrarPrevisto())"
+            [attr.aria-label]="mostrarPrevisto() ? 'Ocultar valor previsto' : 'Mostrar valor previsto'"
+            [title]="mostrarPrevisto() ? 'Ocultar valor' : 'Mostrar valor'" [attr.aria-pressed]="mostrarPrevisto()">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              @if (!mostrarPrevisto()) {<path d="M4 4l16 16" />}
+            </svg>
+          </button>
+        </span>
       </div>
 
       @if (a.barbeiros.length === 0) {
@@ -341,6 +353,8 @@ export class Agenda implements OnInit, OnDestroy {
   protected readonly selecionado = signal<{ ag: AgendamentoDoDia; barbeiro: ColunaBarbeiro } | null>(null);
   protected readonly alterando = signal(false);
   protected readonly formulario = signal<InicioFormulario | null>(null);
+  /** Valor previsto começa oculto (tela da recepção fica à vista dos clientes). */
+  protected readonly mostrarPrevisto = signal(false);
   protected readonly comandaAberta = signal<AbrirComanda | null>(null);
   protected readonly podeReceber = podeEditar(inject(AuthService), 'dono', 'recepcao');
   /** Minutos do relógio da barbearia, avançados localmente entre as atualizações. */

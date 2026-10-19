@@ -19,26 +19,11 @@ export const routes: Routes = [
     canActivate: [exigeLogin],
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'painel' },
+      { path: '', pathMatch: 'full', redirectTo: 'agenda' },
       {
-        path: 'painel',
-        title: 'Início | Barbearia',
-        loadComponent: () => import('./paginas/painel/painel').then((m) => m.Painel),
-      },
-      {
-        path: 'servicos',
-        title: 'Serviços | Barbearia',
-        loadComponent: () => import('./paginas/servicos/servicos').then((m) => m.Servicos),
-      },
-      {
-        path: 'barbeiros',
-        title: 'Barbeiros | Barbearia',
-        loadComponent: () => import('./paginas/barbeiros/barbeiros').then((m) => m.Barbeiros),
-      },
-      {
-        path: 'barbeiros/:id',
-        title: 'Barbeiro | Barbearia',
-        loadComponent: () => import('./paginas/barbeiros/barbeiro').then((m) => m.Barbeiro),
+        path: 'agenda',
+        title: 'Agenda do dia | Barbearia',
+        loadComponent: () => import('./paginas/agenda/agenda').then((m) => m.Agenda),
       },
       {
         path: 'clientes',
@@ -47,11 +32,37 @@ export const routes: Routes = [
       },
       {
         path: 'configuracoes',
-        canActivate: [exigePerfil('dono')],
-        title: 'Barbearia e página | Barbearia',
         loadComponent: () => import('./paginas/configuracoes/configuracoes').then((m) => m.Configuracoes),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'servicos' },
+          {
+            path: 'servicos',
+            title: 'Serviços | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/servicos/servicos').then((m) => m.Servicos),
+          },
+          {
+            path: 'barbeiros',
+            title: 'Barbeiros | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/barbeiros/barbeiros').then((m) => m.Barbeiros),
+          },
+          {
+            path: 'barbeiros/:id',
+            title: 'Barbeiro | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/barbeiros/barbeiro').then((m) => m.Barbeiro),
+          },
+          {
+            path: 'barbearia',
+            canActivate: [exigePerfil('dono')],
+            title: 'Barbearia e página | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/barbearia').then((m) => m.DadosBarbearia),
+          },
+        ],
       },
+      // Endereços antigos
+      { path: 'painel', redirectTo: 'agenda' },
+      { path: 'servicos', redirectTo: 'configuracoes/servicos' },
+      { path: 'barbeiros', redirectTo: 'configuracoes/barbeiros' },
     ],
   },
-  { path: '**', redirectTo: 'painel' },
+  { path: '**', redirectTo: 'agenda' },
 ];

@@ -3,14 +3,16 @@
 // ---------- Estrutura ----------
 .shell {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 248px 1fr;
   min-height: 100dvh;
 }
 
 .menu-lateral {
+  display: flex;
+  flex-direction: column;
   background: var(--cor-superficie);
   border-right: 1px solid var(--cor-borda);
-  padding: 20px 12px;
+  padding: 16px 12px;
   position: sticky;
   top: 0;
   height: 100dvh;
@@ -20,31 +22,74 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
   }
 }
 
 .menu-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.marca-icone {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--cor-primaria);
+  color: #fff;
   font-weight: 700;
-  color: var(--cor-primaria);
-  padding: 0 10px 18px;
-  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.marca-textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: var(--cor-texto-suave);
+    font-size: 0.75rem;
+  }
+}
+
+.menu-grupo {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-suave);
+  padding: 14px 10px 6px;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px;
+  padding: 8px 10px;
   border-radius: 8px;
   color: var(--cor-texto);
   text-decoration: none;
+  font-size: 0.92rem;
 
   &:hover {
     background: var(--cor-fundo);
   }
 
   &.ativo {
-    background: var(--cor-fundo);
+    background: var(--cor-primaria-suave);
     color: var(--cor-primaria);
     font-weight: 600;
   }
@@ -59,21 +104,86 @@
   }
 }
 
-.menu-icone {
-  width: 20px;
-  text-align: center;
+.menu-icone,
+.botao-icone svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
 }
 
 .em-breve {
   margin-left: auto;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   border: 1px solid var(--cor-borda);
   border-radius: 999px;
   padding: 0 6px;
 }
 
+.menu-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 6px 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.avatar-usuario {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cor-texto);
+  color: var(--cor-superficie);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.menu-usuario-textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: 0.85rem;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.botao-icone {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--cor-fundo);
+    color: var(--cor-erro);
+  }
+}
+
 .fundo-menu,
-.botao-menu {
+.topo-celular {
   display: none;
 }
 
@@ -81,37 +191,12 @@
   min-width: 0;
 }
 
-.topo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 24px;
-  background: var(--cor-superficie);
-  border-bottom: 1px solid var(--cor-borda);
-}
-
-.perfil {
-  font-size: 0.8rem;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--cor-fundo);
-  color: var(--cor-texto-suave);
-}
-
-.usuario-topo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
-
 .conteudo {
-  max-width: 1080px;
-  padding: 24px;
+  padding: 20px 24px;
 
   h1 {
     margin: 0 0 4px;
-    font-size: 1.5rem;
+    font-size: 1.45rem;
   }
 
   h2 {
@@ -128,7 +213,7 @@
   .menu-lateral {
     position: fixed;
     inset: 0 auto 0 0;
-    width: 260px;
+    width: 270px;
     z-index: 30;
     transform: translateX(-100%);
     transition: transform 0.2s;
@@ -148,8 +233,16 @@
     }
   }
 
+  .topo-celular {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--cor-superficie);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
   .botao-menu {
-    display: inline-block;
     font-size: 1.3rem;
     background: none;
     border: 0;
@@ -157,14 +250,8 @@
     cursor: pointer;
   }
 
-  .nome-usuario {
-    display: none;
-  }
-
-  .topo,
   .conteudo {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding: 16px;
   }
 }
 

@@ -37,7 +37,7 @@ class AuthController extends Controller
                 'slug' => Empresa::gerarSlug($dados['empresa_nome']),
                 'telefone' => $dados['empresa_telefone'] ?? null,
                 'email' => $dados['email'],
-            ]);
+            ])->refresh(); // carrega os valores padrão do banco (ex.: fuso horário)
 
             return User::create([
                 'empresa_id' => $empresa->id,

@@ -108,7 +108,7 @@ export class Cadastro {
     this.errosApi.set({});
 
     this.auth.registrar(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/painel']),
+      next: () => this.router.navigate(['/agenda']),
       error: (e) => {
         const porCampo = errosPorCampo(e);
         this.errosApi.set(porCampo);

@@ -32,7 +32,8 @@
             ],
             "styles": [
               "src/styles.scss",
-              "src/logado.scss"
+              "src/logado.scss",
+              "src/agenda.scss"
             ]
           },
           "configurations": {

@@ -59,6 +59,6 @@ class IsolamentoEmpresaTest extends TestCase
 
         $this->assertDatabaseHas('usuarios', ['email' => 'dono@demo.test']);
         $this->assertDatabaseCount('servicos', 4);
-        $this->assertDatabaseCount('funcionario_servicos', 8);
+        $this->assertDatabaseCount('funcionario_servicos', 12);
     }
 }

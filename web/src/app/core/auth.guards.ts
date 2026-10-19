@@ -14,7 +14,7 @@ export const exigeLogin: CanActivateFn = () => {
 export const somenteVisitante: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.carregarSessao().pipe(map((ok) => (ok ? router.createUrlTree(['/painel']) : true)));
+  return auth.carregarSessao().pipe(map((ok) => (ok ? router.createUrlTree(['/agenda']) : true)));
 };
 
 /** Restringe a rota a determinados perfis (use depois de exigeLogin). */
@@ -22,7 +22,7 @@ export const exigePerfil =
   (...perfis: Perfil[]): CanActivateFn =>
   () => {
     const perfil = inject(AuthService).sessao()?.usuario.perfil;
-    return (perfil && perfis.includes(perfil)) || inject(Router).createUrlTree(['/painel']);
+    return (perfil && perfis.includes(perfil)) || inject(Router).createUrlTree(['/agenda']);
   };
 
 /** Atalho usado nas telas para mostrar/ocultar botões de edição. */

@@ -63,7 +63,7 @@ export class Login {
 
     const { email, password } = this.form.getRawValue();
     this.auth.login(email, password).subscribe({
-      next: () => this.router.navigate(['/painel']),
+      next: () => this.router.navigate(['/agenda']),
       error: (e) => {
         this.erro.set(mensagemDeErro(e));
         this.enviando.set(false);

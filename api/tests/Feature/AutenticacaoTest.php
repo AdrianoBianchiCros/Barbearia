@@ -24,7 +24,8 @@ class AutenticacaoTest extends TestCase
         $resposta->assertCreated()
             ->assertJsonStructure(['token', 'usuario' => ['id', 'nome', 'email', 'perfil'], 'empresa' => ['id', 'nome', 'slug']])
             ->assertJsonPath('usuario.perfil', 'dono')
-            ->assertJsonPath('empresa.slug', 'barbearia-do-ze');
+            ->assertJsonPath('empresa.slug', 'barbearia-do-ze')
+            ->assertJsonPath('empresa.fuso_horario', 'America/Sao_Paulo');
 
         $this->assertDatabaseHas('usuarios', ['email' => 'ze@exemplo.test', 'perfil' => 'dono']);
     }

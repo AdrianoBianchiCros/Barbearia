@@ -1,12 +1,12 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../core/auth.service';
-import { podeEditar } from '../../core/auth.guards';
-import { AvisoService } from '../../core/aviso.service';
-import { CadastrosService } from '../../core/cadastros.service';
-import { errosPorCampo, mensagemDeErro } from '../../core/erros';
-import { Servico } from '../../core/modelos';
+import { AuthService } from '../../../core/auth.service';
+import { podeEditar } from '../../../core/auth.guards';
+import { AvisoService } from '../../../core/aviso.service';
+import { CadastrosService } from '../../../core/cadastros.service';
+import { errosPorCampo, mensagemDeErro } from '../../../core/erros';
+import { Servico } from '../../../core/modelos';
 
 @Component({
   selector: 'app-servicos',

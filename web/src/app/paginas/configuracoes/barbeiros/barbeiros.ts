@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
-import { podeEditar } from '../../core/auth.guards';
-import { AvisoService } from '../../core/aviso.service';
-import { CadastrosService } from '../../core/cadastros.service';
-import { mensagemDeErro } from '../../core/erros';
-import { Funcionario, VINCULOS } from '../../core/modelos';
-import { TelefonePipe } from '../../core/telefone.pipe';
+import { AuthService } from '../../../core/auth.service';
+import { podeEditar } from '../../../core/auth.guards';
+import { AvisoService } from '../../../core/aviso.service';
+import { CadastrosService } from '../../../core/cadastros.service';
+import { mensagemDeErro } from '../../../core/erros';
+import { Funcionario, VINCULOS } from '../../../core/modelos';
+import { TelefonePipe } from '../../../core/telefone.pipe';
 
 @Component({
   selector: 'app-barbeiros',
@@ -18,7 +18,7 @@ import { TelefonePipe } from '../../core/telefone.pipe';
         <p class="texto-suave">Equipe, serviços realizados, expediente e folgas.</p>
       </div>
       @if (editavel) {
-        <a class="botao botao-auto" routerLink="/barbeiros/novo">+ Novo barbeiro</a>
+        <a class="botao botao-auto" routerLink="/configuracoes/barbeiros/novo">+ Novo barbeiro</a>
       }
     </div>
 
@@ -29,7 +29,7 @@ import { TelefonePipe } from '../../core/telefone.pipe';
     } @else {
       <div class="cartoes">
         @for (f of equipe(); track f.id) {
-          <a class="cartao-pessoa" [routerLink]="['/barbeiros', f.id]" [class.inativo]="!f.ativo">
+          <a class="cartao-pessoa" [routerLink]="['/configuracoes/barbeiros', f.id]" [class.inativo]="!f.ativo">
             @if (f.foto_url) {
               <img class="avatar" [src]="f.foto_url" [alt]="f.nome" />
             } @else {

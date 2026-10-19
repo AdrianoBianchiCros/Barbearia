@@ -3,12 +3,12 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { AuthService } from '../../core/auth.service';
-import { podeEditar } from '../../core/auth.guards';
-import { AvisoService } from '../../core/aviso.service';
-import { CadastrosService } from '../../core/cadastros.service';
-import { errosPorCampo, mensagemDeErro } from '../../core/erros';
-import { BloqueioAgenda, DIAS_SEMANA, FaixaHorario, Funcionario, Servico, VINCULOS } from '../../core/modelos';
+import { AuthService } from '../../../core/auth.service';
+import { podeEditar } from '../../../core/auth.guards';
+import { AvisoService } from '../../../core/aviso.service';
+import { CadastrosService } from '../../../core/cadastros.service';
+import { errosPorCampo, mensagemDeErro } from '../../../core/erros';
+import { BloqueioAgenda, DIAS_SEMANA, FaixaHorario, Funcionario, Servico, VINCULOS } from '../../../core/modelos';
 
 type Aba = 'dados' | 'servicos' | 'expediente' | 'folgas';
 
@@ -29,7 +29,7 @@ interface DiaExpediente {
   selector: 'app-barbeiro',
   imports: [ReactiveFormsModule, FormsModule, RouterLink, CurrencyPipe, DatePipe],
   template: `
-    <a class="voltar" routerLink="/barbeiros">← Barbeiros</a>
+    <a class="voltar" routerLink="/configuracoes/barbeiros">← Barbeiros</a>
 
     <div class="cabecalho-pagina">
       <div class="cabecalho-pessoa">
@@ -115,7 +115,7 @@ interface DiaExpediente {
         <div class="cartao-secao">
           <p class="texto-suave">Marque os serviços que {{ funcionario()?.nome }} realiza. Preço e duração próprios são opcionais: em branco, vale o padrão do serviço.</p>
           @if (linhasServico().length === 0) {
-            <div class="vazio">Cadastre os serviços primeiro em <a routerLink="/servicos">Serviços</a>.</div>
+            <div class="vazio">Cadastre os serviços primeiro em <a routerLink="/configuracoes/servicos">Serviços</a>.</div>
           }
           @for (l of linhasServico(); track l.servico.id) {
             <div class="linha-servico" [class.desmarcada]="!l.marcado">
@@ -268,7 +268,7 @@ export class Barbeiro implements OnInit {
       },
       error: (e) => {
         this.aviso.erro(mensagemDeErro(e));
-        this.router.navigate(['/barbeiros']);
+        this.router.navigate(['/configuracoes/barbeiros']);
       },
     });
   }
@@ -329,7 +329,7 @@ export class Barbeiro implements OnInit {
         this.aviso.sucesso('Dados salvos.');
         if (!atual) {
           this.aviso.sucesso('Barbeiro cadastrado. Agora defina os serviços e o expediente.');
-          this.router.navigate(['/barbeiros', f.id]);
+          this.router.navigate(['/configuracoes/barbeiros', f.id]);
         } else {
           this.aplicar(f);
         }
@@ -443,7 +443,7 @@ export class Barbeiro implements OnInit {
     this.api.excluirFuncionario(f.id).subscribe({
       next: () => {
         this.aviso.sucesso('Barbeiro excluído.');
-        this.router.navigate(['/barbeiros']);
+        this.router.navigate(['/configuracoes/barbeiros']);
       },
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
     });

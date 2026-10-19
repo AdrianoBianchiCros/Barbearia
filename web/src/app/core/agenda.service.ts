@@ -16,6 +16,7 @@ export interface AgendamentoDoDia {
   cliente: { id: number; nome: string; telefone: string; observacoes: string | null } | null;
   servicos: string[];
   servico_ids: number[];
+  comanda: { id: number; status: 'aberta' | 'paga' | 'cancelada'; total: string } | null;
 }
 
 export interface ColunaBarbeiro {

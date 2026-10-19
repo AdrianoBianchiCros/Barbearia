@@ -3,13 +3,16 @@
 namespace Database\Seeders;
 
 use App\Models\Agendamento;
+use App\Models\Caixa;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Funcionario;
+use App\Models\Lancamento;
+use App\Models\Produto;
 use App\Models\Servico;
 use App\Models\User;
+use App\Services\Comandas;
 use App\Support\EmpresaAtual;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 /**
@@ -21,8 +24,6 @@ use Illuminate\Database\Seeder;
  */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
         $empresa = Empresa::create([
@@ -95,10 +96,69 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->agendamentosDeDemonstracao($empresa, $barbeiros, $servicos);
+        $this->financeiroDeDemonstracao($empresa, $dono, $barbeiros);
     }
 
     /**
-     * Cria clientes e agendamentos de hoje e amanhã. A situação de cada horário
+     * Produtos, caixa aberto hoje e comandas dos atendimentos concluídos
+     * (alguns ficam aguardando pagamento), além de despesas e um vale.
+     */
+    private function financeiroDeDemonstracao(Empresa $empresa, User $dono, $barbeiros): void
+    {
+        foreach ([
+            ['Pomada modeladora', 45, 20, 12, 10],
+            ['Shampoo para barba', 38, 15, 8, 10],
+            ['Cerveja long neck', 12, 5, 48, 0],
+            ['Refrigerante lata', 7, 3, 24, 0],
+        ] as [$nome, $preco, $custo, $estoque, $comissao]) {
+            Produto::create(compact('nome', 'preco', 'custo', 'estoque') + ['comissao_percentual' => $comissao]);
+        }
+
+        Caixa::create(['aberto_por' => $dono->id, 'aberto_em' => now(), 'valor_inicial' => 100]);
+
+        $comandas = app(Comandas::class);
+        $formas = [['pix'], ['dinheiro'], ['credito'], ['debito'], ['pix', 'dinheiro']];
+        $concluidos = Agendamento::where('status', 'concluido')->with('itens')->orderBy('inicio')->get();
+        foreach ($concluidos as $i => $agendamento) {
+            $comanda = $comandas->abrirDoAgendamento($agendamento);
+            if ($i % 4 === 3) {
+                continue; // aguardando pagamento na recepção
+            }
+            $total = (float) $comanda->total;
+            $forma = $formas[$i % count($formas)];
+            $pagamentos = count($forma) === 1
+                ? [['forma' => $forma[0], 'valor' => $total]]
+                : [['forma' => $forma[0], 'valor' => $total - 20], ['forma' => $forma[1], 'valor' => 20]];
+            $comandas->fechar(
+                $comanda,
+                $comanda->itens->map(fn ($item) => $item->only(['tipo', 'servico_id', 'produto_id', 'funcionario_id', 'quantidade', 'preco_unitario']))->all(),
+                0,
+                $pagamentos,
+                $dono->id,
+            );
+        }
+
+        $mes = now($empresa->fuso_horario)->startOfMonth();
+        foreach ([
+            ['Aluguel', 'aluguel', 1800, 5, true],
+            ['Energia elétrica', 'contas', 320, 15, false],
+            ['Reposição de produtos', 'produtos', 450, 20, false],
+            ['Internet', 'contas', 120, 25, false],
+        ] as [$descricao, $categoria, $valor, $dia, $pago]) {
+            Lancamento::create([
+                'tipo' => 'despesa', 'descricao' => $descricao, 'categoria' => $categoria, 'valor' => $valor,
+                'vencimento' => $mes->copy()->day($dia)->toDateString(), 'pago_em' => $pago ? now() : null,
+                'usuario_id' => $dono->id,
+            ]);
+        }
+        Lancamento::create([
+            'tipo' => 'vale', 'descricao' => 'Adiantamento', 'valor' => 100, 'funcionario_id' => $barbeiros[1]->id,
+            'pago_em' => now(), 'usuario_id' => $dono->id,
+        ]);
+    }
+
+    /**
+     * Cria clientes e agendamentos de ontem, hoje e amanhã. A situação de cada horário
      * depende da hora em que o seeder roda (passado = concluído, agora = em atendimento).
      */
     private function agendamentosDeDemonstracao(Empresa $empresa, $barbeiros, $servicos): void
@@ -122,7 +182,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         $agora = now($empresa->fuso_horario);
-        foreach ([0, 1] as $diasAFrente) {
+        foreach ([-1, 0, 1] as $diasAFrente) {
             $dia = $agora->copy()->startOfDay()->addDays($diasAFrente);
             foreach ($grade as $n => [$b, $hora, $s, $c]) {
                 $servico = $servicos[$s];

@@ -26,7 +26,7 @@ const MENU: GrupoMenu[] = [
   {
     titulo: 'Gestão',
     itens: [
-      { rota: '/financeiro', rotulo: 'Financeiro', icone: 'financeiro', emBreve: true },
+      { rota: '/financeiro', rotulo: 'Financeiro', icone: 'financeiro' },
       { rota: '/relatorios', rotulo: 'Relatórios', icone: 'relatorios', emBreve: true },
       { rota: '/configuracoes', rotulo: 'Configurações', icone: 'config' },
     ],

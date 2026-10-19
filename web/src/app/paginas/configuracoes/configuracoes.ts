@@ -12,6 +12,7 @@ interface Secao {
 const SECOES: Secao[] = [
   { rota: 'servicos', titulo: 'Serviços', descricao: 'Preços e duração' },
   { rota: 'barbeiros', titulo: 'Barbeiros', descricao: 'Equipe, expediente e folgas' },
+  { rota: 'produtos', titulo: 'Produtos', descricao: 'Itens à venda e estoque' },
   { rota: 'barbearia', titulo: 'Barbearia e página', descricao: 'Dados, endereço e página pública', perfis: ['dono'] },
 ];
 

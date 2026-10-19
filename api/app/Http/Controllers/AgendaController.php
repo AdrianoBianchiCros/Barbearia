@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use App\Models\BloqueioAgenda;
 use App\Models\Funcionario;
+use App\Services\Comandas;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Agenda do dia: barbeiros, expediente, bloqueios e agendamentos.
@@ -41,7 +43,7 @@ class AgendaController extends Controller
             ->get();
 
         $agendamentos = Agendamento::query()
-            ->with(['cliente:id,nome,telefone,observacoes', 'itens:id,agendamento_id,servico_id,nome,duracao_minutos'])
+            ->with(['cliente:id,nome,telefone,observacoes', 'itens:id,agendamento_id,servico_id,nome,duracao_minutos', 'comanda:id,agendamento_id,status,total'])
             ->where('inicio', '<', $fimUtc)
             ->where('fim', '>', $inicioUtc)
             ->where('status', '!=', 'cancelado')
@@ -86,6 +88,7 @@ class AgendaController extends Controller
                         'cliente' => $a->cliente?->only(['id', 'nome', 'telefone', 'observacoes']),
                         'servicos' => $a->itens->pluck('nome')->values(),
                         'servico_ids' => $a->itens->pluck('servico_id')->values(),
+                        'comanda' => $a->comanda?->only(['id', 'status', 'total']),
                     ])->values(),
             ])->values(),
         ]);
@@ -143,7 +146,7 @@ class AgendaController extends Controller
      * Atualiza a situação do agendamento (confirmar, iniciar, concluir, faltou, cancelar).
      * Barbeiros só alteram os próprios agendamentos.
      */
-    public function status(Request $request, Agendamento $agendamento): JsonResponse
+    public function status(Request $request, Agendamento $agendamento, Comandas $comandas): JsonResponse
     {
         $dados = $request->validate([
             'status' => ['required', 'in:'.implode(',', Agendamento::STATUS)],
@@ -154,10 +157,25 @@ class AgendaController extends Controller
             return response()->json(['message' => 'Você só pode alterar os seus próprios atendimentos.'], 403);
         }
 
-        $agendamento->status = $dados['status'];
-        $agendamento->cancelado_em = $dados['status'] === 'cancelado' ? now() : null;
-        $agendamento->save();
+        DB::transaction(function () use ($agendamento, $dados, $comandas) {
+            // Concluído gera a comanda para receber; saindo de concluído, a comanda não paga é descartada
+            if ($agendamento->status === 'concluido' && $dados['status'] !== 'concluido') {
+                $comandas->descartarAberta($agendamento);
+            }
 
-        return response()->json(['id' => $agendamento->id, 'status' => $agendamento->status]);
+            $agendamento->status = $dados['status'];
+            $agendamento->cancelado_em = $dados['status'] === 'cancelado' ? now() : null;
+            $agendamento->save();
+
+            if ($dados['status'] === 'concluido') {
+                $comandas->abrirDoAgendamento($agendamento);
+            }
+        });
+
+        return response()->json([
+            'id' => $agendamento->id,
+            'status' => $agendamento->status,
+            'comanda' => $agendamento->comanda()->first()?->only(['id', 'status', 'total']),
+        ]);
     }
 }

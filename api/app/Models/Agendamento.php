@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['cliente_id', 'funcionario_id', 'inicio', 'fim', 'status', 'origem', 'valor_total', 'observacoes', 'cancelado_em'])]
 class Agendamento extends Model
@@ -40,5 +41,10 @@ class Agendamento extends Model
     public function itens(): HasMany
     {
         return $this->hasMany(AgendamentoItem::class);
+    }
+
+    public function comanda(): HasOne
+    {
+        return $this->hasOne(Comanda::class);
     }
 }

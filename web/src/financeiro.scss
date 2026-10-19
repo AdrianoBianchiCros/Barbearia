@@ -1,0 +1,384 @@
+// Financeiro: caixa, comandas, comissões e despesas.
+
+.cartao-receber {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0 6px;
+  color: var(--cor-texto);
+  background: var(--st-em_atendimento-bg);
+  border: 1px solid var(--st-em_atendimento-bd);
+  border-radius: 999px;
+}
+
+.compacto .cartao-receber {
+  position: static;
+  margin-left: auto;
+}
+
+.pago-info {
+  margin: 0;
+  padding: 8px 12px;
+  font-weight: 600;
+  background: var(--st-confirmado-bg);
+  border-radius: 8px;
+}
+
+.botoes-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+
+  span {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+  }
+
+  strong {
+    font-size: 1.2rem;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: var(--cor-texto-suave);
+  }
+
+  &.destaque {
+    background: var(--cor-primaria-suave);
+    border-color: var(--cor-primaria);
+
+    strong {
+      color: var(--cor-primaria);
+    }
+  }
+
+  &.alerta-indicador strong {
+    color: var(--cor-erro);
+  }
+}
+
+.contador {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin-left: 6px;
+  font-size: 0.75rem;
+  color: #fff;
+  background: var(--cor-primaria);
+  border-radius: 999px;
+}
+
+.lista-simples {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--cor-borda);
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &.clicavel {
+      cursor: pointer;
+
+      &:hover {
+        background: var(--cor-fundo);
+      }
+    }
+  }
+}
+
+.grade-caixa {
+  gap: 0 16px;
+  align-items: start;
+}
+
+.negativo {
+  color: var(--cor-erro);
+}
+
+.positivo {
+  color: #1a7f37;
+}
+
+.etiqueta.etiqueta-erro {
+  color: var(--cor-erro);
+  border-color: var(--cor-erro);
+  background: var(--cor-erro-fundo);
+}
+
+.estoque-baixo {
+  color: var(--cor-erro);
+  font-weight: 600;
+}
+
+.abrir-caixa {
+  max-width: 520px;
+}
+
+.linha-abrir-caixa {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  input {
+    width: 160px;
+    padding: 9px 10px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+  }
+}
+
+.aviso-caixa {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--st-em_atendimento-bg);
+  border: 1px solid var(--st-em_atendimento-bd);
+  border-radius: 8px;
+}
+
+.filtro-periodo,
+.navegacao-mes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  input {
+    padding: 7px 8px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+  }
+}
+
+.navegacao-mes strong {
+  min-width: 150px;
+  text-align: center;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+// Comanda
+.comanda-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+  }
+
+  p {
+    margin: 2px 0 8px;
+  }
+}
+
+.item-comanda {
+  display: grid;
+  grid-template-columns: 1fr 60px 90px 90px 24px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--cor-borda);
+
+  input,
+  select {
+    width: 100%;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+  }
+}
+
+.item-descricao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  select {
+    font-size: 0.78rem;
+    padding: 3px 6px;
+  }
+}
+
+.item-total {
+  text-align: right;
+  font-weight: 600;
+}
+
+.adicionar-itens {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+
+  select {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px dashed var(--cor-primaria);
+    border-radius: 8px;
+  }
+}
+
+.totais-comanda {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  input {
+    width: 110px;
+    padding: 6px 8px;
+    font: inherit;
+    text-align: right;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+  }
+
+  .total-geral {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+}
+
+.linha-pagamento {
+  display: grid;
+  grid-template-columns: 1fr 130px 24px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+
+  input {
+    padding: 7px 8px;
+    font: inherit;
+    text-align: right;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+  }
+}
+
+.linha-troco {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+
+  input {
+    width: 110px;
+    margin-left: 6px;
+    padding: 6px 8px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+  }
+}
+
+.restante {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  font-weight: 600;
+  background: var(--cor-fundo);
+  border-radius: 8px;
+
+  &.ok {
+    color: #1a7f37;
+    background: var(--st-confirmado-bg);
+  }
+
+  &.excesso {
+    color: var(--cor-erro);
+    background: var(--cor-erro-fundo);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .positivo,
+  .restante.ok {
+    color: #7ee2a0;
+  }
+}
+
+@media (max-width: 600px) {
+  .item-comanda {
+    grid-template-columns: 1fr 56px 80px 24px;
+
+    .item-total {
+      display: none;
+    }
+  }
+}

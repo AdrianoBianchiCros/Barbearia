@@ -21,6 +21,8 @@ import { AvisoService } from '../../core/aviso.service';
 import { mensagemDeErro } from '../../core/erros';
 import { TelefonePipe } from '../../core/telefone.pipe';
 import { FormularioAgendamento, InicioFormulario } from './formulario-agendamento';
+import { AbrirComanda, PainelComanda } from '../financeiro/painel-comanda';
+import { podeEditar } from '../../core/auth.guards';
 
 const PX_POR_HORA = 76;
 const PX_POR_MINUTO = PX_POR_HORA / 60;
@@ -72,7 +74,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento],
+  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento, PainelComanda],
   template: `
     <div class="agenda-barra">
       <div class="agenda-navegacao">
@@ -217,6 +219,9 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
                     @if (k.ag.origem === 'link_publico') {
                       <span class="cartao-origem" title="Agendado pela página da barbearia">online</span>
                     }
+                    @if (k.ag.comanda?.status === 'aberta') {
+                      <span class="cartao-receber" title="Atendimento concluído aguardando pagamento">a receber</span>
+                    }
                   </button>
                 }
                 @if (agoraMin() !== null && agoraMin()! >= inicioGrade() && agoraMin()! <= fimGrade()) {
@@ -267,7 +272,21 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
             @if (sel.ag.status === 'agendado' || sel.ag.status === 'confirmado') {
               <button type="button" class="botao botao-secundario" (click)="remarcar(sel.ag, sel.barbeiro)">Remarcar</button>
             }
-            @for (acao of acoes(sel.ag.status); track acao.status) {
+            @if (sel.ag.status === 'em_atendimento' && podeReceber) {
+              <button type="button" class="botao" [disabled]="alterando()" (click)="concluirEReceber(sel.ag)">Concluir e receber</button>
+            }
+            @if (sel.ag.status === 'concluido' && sel.ag.comanda?.status === 'aberta' && podeReceber) {
+              <button type="button" class="botao" (click)="abrirComanda({ agendamentoId: sel.ag.id })">
+                Receber pagamento · {{ +sel.ag.comanda!.total | currency: 'BRL' }}
+              </button>
+            }
+            @if (sel.ag.comanda?.status === 'paga') {
+              <p class="pago-info">Pago · {{ +sel.ag.comanda!.total | currency: 'BRL' }}</p>
+              @if (podeReceber) {
+                <button type="button" class="botao botao-secundario" (click)="abrirComanda({ agendamentoId: sel.ag.id })">Ver comanda</button>
+              }
+            }
+            @for (acao of acoes(sel.ag); track acao.status) {
               <button type="button" [disabled]="alterando()"
                 [class]="acao.estilo === 'primario' ? 'botao' : acao.estilo === 'perigo' ? 'botao botao-perigo' : 'botao botao-secundario'"
                 (click)="alterarStatus(sel.ag, acao.status)">{{ acao.rotulo }}</button>
@@ -280,6 +299,10 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
           <button class="botao botao-secundario botao-auto" type="button" (click)="selecionado.set(null)">Fechar</button>
         </div>
       </aside>
+    }
+
+    @if (comandaAberta(); as origem) {
+      <app-painel-comanda [origem]="origem" (fechar)="comandaFechada(false)" (pago)="comandaFechada(true)" />
     }
 
     @if (formulario(); as f) {
@@ -318,6 +341,8 @@ export class Agenda implements OnInit, OnDestroy {
   protected readonly selecionado = signal<{ ag: AgendamentoDoDia; barbeiro: ColunaBarbeiro } | null>(null);
   protected readonly alterando = signal(false);
   protected readonly formulario = signal<InicioFormulario | null>(null);
+  protected readonly comandaAberta = signal<AbrirComanda | null>(null);
+  protected readonly podeReceber = podeEditar(inject(AuthService), 'dono', 'recepcao');
   /** Minutos do relógio da barbearia, avançados localmente entre as atualizações. */
   private readonly relogio = signal<{ min: number; em: number } | null>(null);
   private readonly tique = signal(Date.now());
@@ -440,7 +465,7 @@ export class Agenda implements OnInit, OnDestroy {
     this.carregar();
     this.timer = setInterval(() => {
       this.tique.set(Date.now());
-      if (this.ehHoje() && !this.selecionado() && !this.formulario()) this.carregar(true);
+      if (this.ehHoje() && !this.selecionado() && !this.formulario() && !this.comandaAberta()) this.carregar(true);
     }, ATUALIZAR_A_CADA_MS);
   }
 
@@ -574,8 +599,41 @@ export class Agenda implements OnInit, OnDestroy {
     return this.auth.sessao()?.usuario.perfil === 'barbeiro';
   }
 
-  acoes(status: StatusAgendamento): Acao[] {
-    return ACOES[status] ?? [];
+  acoes(ag: AgendamentoDoDia): Acao[] {
+    const lista = ACOES[ag.status] ?? [];
+    // Atendimento já pago não pode ser reaberto sem estornar a comanda
+    if (ag.status === 'concluido' && ag.comanda?.status === 'paga') return [];
+    // Quem recebe usa "Concluir e receber"; este botão conclui deixando a cobrança para depois
+    if (ag.status === 'em_atendimento' && this.podeReceber) {
+      return [{ status: 'concluido', rotulo: 'Concluir e receber depois', estilo: 'secundario' }];
+    }
+    return lista;
+  }
+
+  abrirComanda(origem: AbrirComanda): void {
+    this.selecionado.set(null);
+    this.comandaAberta.set(origem);
+  }
+
+  concluirEReceber(ag: AgendamentoDoDia): void {
+    this.alterando.set(true);
+    this.api.alterarStatus(ag.id, 'concluido').subscribe({
+      next: () => {
+        this.alterando.set(false);
+        this.abrirComanda({ agendamentoId: ag.id });
+        this.carregar(true);
+      },
+      error: (e) => {
+        this.alterando.set(false);
+        this.aviso.erro(mensagemDeErro(e));
+      },
+    });
+  }
+
+  comandaFechada(pago: boolean): void {
+    this.comandaAberta.set(null);
+    if (pago) this.aviso.sucesso('Pagamento registrado.');
+    this.carregar(true);
   }
 
   podeAlterar(barbeiro: ColunaBarbeiro): boolean {

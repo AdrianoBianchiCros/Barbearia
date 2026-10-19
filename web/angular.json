@@ -33,7 +33,8 @@
             "styles": [
               "src/styles.scss",
               "src/logado.scss",
-              "src/agenda.scss"
+              "src/agenda.scss",
+              "src/financeiro.scss"
             ]
           },
           "configurations": {

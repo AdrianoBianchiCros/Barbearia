@@ -1,4 +1,6 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
+import { AuthService } from './core/auth.service';
 import { exigeLogin, exigePerfil, somenteVisitante } from './core/auth.guards';
 
 export const routes: Routes = [
@@ -31,6 +33,34 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/clientes/clientes').then((m) => m.Clientes),
       },
       {
+        path: 'financeiro',
+        loadComponent: () => import('./paginas/financeiro/financeiro').then((m) => m.Financeiro),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: () => (inject(AuthService).sessao()?.usuario.perfil === 'barbeiro' ? 'comissoes' : 'caixa'),
+          },
+          {
+            path: 'caixa',
+            canActivate: [exigePerfil('dono', 'recepcao')],
+            title: 'Caixa | Financeiro',
+            loadComponent: () => import('./paginas/financeiro/caixa').then((m) => m.Caixa),
+          },
+          {
+            path: 'comissoes',
+            title: 'Comissões | Financeiro',
+            loadComponent: () => import('./paginas/financeiro/comissoes').then((m) => m.Comissoes),
+          },
+          {
+            path: 'despesas',
+            canActivate: [exigePerfil('dono')],
+            title: 'Despesas | Financeiro',
+            loadComponent: () => import('./paginas/financeiro/despesas').then((m) => m.Despesas),
+          },
+        ],
+      },
+      {
         path: 'configuracoes',
         loadComponent: () => import('./paginas/configuracoes/configuracoes').then((m) => m.Configuracoes),
         children: [
@@ -49,6 +79,11 @@ export const routes: Routes = [
             path: 'barbeiros/:id',
             title: 'Barbeiro | Configurações',
             loadComponent: () => import('./paginas/configuracoes/barbeiros/barbeiro').then((m) => m.Barbeiro),
+          },
+          {
+            path: 'produtos',
+            title: 'Produtos | Configurações',
+            loadComponent: () => import('./paginas/configuracoes/produtos/produtos').then((m) => m.Produtos),
           },
           {
             path: 'barbearia',

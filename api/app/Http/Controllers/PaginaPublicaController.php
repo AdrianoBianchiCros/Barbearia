@@ -6,6 +6,7 @@ use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Funcionario;
+use App\Models\GaleriaFoto;
 use App\Models\Servico;
 use App\Services\Disponibilidade;
 use App\Support\Telefone;
@@ -30,6 +31,9 @@ class PaginaPublicaController extends Controller
 
     private const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
+    /** Fotos ilustrativas (Unsplash) usadas enquanto a barbearia não envia as próprias. */
+    private const FOTOS_PADRAO = ['corte', 'navalha', 'ferramentas', 'poltrona', 'barba', 'salao'];
+
     public function show(Request $request): View
     {
         $empresa = $this->empresa($request);
@@ -40,8 +44,18 @@ class PaginaPublicaController extends Controller
             ->orderBy('nome')
             ->get();
 
+        $galeria = GaleriaFoto::orderBy('ordem')->orderBy('id')->get()
+            ->map(fn ($f) => ['url' => $f->url, 'legenda' => $f->legenda]);
+        if ($galeria->isEmpty()) {
+            $galeria = collect(self::FOTOS_PADRAO)->map(fn ($n) => ['url' => asset("img/pagina/{$n}.jpg"), 'legenda' => null]);
+        }
+
         return view('pagina.show', [
             'empresa' => $empresa,
+            'galeria' => $galeria,
+            'fotoCapa' => $empresa->capa_url ?? asset('img/pagina/salao.jpg'),
+            'fotoSobre' => asset('img/pagina/barba.jpg'),
+            'acentoClaro' => $this->clarear($empresa->cor_primaria),
             'servicos' => $servicos,
             'barbeiros' => $barbeiros,
             'funcionamento' => $this->funcionamento($barbeiros),
@@ -309,12 +323,30 @@ class PaginaPublicaController extends Controller
     /** Branco ou preto, o que tiver mais contraste sobre a cor principal. */
     private function corDoTexto(string $hex): string
     {
+        return $this->luminancia(sscanf($hex, '#%02x%02x%02x')) > 0.179 ? '#111111' : '#ffffff';
+    }
+
+    /**
+     * A cor principal clareada até ficar legível sobre o fundo escuro da página
+     * (cores muito escuras, como azul-marinho, sumiriam no preto).
+     */
+    private function clarear(string $hex): string
+    {
+        $rgb = sscanf($hex, '#%02x%02x%02x');
+        for ($t = 0; $t < 1 && $this->luminancia($rgb) < 0.3; $t += 0.05) {
+            $rgb = array_map(fn ($c) => (int) round($c + (255 - $c) * 0.05), $rgb);
+        }
+
+        return vsprintf('#%02x%02x%02x', $rgb);
+    }
+
+    private function luminancia(array $rgb): float
+    {
         [$r, $g, $b] = array_map(
             fn ($c) => ($c /= 255) <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4,
-            sscanf($hex, '#%02x%02x%02x'),
+            $rgb,
         );
-        $luminancia = 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
 
-        return $luminancia > 0.179 ? '#111111' : '#ffffff';
+        return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
     }
 }

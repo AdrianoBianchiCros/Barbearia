@@ -7,6 +7,7 @@ import {
   Cliente,
   EmpresaCompleta,
   FaixaHorario,
+  FotoGaleria,
   Funcionario,
   Pagina,
   Servico,
@@ -103,5 +104,20 @@ export class CadastrosService {
   }
   removerImagemEmpresa(tipo: 'logo' | 'capa'): Observable<EmpresaCompleta> {
     return this.http.delete<EmpresaCompleta>(`${API}/empresa/imagens/${tipo}`);
+  }
+
+  listarGaleria(): Observable<FotoGaleria[]> {
+    return this.http.get<FotoGaleria[]>(`${API}/galeria`);
+  }
+  enviarFotoGaleria(arquivo: File): Observable<FotoGaleria> {
+    const form = new FormData();
+    form.append('imagem', arquivo);
+    return this.http.post<FotoGaleria>(`${API}/galeria`, form);
+  }
+  salvarLegendaGaleria(id: number, legenda: string | null): Observable<FotoGaleria> {
+    return this.http.put<FotoGaleria>(`${API}/galeria/${id}`, { legenda });
+  }
+  removerFotoGaleria(id: number): Observable<void> {
+    return this.http.delete<void>(`${API}/galeria/${id}`);
   }
 }

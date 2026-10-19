@@ -10,6 +10,7 @@ use App\Http\Controllers\ComandaController;
 use App\Http\Controllers\ComissaoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FuncionarioController;
+use App\Http\Controllers\GaleriaController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\PaginaPublicaController;
 use App\Http\Controllers\ProdutoController;
@@ -58,6 +59,10 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::put('empresa', [EmpresaController::class, 'update']);
         Route::post('empresa/imagens/{tipo}', [EmpresaController::class, 'enviarImagem']);
         Route::delete('empresa/imagens/{tipo}', [EmpresaController::class, 'removerImagem']);
+        Route::get('galeria', [GaleriaController::class, 'index']);
+        Route::post('galeria', [GaleriaController::class, 'store']);
+        Route::put('galeria/{foto}', [GaleriaController::class, 'update']);
+        Route::delete('galeria/{foto}', [GaleriaController::class, 'destroy']);
 
         Route::apiResource('servicos', ServicoController::class)->only(['store', 'update', 'destroy']);
 

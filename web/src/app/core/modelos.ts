@@ -91,6 +91,13 @@ export interface EmpresaCompleta {
   capa_url: string | null;
 }
 
+export interface FotoGaleria {
+  id: number;
+  url: string;
+  legenda: string | null;
+  ordem: number;
+}
+
 export const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export const VINCULOS: Record<TipoVinculo, string> = {

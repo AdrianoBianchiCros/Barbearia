@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AvisoService } from '../../core/aviso.service';
 import { CadastrosService } from '../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
-import { EmpresaCompleta } from '../../core/modelos';
+import { EmpresaCompleta, FotoGaleria } from '../../core/modelos';
 import { environment } from '../../../environments/environment';
 
 /** A página pública fica no mesmo domínio da API, sem o /api. */
@@ -13,6 +14,16 @@ const ENDERECO_SITE = environment.apiUrl.replace(/\/api\/?$/, '');
 @Component({
   selector: 'app-dados-barbearia',
   imports: [ReactiveFormsModule],
+  styles: `
+    .cabeca-galeria { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .cabeca-galeria h2 { margin-bottom: 4px; }
+    .desativado { opacity: 0.6; pointer-events: none; }
+    .grade-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-top: 16px; }
+    .grade-galeria figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .grade-galeria img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+    .grade-galeria input { width: 100%; padding: 6px 8px; font: inherit; font-size: 0.85rem; border: 1px solid var(--borda, #ddd); border-radius: 8px; }
+    .grade-galeria button { align-self: flex-start; }
+  `,
   template: `
     <div class="cabecalho-pagina">
       <div>
@@ -50,6 +61,35 @@ const ENDERECO_SITE = environment.apiUrl.replace(/\/api\/?$/, '');
             </div>
           }
         </div>
+      </section>
+
+      <section class="cartao-secao">
+        <div class="cabeca-galeria">
+          <div>
+            <h2>Galeria de fotos</h2>
+            <p class="texto-suave pequeno">
+              Fotos de cortes e do espaço (até {{ maxFotos }}).
+              @if (galeria().length === 0) { Enquanto você não enviar fotos, a página usa fotos ilustrativas. }
+            </p>
+          </div>
+          @if (galeria().length < maxFotos) {
+            <label class="botao botao-secundario botao-auto" [class.desativado]="enviandoFotos()">
+              {{ enviandoFotos() ? 'Enviando…' : 'Adicionar fotos' }}
+              <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden (change)="enviarFotos($event)" [disabled]="enviandoFotos()" />
+            </label>
+          }
+        </div>
+        @if (galeria().length) {
+          <div class="grade-galeria">
+            @for (foto of galeria(); track foto.id) {
+              <figure>
+                <img [src]="foto.url" alt="" />
+                <input placeholder="Legenda (opcional)" maxlength="120" [value]="foto.legenda ?? ''" (change)="salvarLegenda(foto, $event)" />
+                <button class="botao-link perigo" type="button" (click)="removerFoto(foto)">Remover</button>
+              </figure>
+            }
+          </div>
+        }
       </section>
 
       <form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
@@ -146,6 +186,9 @@ export class DadosBarbearia implements OnInit {
   protected readonly enderecoSite = ENDERECO_SITE;
   protected readonly dominio = ENDERECO_SITE.replace(/^https?:\/\//, '');
   protected readonly empresa = signal<EmpresaCompleta | null>(null);
+  protected readonly galeria = signal<FotoGaleria[]>([]);
+  protected readonly enviandoFotos = signal(false);
+  protected readonly maxFotos = 12;
   protected readonly salvando = signal(false);
   protected readonly erro = signal('');
   protected readonly errosApi = signal<Record<string, string>>({});
@@ -173,6 +216,44 @@ export class DadosBarbearia implements OnInit {
   ngOnInit(): void {
     this.api.buscarEmpresa().subscribe({
       next: (e) => this.aplicar(e),
+      error: (e) => this.aviso.erro(mensagemDeErro(e)),
+    });
+    this.api.listarGaleria().subscribe({ next: (fotos) => this.galeria.set(fotos) });
+  }
+
+  /** Envia as fotos escolhidas uma a uma, até o limite da galeria. */
+  async enviarFotos(evento: Event): Promise<void> {
+    const input = evento.target as HTMLInputElement;
+    const arquivos = Array.from(input.files ?? []).slice(0, this.maxFotos - this.galeria().length);
+    input.value = '';
+    if (!arquivos.length) return;
+    this.enviandoFotos.set(true);
+    let enviadas = 0;
+    for (const arquivo of arquivos) {
+      try {
+        const foto = await firstValueFrom(this.api.enviarFotoGaleria(arquivo));
+        this.galeria.update((g) => [...g, foto]);
+        enviadas++;
+      } catch (e) {
+        this.aviso.erro(`${arquivo.name}: ${mensagemDeErro(e)}`);
+      }
+    }
+    this.enviandoFotos.set(false);
+    if (enviadas) this.aviso.sucesso(enviadas === 1 ? 'Foto adicionada à galeria.' : `${enviadas} fotos adicionadas à galeria.`);
+  }
+
+  salvarLegenda(foto: FotoGaleria, evento: Event): void {
+    const legenda = (evento.target as HTMLInputElement).value.trim() || null;
+    this.api.salvarLegendaGaleria(foto.id, legenda).subscribe({
+      next: (f) => this.galeria.update((g) => g.map((x) => (x.id === f.id ? f : x))),
+      error: (e) => this.aviso.erro(mensagemDeErro(e)),
+    });
+  }
+
+  removerFoto(foto: FotoGaleria): void {
+    if (!confirm('Remover esta foto da galeria?')) return;
+    this.api.removerFotoGaleria(foto.id).subscribe({
+      next: () => this.galeria.update((g) => g.filter((x) => x.id !== foto.id)),
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
     });
   }

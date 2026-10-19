@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Compra de um produto (entrada de estoque). */
-#[Fillable(['produto_id', 'data_compra', 'fornecedor', 'numero_nota', 'quantidade', 'custo_unitario', 'validade', 'usuario_id'])]
+#[Fillable(['produto_id', 'data_compra', 'fornecedor', 'numero_nota', 'lote', 'quantidade', 'custo_unitario', 'validade', 'usuario_id'])]
 class ProdutoEntrada extends Model
 {
     use PertenceAEmpresa;

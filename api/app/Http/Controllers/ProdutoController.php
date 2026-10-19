@@ -15,7 +15,7 @@ class ProdutoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $produtos = Produto::query()
-            ->with('ultimaEntrada')
+            ->with(['ultimaEntrada', 'entradas'])
             ->when($request->boolean('ativos'), fn ($q) => $q->where('ativo', true))
             ->orderBy('nome')
             ->get();
@@ -38,14 +38,14 @@ class ProdutoController extends Controller
             return $produto;
         });
 
-        return response()->json($this->formatar($produto->fresh('ultimaEntrada')), 201);
+        return response()->json($this->formatar($produto->fresh(['ultimaEntrada', 'entradas'])), 201);
     }
 
     public function update(Request $request, Produto $produto): JsonResponse
     {
         $produto->update($this->validar($request));
 
-        return response()->json($this->formatar($produto->fresh('ultimaEntrada')));
+        return response()->json($this->formatar($produto->fresh(['ultimaEntrada', 'entradas'])));
     }
 
     public function destroy(Produto $produto): JsonResponse
@@ -58,9 +58,11 @@ class ProdutoController extends Controller
     /** Histórico de compras do produto (mais recentes primeiro). */
     public function entradas(Produto $produto): JsonResponse
     {
+        $saldos = $this->saldosPorLote($produto->load('entradas'));
+
         return response()->json(
             $produto->entradas()->with('usuario:id,nome')->orderByDesc('data_compra')->orderByDesc('id')->get()
-                ->map(fn ($e) => $this->formatarEntrada($e)),
+                ->map(fn ($e) => $this->formatarEntrada($e) + ['em_estoque' => $saldos[$e->id] ?? 0]),
         );
     }
 
@@ -73,7 +75,7 @@ class ProdutoController extends Controller
 
         return response()->json([
             'entrada' => $this->formatarEntrada($entrada->load('usuario:id,nome')),
-            'produto' => $this->formatar($produto->fresh('ultimaEntrada')),
+            'produto' => $this->formatar($produto->fresh(['ultimaEntrada', 'entradas'])),
         ], 201);
     }
 
@@ -87,7 +89,27 @@ class ProdutoController extends Controller
             $entrada->delete();
         });
 
-        return response()->json($this->formatar($produto->fresh('ultimaEntrada')));
+        return response()->json($this->formatar($produto->fresh(['ultimaEntrada', 'entradas'])));
+    }
+
+    /**
+     * Quanto de cada compra ainda está no estoque, considerando que os produtos
+     * mais antigos saem primeiro (PEPS): o estoque atual é formado pelas compras
+     * mais recentes. Retorna [id da compra => quantidade restante].
+     */
+    private function saldosPorLote(Produto $produto): array
+    {
+        $restante = max((int) $produto->estoque, 0);
+        $saldos = [];
+        foreach ($produto->entradas->sortByDesc(fn ($e) => [$e->data_compra->timestamp, $e->id]) as $entrada) {
+            if ($restante <= 0) {
+                break;
+            }
+            $saldos[$entrada->id] = min($entrada->quantidade, $restante);
+            $restante -= $saldos[$entrada->id];
+        }
+
+        return $saldos;
     }
 
     private function registrarEntrada(Produto $produto, array $dados, int $usuarioId): ProdutoEntrada
@@ -127,6 +149,7 @@ class ProdutoController extends Controller
             'data_compra' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'fornecedor' => ['nullable', 'string', 'max:120'],
             'numero_nota' => ['nullable', 'string', 'max:60'],
+            'lote' => ['nullable', 'string', 'max:60'],
             'quantidade' => ['required', 'integer', 'min:1', 'max:99999'],
             'custo_unitario' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'validade' => ['nullable', 'date_format:Y-m-d'],
@@ -155,14 +178,27 @@ class ProdutoController extends Controller
     private function formatar(Produto $p): array
     {
         $ultima = $p->ultimaEntrada;
+        $saldos = $this->saldosPorLote($p);
+        $lotes = $p->entradas->filter(fn ($e) => isset($saldos[$e->id]))
+            ->sortBy(fn ($e) => $e->validade?->timestamp ?? PHP_INT_MAX)
+            ->map(fn ($e) => [
+                'lote' => $e->lote,
+                'validade' => $e->validade?->toDateString(),
+                'quantidade' => $saldos[$e->id],
+                'data_compra' => $e->data_compra->toDateString(),
+            ])->values();
 
         return $p->only(['id', 'nome', 'preco', 'custo', 'estoque', 'comissao_percentual', 'ativo']) + [
             'ultima_compra' => $ultima ? [
                 'data_compra' => $ultima->data_compra->toDateString(),
                 'fornecedor' => $ultima->fornecedor,
                 'numero_nota' => $ultima->numero_nota,
+                'lote' => $ultima->lote,
                 'validade' => $ultima->validade?->toDateString(),
             ] : null,
+            // Lotes que ainda têm unidades em estoque, do que vence primeiro ao último
+            'lotes_em_estoque' => $lotes,
+            'proximo_vencimento' => $lotes->firstWhere('validade', '!=', null),
         ];
     }
 
@@ -173,6 +209,7 @@ class ProdutoController extends Controller
             'data_compra' => $e->data_compra->toDateString(),
             'fornecedor' => $e->fornecedor,
             'numero_nota' => $e->numero_nota,
+            'lote' => $e->lote,
             'quantidade' => $e->quantidade,
             'custo_unitario' => $e->custo_unitario,
             'validade' => $e->validade?->toDateString(),

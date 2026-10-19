@@ -30,7 +30,17 @@ export interface Produto {
   estoque: number | null;
   comissao_percentual: string;
   ativo: boolean;
-  ultima_compra: { data_compra: string; fornecedor: string | null; numero_nota: string | null; validade: string | null } | null;
+  ultima_compra: { data_compra: string; fornecedor: string | null; numero_nota: string | null; lote: string | null; validade: string | null } | null;
+  /** Lotes com unidades em estoque (as mais antigas saem primeiro), do que vence antes ao último. */
+  lotes_em_estoque: LoteEmEstoque[];
+  proximo_vencimento: LoteEmEstoque | null;
+}
+
+export interface LoteEmEstoque {
+  lote: string | null;
+  validade: string | null;
+  quantidade: number;
+  data_compra: string;
 }
 
 /** Compra de produto (entrada de estoque). */
@@ -39,7 +49,9 @@ export interface EntradaProduto {
   data_compra: string;
   fornecedor: string | null;
   numero_nota: string | null;
+  lote: string | null;
   quantidade: number;
+  em_estoque?: number;
   custo_unitario: string | null;
   validade: string | null;
   usuario: string | null;

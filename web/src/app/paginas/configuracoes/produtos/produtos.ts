@@ -20,13 +20,14 @@ interface FormCompra {
   data_compra: string;
   fornecedor: string;
   numero_nota: string;
+  lote: string;
   quantidade: number | null;
   custo_unitario: number | null;
   validade: string;
 }
 
 const compraVazia = (): FormCompra => ({
-  data_compra: hojeIso(), fornecedor: '', numero_nota: '', quantidade: null, custo_unitario: null, validade: '',
+  data_compra: hojeIso(), fornecedor: '', numero_nota: '', lote: '', quantidade: null, custo_unitario: null, validade: '',
 });
 
 @Component({
@@ -51,7 +52,7 @@ const compraVazia = (): FormCompra => ({
       <div class="tabela-container">
         <table class="tabela">
           <thead>
-            <tr><th>Produto</th><th>Preço</th><th>Custo</th><th>Estoque</th><th>Última compra</th><th>Validade</th>@if (editavel) {<th></th>}</tr>
+            <tr><th>Produto</th><th>Preço</th><th>Custo</th><th>Estoque</th><th>Última compra</th><th>Próximo vencimento</th>@if (editavel) {<th></th>}</tr>
           </thead>
           <tbody>
             @for (p of produtos(); track p.id) {
@@ -72,20 +73,30 @@ const compraVazia = (): FormCompra => ({
                 <td>
                   @if (p.ultima_compra; as c) {
                     {{ c.data_compra + 'T12:00:00' | date: 'dd/MM/yyyy' }}
-                    <div class="texto-suave pequeno">{{ c.fornecedor || 'Fornecedor não informado' }}{{ c.numero_nota ? ' · NF ' + c.numero_nota : '' }}</div>
+                    <div class="texto-suave pequeno">
+                      {{ c.fornecedor || 'Fornecedor não informado' }}{{ c.numero_nota ? ' · NF ' + c.numero_nota : '' }}{{ c.lote ? ' · Lote ' + c.lote : '' }}
+                    </div>
                   } @else {
                     <span class="texto-suave">—</span>
                   }
                 </td>
                 <td>
-                  @if (p.ultima_compra?.validade; as v) {
-                    <span class="etiqueta" [class.etiqueta-erro]="diasAte(v) < 0" [class.etiqueta-alerta]="diasAte(v) >= 0 && diasAte(v) <= 30">
-                      {{ v + 'T12:00:00' | date: 'dd/MM/yyyy' }}
+                  @if (p.proximo_vencimento; as lv) {
+                    <span class="etiqueta" [class.etiqueta-erro]="diasAte(lv.validade!) < 0"
+                      [class.etiqueta-alerta]="diasAte(lv.validade!) >= 0 && diasAte(lv.validade!) <= 30"
+                      [title]="resumoLotes(p)">
+                      {{ lv.validade + 'T12:00:00' | date: 'dd/MM/yyyy' }}
                     </span>
-                    @if (diasAte(v) < 0) {
-                      <div class="pequeno negativo">vencido</div>
-                    } @else if (diasAte(v) <= 30) {
-                      <div class="pequeno texto-suave">vence em {{ diasAte(v) }} dia(s)</div>
+                    <div class="pequeno texto-suave">
+                      {{ lv.lote ? 'Lote ' + lv.lote : 'Lote não informado' }} · {{ lv.quantidade }} un.
+                      @if (diasAte(lv.validade!) < 0) {
+                        · <span class="negativo">vencido</span>
+                      } @else if (diasAte(lv.validade!) <= 30) {
+                        · vence em {{ diasAte(lv.validade!) }} dia(s)
+                      }
+                    </div>
+                    @if (p.lotes_em_estoque.length > 1) {
+                      <div class="pequeno texto-suave">{{ p.lotes_em_estoque.length }} lotes em estoque</div>
                     }
                   } @else {
                     <span class="texto-suave">—</span>
@@ -171,12 +182,19 @@ const compraVazia = (): FormCompra => ({
               @for (e of entradas(); track e.id) {
                 <li>
                   <div>
-                    <strong>{{ e.data_compra + 'T12:00:00' | date: 'dd/MM/yyyy' }} · {{ e.quantidade }} un.</strong>
+                    <strong>
+                      {{ e.data_compra + 'T12:00:00' | date: 'dd/MM/yyyy' }} · {{ e.quantidade }} un.{{ e.lote ? ' · Lote ' + e.lote : '' }}
+                    </strong>
                     <span class="texto-suave pequeno">
                       {{ e.fornecedor || 'Fornecedor não informado' }}{{ e.numero_nota ? ' · NF ' + e.numero_nota : '' }}
                       {{ e.custo_unitario ? ' · ' + (+e.custo_unitario | currency: 'BRL') + '/un.' : '' }}
                       {{ e.validade ? ' · validade ' + (e.validade + 'T12:00:00' | date: 'dd/MM/yyyy') : '' }}
                     </span>
+                    @if (e.em_estoque !== undefined) {
+                      <span class="pequeno" [class.texto-suave]="!e.em_estoque">
+                        {{ e.em_estoque ? e.em_estoque + ' un. ainda em estoque' : 'Lote esgotado' }}
+                      </span>
+                    }
                   </div>
                   <button class="botao-link perigo" type="button" (click)="excluirCompra(p, e)" title="Excluir compra lançada por engano">Excluir</button>
                 </li>
@@ -206,6 +224,10 @@ const compraVazia = (): FormCompra => ({
           <input [(ngModel)]="compra.numero_nota" [ngModelOptions]="{ standalone: true }" />
         </label>
         <label class="campo">
+          <span>Lote <em>(do fabricante)</em></span>
+          <input [(ngModel)]="compra.lote" [ngModelOptions]="{ standalone: true }" placeholder="Ex.: L2026-118" />
+        </label>
+        <label class="campo">
           <span>Custo unitário (R$) <em>(opcional)</em></span>
           <input type="number" min="0" step="0.01" [(ngModel)]="compra.custo_unitario" [ngModelOptions]="{ standalone: true }" />
         </label>
@@ -228,7 +250,7 @@ export class Produtos implements OnInit {
   protected readonly editavel = podeEditar(inject(AuthService), 'dono');
   protected readonly hoje = hojeIso();
   protected readonly diasAte = diasAte;
-  protected readonly camposErroCompra = ['data_compra', 'quantidade', 'fornecedor', 'numero_nota', 'custo_unitario', 'validade'];
+  protected readonly camposErroCompra = ['data_compra', 'quantidade', 'fornecedor', 'numero_nota', 'lote', 'custo_unitario', 'validade'];
 
   protected readonly produtos = signal<Produto[]>([]);
   protected readonly entradas = signal<EntradaProduto[]>([]);
@@ -317,7 +339,7 @@ export class Produtos implements OnInit {
     this.api.registrarEntrada(produto.id, this.dadosCompra()).subscribe({
       next: (r) => {
         this.salvando.set(false);
-        this.entradas.update((l) => [r.entrada, ...l]);
+        this.api.entradasProduto(produto.id).subscribe((e) => this.entradas.set(e));
         this.editando.set(r.produto);
         this.form.patchValue({ estoque: r.produto.estoque, custo: r.produto.custo != null ? +r.produto.custo : null });
         this.compra = compraVazia();
@@ -332,7 +354,7 @@ export class Produtos implements OnInit {
     if (!confirm(`Excluir a compra de ${entrada.quantidade} un.? A quantidade será retirada do estoque.`)) return;
     this.api.excluirEntrada(produto.id, entrada.id).subscribe({
       next: (p) => {
-        this.entradas.update((l) => l.filter((x) => x.id !== entrada.id));
+        this.api.entradasProduto(produto.id).subscribe((e) => this.entradas.set(e));
         this.editando.set(p);
         this.form.patchValue({ estoque: p.estoque });
         this.carregar();
@@ -352,12 +374,20 @@ export class Produtos implements OnInit {
     });
   }
 
+  /** Texto da dica com todos os lotes em estoque. */
+  resumoLotes(p: Produto): string {
+    return p.lotes_em_estoque
+      .map((l) => `${l.lote ? 'Lote ' + l.lote : 'Sem lote'}: ${l.quantidade} un.${l.validade ? ', vence ' + l.validade.split('-').reverse().join('/') : ''}`)
+      .join('\n');
+  }
+
   private dadosCompra(): object {
     const c = this.compra;
     return {
       data_compra: c.data_compra,
       fornecedor: c.fornecedor || null,
       numero_nota: c.numero_nota || null,
+      lote: c.lote || null,
       quantidade: c.quantidade,
       custo_unitario: c.custo_unitario === null || (c.custo_unitario as unknown) === '' ? null : c.custo_unitario,
       validade: c.validade || null,

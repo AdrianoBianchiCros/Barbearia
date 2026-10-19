@@ -71,6 +71,35 @@ class ProdutosTest extends TestCase
         $this->deleteJson("/api/produtos/{$produto->id}/entradas/{$id}")->assertOk()->assertJsonPath('estoque', 3);
     }
 
+    public function test_lotes_em_estoque_e_proximo_vencimento(): void
+    {
+        $usuario = $this->logarComo('dono');
+        $produto = $this->naEmpresa($usuario->empresa_id, fn () => Produto::create(['nome' => 'Pomada', 'preco' => 45, 'estoque' => 0]));
+        $compra = fn (array $d) => $this->postJson("/api/produtos/{$produto->id}/entradas", $d)->assertCreated();
+
+        $compra(['data_compra' => '2030-01-05', 'lote' => 'L1', 'quantidade' => 10, 'validade' => '2030-06-30']);
+        $compra(['data_compra' => '2030-01-15', 'lote' => 'L2', 'quantidade' => 5, 'validade' => '2030-03-31'])
+            ->assertJsonPath('entrada.lote', 'L2')
+            ->assertJsonPath('produto.ultima_compra.lote', 'L2')
+            ->assertJsonCount(2, 'produto.lotes_em_estoque')
+            // Vence primeiro o L2, mesmo tendo sido comprado depois
+            ->assertJsonPath('produto.proximo_vencimento.lote', 'L2')
+            ->assertJsonPath('produto.proximo_vencimento.quantidade', 5);
+
+        // Vendeu 11: saem primeiro as unidades mais antigas (todo o L1 e 1 do L2)
+        $produto->update(['estoque' => 4]);
+
+        $this->getJson('/api/produtos')->assertOk()
+            ->assertJsonCount(1, '0.lotes_em_estoque')
+            ->assertJsonPath('0.lotes_em_estoque.0', ['lote' => 'L2', 'validade' => '2030-03-31', 'quantidade' => 4, 'data_compra' => '2030-01-15']);
+
+        $this->getJson("/api/produtos/{$produto->id}/entradas")->assertOk()
+            ->assertJsonPath('0.lote', 'L2')
+            ->assertJsonPath('0.em_estoque', 4)
+            ->assertJsonPath('1.lote', 'L1')
+            ->assertJsonPath('1.em_estoque', 0);
+    }
+
     public function test_validacoes_da_compra(): void
     {
         $usuario = $this->logarComo('dono');

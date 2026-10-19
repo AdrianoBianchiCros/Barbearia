@@ -121,6 +121,7 @@ class DatabaseSeeder extends Seeder
                     'data_compra' => $data->toDateString(),
                     'fornecedor' => $fornecedor,
                     'numero_nota' => (string) (4100 + $i * 10 + $j),
+                    'lote' => 'L'.$data->format('ymd').'-'.($i + 1),
                     'quantidade' => $compras[$j],
                     'custo_unitario' => $custo,
                     'validade' => $data->copy()->addMonths($mesesValidade)->toDateString(),

@@ -148,6 +148,25 @@ class FinanceiroTest extends TestCase
         $this->getJson('/api/caixas')->assertOk()->assertJsonPath('total', 1);
     }
 
+    public function test_limite_da_gaveta_indica_excedente_para_sangria(): void
+    {
+        $this->abrirCaixa(100);
+        $this->getJson('/api/caixa/atual')->assertJsonPath('limite_gaveta', null)->assertJsonPath('caixa.excedente_gaveta', 0);
+
+        $this->putJson('/api/empresa', ['limite_gaveta' => 120])->assertOk();
+        $comanda = $this->postJson("/api/agendamentos/{$this->agendamento->id}/comanda")->json();
+        $this->fecharComanda($comanda['id'])->assertOk(); // + R$ 50 em dinheiro → 150 na gaveta
+
+        $this->getJson('/api/caixa/atual')->assertOk()
+            ->assertJsonPath('limite_gaveta', 120)
+            ->assertJsonPath('caixa.excedente_gaveta', 30);
+
+        $this->postJson('/api/caixa/movimentos', ['tipo' => 'sangria', 'valor' => 30])->assertCreated()
+            ->assertJsonPath('excedente_gaveta', 0);
+
+        $this->putJson('/api/empresa', ['limite_gaveta' => -1])->assertUnprocessable();
+    }
+
     public function test_estorno_devolve_estoque_e_reabre_comanda(): void
     {
         $this->abrirCaixa();

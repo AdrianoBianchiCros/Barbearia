@@ -54,6 +54,7 @@ class EmpresaController extends Controller
             'cidade' => ['nullable', 'string', 'max:80'],
             'uf' => ['nullable', 'string', 'size:2'],
             'cor_primaria' => ['sometimes', 'required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'limite_gaveta' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'fuso_horario' => ['sometimes', 'required', 'timezone:all'],
         ], [
             'telefone.regex' => 'Informe o telefone com DDD (10 ou 11 dígitos).',
@@ -64,6 +65,7 @@ class EmpresaController extends Controller
             'slug' => 'endereço da página',
             'cor_primaria' => 'cor principal',
             'descricao' => 'descrição',
+            'limite_gaveta' => 'limite de dinheiro na gaveta',
         ]);
 
         $empresa->update($dados);

@@ -1,5 +1,8 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { AuthService } from '../../core/auth.service';
+import { podeEditar } from '../../core/auth.guards';
+import { CadastrosService } from '../../core/cadastros.service';
 import { FormsModule } from '@angular/forms';
 import { AvisoService } from '../../core/aviso.service';
 import { mensagemDeErro } from '../../core/erros';
@@ -24,10 +27,41 @@ type Acao = 'suprimento' | 'sangria' | 'fechar' | null;
         </div>
         <div class="botoes-linha">
           <button class="botao botao-secundario botao-auto" type="button" (click)="comanda.set({ avulsa: true })">+ Venda avulsa</button>
-          <button class="botao botao-secundario botao-auto" type="button" (click)="acao.set('suprimento')">Suprimento</button>
-          <button class="botao botao-secundario botao-auto" type="button" (click)="acao.set('sangria')">Sangria</button>
-          <button class="botao botao-auto" type="button" (click)="acao.set('fechar')">Fechar caixa</button>
+          <button class="botao botao-secundario botao-auto" type="button" (click)="abrirAcao('suprimento')">Suprimento</button>
+          <button class="botao botao-auto" type="button" [class.botao-secundario]="!excedente()" [class.botao-sangria]="excedente() > 0"
+            (click)="abrirAcao('sangria')" [title]="excedente() > 0 ? 'Gaveta acima do limite: faça uma sangria' : 'Retirar dinheiro do caixa'">
+            Sangria
+          </button>
+          <button class="botao botao-auto" type="button" (click)="abrirAcao('fechar')">Fechar caixa</button>
         </div>
+      </div>
+
+      @if (excedente() > 0) {
+        <div class="alerta-gaveta" role="alert">
+          <div>
+            <strong>Gaveta acima do limite.</strong>
+            Há {{ cx.resumo.dinheiro_esperado | currency: 'BRL' }} em dinheiro (limite {{ limite() | currency: 'BRL' }}).
+            Faça uma sangria de pelo menos {{ excedente() | currency: 'BRL' }}.
+          </div>
+          <button class="botao botao-sangria botao-auto" type="button" (click)="abrirAcao('sangria')">Fazer sangria</button>
+        </div>
+      }
+
+      <div class="limite-gaveta">
+        @if (editandoLimite()) {
+          <form class="linha-abrir-caixa" (ngSubmit)="salvarLimite()">
+            <label>Limite de dinheiro na gaveta (R$) <input type="number" min="0" step="10" name="limite" [(ngModel)]="novoLimite" placeholder="Sem limite" /></label>
+            <button class="botao botao-auto" type="submit">Salvar</button>
+            <button class="botao botao-secundario botao-auto" type="button" (click)="editandoLimite.set(false)">Cancelar</button>
+          </form>
+        } @else {
+          <span class="texto-suave pequeno">
+            Limite da gaveta: <strong>{{ limite() !== null ? (limite() | currency: 'BRL') : 'não definido' }}</strong>
+          </span>
+          @if (dono) {
+            <button class="botao-link" type="button" (click)="editarLimite()">{{ limite() !== null ? 'Alterar' : 'Definir limite' }}</button>
+          }
+        }
       </div>
 
       <div class="indicadores">
@@ -38,7 +72,7 @@ type Acao = 'suprimento' | 'sangria' | 'fechar' | null;
         @for (f of formas; track f.id) {
           <div class="indicador"><span>{{ f.rotulo }}</span><strong>{{ cx.resumo.recebido_por_forma[f.id] | currency: 'BRL' }}</strong></div>
         }
-        <div class="indicador">
+        <div class="indicador" [class.alerta-indicador]="excedente() > 0">
           <span>Dinheiro na gaveta</span><strong>{{ cx.resumo.dinheiro_esperado | currency: 'BRL' }}</strong>
           <small>troco {{ cx.resumo.valor_inicial | currency: 'BRL' }} · sangrias {{ cx.resumo.sangrias | currency: 'BRL' }}</small>
         </div>
@@ -205,6 +239,7 @@ type Acao = 'suprimento' | 'sangria' | 'fechar' | null;
 })
 export class Caixa implements OnInit {
   private readonly api = inject(FinanceiroService);
+  private readonly cadastros = inject(CadastrosService);
   private readonly aviso = inject(AvisoService);
   protected readonly formas = FORMAS;
 
@@ -216,6 +251,13 @@ export class Caixa implements OnInit {
   protected readonly acao = signal<Acao>(null);
   protected readonly salvando = signal(false);
   protected valorInicial = 100;
+  protected readonly dono = podeEditar(inject(AuthService), 'dono');
+  protected readonly limite = signal<number | null>(null);
+  protected readonly editandoLimite = signal(false);
+  protected novoLimite: number | null = null;
+  protected readonly excedente = computed(() => this.caixa()?.excedente_gaveta ?? 0);
+  /** Evita reabrir a sangria sozinha depois que o usuário já a viu neste caixa. */
+  private avisouExcedente = false;
   protected valor: number | null = null;
   protected descricao = '';
   protected readonly abs = Math.abs;
@@ -228,7 +270,14 @@ export class Caixa implements OnInit {
     this.api.caixaAtual().subscribe({
       next: (r) => {
         this.caixa.set(r.caixa);
+        this.limite.set(r.limite_gaveta);
         this.carregando.set(false);
+        // Passou do limite: abre a sangria já com o valor sugerido (uma vez)
+        if (this.excedente() > 0 && !this.avisouExcedente && !this.acao() && !this.comanda()) {
+          this.avisouExcedente = true;
+          this.abrirAcao('sangria');
+        }
+        if (this.excedente() === 0) this.avisouExcedente = false;
       },
       error: (e) => {
         this.carregando.set(false);
@@ -260,6 +309,30 @@ export class Caixa implements OnInit {
 
   nomesFormas(formas: (keyof typeof ROTULO_FORMA)[]): string {
     return formas.map((f) => ROTULO_FORMA[f]).join(' + ');
+  }
+
+  abrirAcao(a: Exclude<Acao, null>): void {
+    this.valor = a === 'sangria' && this.excedente() > 0 ? this.excedente() : null;
+    this.descricao = '';
+    this.acao.set(a);
+  }
+
+  editarLimite(): void {
+    this.novoLimite = this.limite();
+    this.editandoLimite.set(true);
+  }
+
+  salvarLimite(): void {
+    const valor = this.novoLimite === null || (this.novoLimite as unknown) === '' ? null : +this.novoLimite;
+    this.cadastros.salvarEmpresa({ limite_gaveta: valor }).subscribe({
+      next: () => {
+        this.editandoLimite.set(false);
+        this.aviso.sucesso(valor === null ? 'Limite da gaveta removido.' : 'Limite da gaveta salvo.');
+        this.avisouExcedente = false;
+        this.carregar();
+      },
+      error: (e) => this.aviso.erro(mensagemDeErro(e)),
+    });
   }
 
   confirmarAcao(a: Exclude<Acao, null>): void {

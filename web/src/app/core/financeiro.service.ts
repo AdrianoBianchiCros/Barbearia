@@ -86,6 +86,8 @@ export interface Caixa {
   fechado_por: string | null;
   observacoes: string | null;
   resumo: ResumoCaixa;
+  /** Dinheiro acima do limite da gaveta (0 = dentro do limite ou sem limite definido). */
+  excedente_gaveta?: number;
   movimentos?: { id: number; tipo: 'suprimento' | 'sangria'; valor: string; descricao: string | null; usuario: string | null; em: string }[];
   recebimentos?: { comanda_id: number; cliente: string | null; barbeiro: string | null; total: string; formas: FormaPagamento[]; pago_em: string }[];
 }
@@ -176,8 +178,8 @@ export class FinanceiroService {
   }
 
   // Caixa
-  caixaAtual(): Observable<{ caixa: Caixa | null; comandas_abertas: number }> {
-    return this.http.get<{ caixa: Caixa | null; comandas_abertas: number }>(`${API}/caixa/atual`);
+  caixaAtual(): Observable<{ caixa: Caixa | null; comandas_abertas: number; limite_gaveta: number | null }> {
+    return this.http.get<{ caixa: Caixa | null; comandas_abertas: number; limite_gaveta: number | null }>(`${API}/caixa/atual`);
   }
   abrirCaixa(valorInicial: number): Observable<Caixa> {
     return this.http.post<Caixa>(`${API}/caixa/abrir`, { valor_inicial: valorInicial });

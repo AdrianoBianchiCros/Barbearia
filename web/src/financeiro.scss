@@ -382,3 +382,39 @@
     }
   }
 }
+
+// Limite de dinheiro na gaveta
+.botao-sangria {
+  color: #fff;
+  background: #1a7f37;
+  border-color: #1a7f37;
+
+  &:hover:not(:disabled) {
+    background: #15692d;
+  }
+}
+
+.alerta-gaveta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: var(--st-confirmado-bg);
+  border: 1px solid #1a7f37;
+  border-radius: 10px;
+}
+
+.limite-gaveta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  .linha-abrir-caixa {
+    margin-top: 0;
+  }
+}

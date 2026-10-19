@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'nome', 'slug', 'slogan', 'descricao', 'documento', 'telefone', 'whatsapp', 'email', 'instagram',
-    'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'cor_primaria', 'fuso_horario', 'ativo',
+    'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'cor_primaria', 'limite_gaveta', 'fuso_horario', 'ativo',
 ])]
 class Empresa extends Model
 {
@@ -28,6 +28,7 @@ class Empresa extends Model
     {
         return [
             'ativo' => 'boolean',
+            'limite_gaveta' => 'decimal:2',
         ];
     }
 

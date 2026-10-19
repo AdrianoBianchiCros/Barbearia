@@ -26,6 +26,7 @@ class CaixaController extends Controller
         return response()->json([
             'caixa' => $caixa ? $this->detalhado($caixa, $request) : null,
             'comandas_abertas' => Comanda::where('status', 'aberta')->count(),
+            'limite_gaveta' => $this->limite($request),
         ]);
     }
 
@@ -100,6 +101,13 @@ class CaixaController extends Controller
         return response()->json($this->detalhado($caixa, $request));
     }
 
+    private function limite(Request $request): ?float
+    {
+        $limite = $request->user()->empresa->limite_gaveta;
+
+        return $limite !== null ? (float) $limite : null;
+    }
+
     private function exigirAberto(): Caixa
     {
         return $this->comandas->caixaAberto()
@@ -158,8 +166,15 @@ class CaixaController extends Controller
         $fuso = $request->user()->empresa->fuso_horario;
         $hora = fn ($dt) => $dt?->copy()->setTimezone($fuso)->toIso8601String();
 
+        $resumo = $this->resumo($caixa);
+        $limite = $this->limite($request);
+
         return $this->cabecalho($caixa, $request) + [
-            'resumo' => $this->resumo($caixa),
+            'resumo' => $resumo,
+            // Dinheiro acima do limite da gaveta: sugere uma sangria desse valor
+            'excedente_gaveta' => $limite !== null && $caixa->estaAberto()
+                ? max(round($resumo['dinheiro_esperado'] - $limite, 2), 0)
+                : 0,
             'movimentos' => $caixa->movimentos()->with('usuario:id,nome')->latest('id')->get()->map(fn ($m) => [
                 'id' => $m->id,
                 'tipo' => $m->tipo,

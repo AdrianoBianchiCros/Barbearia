@@ -5,6 +5,7 @@
   display: grid;
   grid-template-columns: 248px 1fr;
   min-height: 100dvh;
+  transition: grid-template-columns 0.2s ease;
 }
 
 .menu-lateral {
@@ -16,13 +17,97 @@
   position: sticky;
   top: 0;
   height: 100dvh;
-  overflow-y: auto;
+  z-index: 10;
 
   nav {
     display: flex;
     flex-direction: column;
     gap: 2px;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+// Botão redondo na borda do menu para recolher/expandir
+.botao-recolher {
+  position: absolute;
+  top: 22px;
+  right: -12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--cor-texto-suave);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  cursor: pointer;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s;
+  }
+
+  &:hover {
+    color: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+  }
+}
+
+// Menu recolhido: só ícones (somente telas grandes)
+@media (min-width: 801px) {
+  .shell.menu-recolhido {
+    grid-template-columns: 72px 1fr;
+
+    .botao-recolher svg {
+      transform: rotate(180deg);
+    }
+
+    .menu-lateral {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .menu-rotulo,
+    .marca-textos,
+    .em-breve,
+    .menu-usuario-textos {
+      display: none;
+    }
+
+    .menu-marca {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .menu-grupo {
+      padding: 8px 0 4px;
+      margin: 6px 8px 0;
+      border-top: 1px solid var(--cor-borda);
+    }
+
+    .menu-item {
+      justify-content: center;
+      padding: 10px 0;
+    }
+
+    .menu-usuario {
+      flex-direction: column;
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 }
 
@@ -208,6 +293,10 @@
 @media (max-width: 800px) {
   .shell {
     grid-template-columns: 1fr;
+  }
+
+  .botao-recolher {
+    display: none;
   }
 
   .menu-lateral {

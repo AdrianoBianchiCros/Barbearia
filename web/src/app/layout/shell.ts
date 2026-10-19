@@ -43,6 +43,16 @@ const ICONES: Record<string, string> = {
   sair: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3',
 };
 
+const CHAVE_RECOLHIDO = 'barbearia.menuRecolhido';
+
+function lerPreferencia(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_RECOLHIDO) === '1';
+  } catch {
+    return false;
+  }
+}
+
 const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepção', barbeiro: 'Barbeiro' };
 
 /** Estrutura da área logada: menu lateral e conteúdo. */
@@ -51,9 +61,14 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     @if (sessao(); as s) {
-      <div class="shell" [class.menu-aberto]="menuAberto()">
+      <div class="shell" [class.menu-aberto]="menuAberto()" [class.menu-recolhido]="recolhido()">
         <aside class="menu-lateral">
-          <div class="menu-marca">
+          <button class="botao-recolher" type="button" (click)="alternarRecolhido()"
+            [attr.aria-label]="recolhido() ? 'Expandir menu' : 'Recolher menu'"
+            [title]="recolhido() ? 'Expandir menu' : 'Recolher menu'" [attr.aria-expanded]="!recolhido()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <div class="menu-marca" [title]="recolhido() ? s.empresa.nome : ''">
             <span class="marca-icone">{{ s.empresa.nome.charAt(0) }}</span>
             <div class="marca-textos">
               <strong>{{ s.empresa.nome }}</strong>
@@ -63,18 +78,19 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
 
           <nav>
             @for (grupo of menu; track grupo.titulo) {
-              <span class="menu-grupo">{{ grupo.titulo }}</span>
+              <span class="menu-grupo"><span class="menu-rotulo">{{ grupo.titulo }}</span></span>
               @for (item of grupo.itens; track item.rota) {
                 @if (item.emBreve) {
-                  <span class="menu-item desativado" title="Disponível em breve">
+                  <span class="menu-item desativado" [title]="item.rotulo + ' (disponível em breve)'">
                     <svg class="menu-icone" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones[item.icone]" /></svg>
-                    {{ item.rotulo }}
+                    <span class="menu-rotulo">{{ item.rotulo }}</span>
                     <small class="em-breve">em breve</small>
                   </span>
                 } @else {
-                  <a class="menu-item" [routerLink]="item.rota" routerLinkActive="ativo" (click)="menuAberto.set(false)">
+                  <a class="menu-item" [routerLink]="item.rota" routerLinkActive="ativo" (click)="menuAberto.set(false)"
+                    [title]="recolhido() ? item.rotulo : ''" [attr.aria-label]="item.rotulo">
                     <svg class="menu-icone" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones[item.icone]" /></svg>
-                    {{ item.rotulo }}
+                    <span class="menu-rotulo">{{ item.rotulo }}</span>
                   </a>
                 }
               }
@@ -82,7 +98,7 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
           </nav>
 
           <div class="menu-usuario">
-            <span class="avatar-usuario">{{ iniciais() }}</span>
+            <span class="avatar-usuario" [title]="recolhido() ? s.usuario.nome + ' (' + nomePerfil() + ')' : ''">{{ iniciais() }}</span>
             <div class="menu-usuario-textos">
               <strong>{{ s.usuario.nome }}</strong>
               <small>{{ nomePerfil() }} · {{ s.usuario.email }}</small>
@@ -116,6 +132,8 @@ export class Shell {
   protected readonly aviso = inject(AvisoService);
   protected readonly sessao = this.auth.sessao;
   protected readonly menuAberto = signal(false);
+  /** Menu só com ícones (desktop). A escolha fica salva neste navegador. */
+  protected readonly recolhido = signal(lerPreferencia());
   protected readonly menu = MENU;
   protected readonly icones = ICONES;
 
@@ -123,6 +141,15 @@ export class Shell {
     const perfil = this.sessao()?.usuario.perfil;
     return perfil ? NOMES_PERFIL[perfil] : '';
   });
+
+  alternarRecolhido(): void {
+    this.recolhido.update((v) => !v);
+    try {
+      localStorage.setItem(CHAVE_RECOLHIDO, this.recolhido() ? '1' : '0');
+    } catch {
+      // armazenamento indisponível: vale só até recarregar a página
+    }
+  }
 
   protected readonly iniciais = computed(() => {
     const partes = (this.sessao()?.usuario.nome ?? '').trim().split(/\s+/);

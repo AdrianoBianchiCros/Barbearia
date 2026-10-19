@@ -61,6 +61,12 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'relatorios',
+        canActivate: [exigePerfil('dono')],
+        title: 'Relatórios | Barbearia',
+        loadComponent: () => import('./paginas/relatorios/relatorios').then((m) => m.Relatorios),
+      },
+      {
         path: 'configuracoes',
         loadComponent: () => import('./paginas/configuracoes/configuracoes').then((m) => m.Configuracoes),
         children: [

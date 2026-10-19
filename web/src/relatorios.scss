@@ -1,0 +1,275 @@
+// Relatórios: filtros, indicadores e gráficos.
+
+// Cor da série nos gráficos (validada contra a superfície: claro e escuro)
+:root {
+  --grafico-serie: #4f46e5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grafico-serie: #7c7ff5;
+  }
+}
+
+.filtros-relatorio {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  .chips {
+    margin-bottom: 0;
+  }
+}
+
+.indicadores-relatorio .indicador strong {
+  font-size: 1.35rem;
+}
+
+.variacao {
+  font-weight: 600;
+
+  &.boa {
+    color: #1a7f37;
+  }
+
+  &.ruim {
+    color: var(--cor-erro);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .variacao.boa {
+    color: #7ee2a0;
+  }
+}
+
+.titulo-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  h2,
+  h3 {
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+  }
+
+  select {
+    padding: 6px 8px;
+    font: inherit;
+    color: inherit;
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+  }
+}
+
+.grade-relatorio {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grade-relatorio {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tabela-rolavel {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.detalhes-resultado {
+  grid-template-columns: 1fr auto;
+
+  dd {
+    text-align: right;
+  }
+}
+
+// Colunas
+.grafico {
+  position: relative;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .grade {
+    stroke: var(--cor-borda);
+    stroke-width: 1;
+  }
+
+  .eixo {
+    fill: var(--cor-texto-suave);
+    font-size: 11px;
+  }
+
+  .barra {
+    fill: var(--grafico-serie);
+    transition: opacity 0.15s;
+
+    &.apagada {
+      opacity: 0.35;
+    }
+  }
+
+  .alvo {
+    fill: transparent;
+    cursor: pointer;
+    outline: none;
+  }
+}
+
+.dica {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 14%);
+
+  small {
+    color: var(--cor-texto-suave);
+  }
+}
+
+// Barras horizontais
+.barras-h {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(90px, 34%) 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+  }
+}
+
+.barras-h-nome {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barras-h-trilho {
+  display: block;
+  height: 14px;
+}
+
+.barras-h-barra {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--grafico-serie);
+  border-radius: 0 4px 4px 0;
+}
+
+.barras-h-valor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  small {
+    font-weight: 400;
+    color: var(--cor-texto-suave);
+  }
+}
+
+// Medidor de ocupação
+.medidor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.medidor-trilho {
+  display: block;
+  width: 90px;
+  height: 8px;
+  background: var(--cor-primaria-suave);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.medidor-barra {
+  display: block;
+  height: 100%;
+  background: var(--grafico-serie);
+  border-radius: 999px;
+}
+
+// Mapa de calor
+.mapa-calor {
+  display: grid;
+  gap: 2px;
+  overflow-x: auto;
+  font-size: 0.75rem;
+}
+
+.mapa-hora {
+  text-align: center;
+  color: var(--cor-texto-suave);
+}
+
+.mapa-dia {
+  display: flex;
+  align-items: center;
+  color: var(--cor-texto-suave);
+}
+
+.mapa-celula {
+  height: 26px;
+  border-radius: 4px;
+  // Sequencial em um tom: mistura a cor da série com a superfície
+  background: color-mix(in oklab, var(--grafico-serie) calc(12% + var(--intensidade) * 88%), var(--cor-superficie));
+
+  &.vazia {
+    background: var(--cor-fundo);
+  }
+}
+
+.mapa-legenda {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--cor-texto-suave);
+}
+
+.mapa-gradiente {
+  width: 120px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--grafico-serie) 12%, var(--cor-superficie)), var(--grafico-serie));
+}

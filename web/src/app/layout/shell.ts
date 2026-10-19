@@ -8,6 +8,8 @@ interface ItemMenu {
   rotulo: string;
   icone: string;
   emBreve?: boolean;
+  /** Perfis que veem o item (todos, se omitido). */
+  perfis?: Perfil[];
 }
 
 interface GrupoMenu {
@@ -27,7 +29,7 @@ const MENU: GrupoMenu[] = [
     titulo: 'Gestão',
     itens: [
       { rota: '/financeiro', rotulo: 'Financeiro', icone: 'financeiro' },
-      { rota: '/relatorios', rotulo: 'Relatórios', icone: 'relatorios', emBreve: true },
+      { rota: '/relatorios', rotulo: 'Relatórios', icone: 'relatorios', perfis: ['dono'] },
       { rota: '/configuracoes', rotulo: 'Configurações', icone: 'config' },
     ],
   },
@@ -77,7 +79,7 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
           </div>
 
           <nav>
-            @for (grupo of menu; track grupo.titulo) {
+            @for (grupo of menu(); track grupo.titulo) {
               <span class="menu-grupo"><span class="menu-rotulo">{{ grupo.titulo }}</span></span>
               @for (item of grupo.itens; track item.rota) {
                 @if (item.emBreve) {
@@ -134,7 +136,13 @@ export class Shell {
   protected readonly menuAberto = signal(false);
   /** Menu só com ícones (desktop). A escolha fica salva neste navegador. */
   protected readonly recolhido = signal(lerPreferencia());
-  protected readonly menu = MENU;
+  /** Menu filtrado pelo perfil do usuário (grupos vazios somem). */
+  protected readonly menu = computed(() => {
+    const perfil = this.sessao()?.usuario.perfil;
+    return MENU.map((g) => ({ ...g, itens: g.itens.filter((i) => !i.perfis || (perfil && i.perfis.includes(perfil))) })).filter(
+      (g) => g.itens.length,
+    );
+  });
   protected readonly icones = ICONES;
 
   protected readonly nomePerfil = computed(() => {

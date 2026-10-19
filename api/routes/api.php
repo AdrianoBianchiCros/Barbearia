@@ -12,6 +12,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\LancamentoController;
 use App\Http\Controllers\ProdutoController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\ServicoController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,9 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy']);
 
         Route::apiResource('produtos', ProdutoController::class)->only(['store', 'update', 'destroy']);
+
+        Route::get('relatorios/resumo', [RelatorioController::class, 'resumo']);
+        Route::get('relatorios/clientes', [RelatorioController::class, 'clientes']);
 
         // Financeiro restrito: estorno, despesas, vales e repasses
         Route::post('comandas/{comanda}/estornar', [ComandaController::class, 'estornar']);

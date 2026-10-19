@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Comandas;
 use App\Support\EmpresaAtual;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 /**
  * Dados de demonstração para desenvolvimento local.
@@ -114,28 +115,67 @@ class DatabaseSeeder extends Seeder
             Produto::create(compact('nome', 'preco', 'custo', 'estoque') + ['comissao_percentual' => $comissao]);
         }
 
-        Caixa::create(['aberto_por' => $dono->id, 'aberto_em' => now(), 'valor_inicial' => 100]);
-
         $comandas = app(Comandas::class);
         $formas = [['pix'], ['dinheiro'], ['credito'], ['debito'], ['pix', 'dinheiro']];
-        $concluidos = Agendamento::where('status', 'concluido')->with('itens')->orderBy('inicio')->get();
-        foreach ($concluidos as $i => $agendamento) {
-            $comanda = $comandas->abrirDoAgendamento($agendamento);
-            if ($i % 4 === 3) {
-                continue; // aguardando pagamento na recepção
+        $fuso = $empresa->fuso_horario;
+        $hoje = now($fuso)->toDateString();
+        $produtos = Produto::all();
+
+        // Atendimentos concluídos agrupados pelo dia (no fuso da barbearia)
+        $porDia = Agendamento::where('status', 'concluido')->with('itens')->orderBy('inicio')->get()
+            ->groupBy(fn ($a) => $a->inicio->copy()->setTimezone($fuso)->toDateString());
+
+        // Garante o caixa de hoje mesmo sem atendimentos concluídos ainda
+        $dias = $porDia->keys()->push($hoje)->unique()->sort()->values();
+        $n = 0;
+        foreach ($dias as $dia) {
+            $passado = $dia < $hoje;
+            $abertura = $passado ? Carbon::parse("{$dia} 08:30", $fuso)->utc() : now();
+            $caixa = Caixa::create(['aberto_por' => $dono->id, 'aberto_em' => $abertura, 'valor_inicial' => 100]);
+
+            foreach ($porDia->get($dia, collect()) as $agendamento) {
+                $n++;
+                $comanda = $comandas->abrirDoAgendamento($agendamento);
+                // Hoje, alguns ficam aguardando pagamento na recepção
+                if (! $passado && $n % 4 === 3) {
+                    continue;
+                }
+                $itens = $comanda->itens->map(fn ($item) => $item->only(['tipo', 'servico_id', 'produto_id', 'funcionario_id', 'quantidade', 'preco_unitario']))->all();
+                // De vez em quando o cliente leva um produto
+                if ($n % 5 === 0) {
+                    $produto = $produtos[$n % $produtos->count()];
+                    $itens[] = ['tipo' => 'produto', 'produto_id' => $produto->id, 'funcionario_id' => $agendamento->funcionario_id, 'quantidade' => 1, 'preco_unitario' => $produto->preco];
+                }
+                $total = array_sum(array_map(fn ($i) => $i['preco_unitario'] * $i['quantidade'], $itens));
+                $forma = $formas[$n % count($formas)];
+                $pagamentos = count($forma) === 1
+                    ? [['forma' => $forma[0], 'valor' => $total]]
+                    : [['forma' => $forma[0], 'valor' => $total - 20], ['forma' => $forma[1], 'valor' => 20]];
+
+                $comanda = $comandas->fechar($comanda, $itens, 0, $pagamentos, $dono->id);
+                // Pagamento registrado ao fim do atendimento (e não na hora em que o seeder roda)
+                $comanda->update(['pago_em' => $agendamento->fim]);
+                $comanda->pagamentos()->update(['created_at' => $agendamento->fim]);
             }
-            $total = (float) $comanda->total;
-            $forma = $formas[$i % count($formas)];
-            $pagamentos = count($forma) === 1
-                ? [['forma' => $forma[0], 'valor' => $total]]
-                : [['forma' => $forma[0], 'valor' => $total - 20], ['forma' => $forma[1], 'valor' => 20]];
-            $comandas->fechar(
-                $comanda,
-                $comanda->itens->map(fn ($item) => $item->only(['tipo', 'servico_id', 'produto_id', 'funcionario_id', 'quantidade', 'preco_unitario']))->all(),
-                0,
-                $pagamentos,
-                $dono->id,
-            );
+
+            if ($passado) {
+                $dinheiro = (float) $caixa->pagamentos()->where('forma', 'dinheiro')->sum('valor');
+                $caixa->update([
+                    'fechado_por' => $dono->id,
+                    'fechado_em' => Carbon::parse("{$dia} 19:30", $fuso)->utc(),
+                    'valor_contado' => 100 + $dinheiro - ($n % 7 === 0 ? 5 : 0), // às vezes falta troco
+                ]);
+            }
+        }
+
+        $anterior = now($empresa->fuso_horario)->subMonthNoOverflow()->startOfMonth();
+        foreach ([['Aluguel', 'aluguel', 1800, 5], ['Energia elétrica', 'contas', 298, 15], ['Internet', 'contas', 120, 25]] as [$descricao, $categoria, $valor, $dia]) {
+            $vencimento = $anterior->copy()->day($dia);
+            Lancamento::create([
+                'tipo' => 'despesa', 'descricao' => $descricao, 'categoria' => $categoria, 'valor' => $valor,
+                'vencimento' => $vencimento->toDateString(), 'pago_em' => $vencimento->copy()->setTime(10, 0)->utc(),
+                'usuario_id' => $dono->id,
+            ]);
         }
 
         $mes = now($empresa->fuso_horario)->startOfMonth();
@@ -147,7 +187,8 @@ class DatabaseSeeder extends Seeder
         ] as [$descricao, $categoria, $valor, $dia, $pago]) {
             Lancamento::create([
                 'tipo' => 'despesa', 'descricao' => $descricao, 'categoria' => $categoria, 'valor' => $valor,
-                'vencimento' => $mes->copy()->day($dia)->toDateString(), 'pago_em' => $pago ? now() : null,
+                'vencimento' => $mes->copy()->day($dia)->toDateString(),
+                'pago_em' => $pago ? $mes->copy()->day($dia)->setTime(10, 0)->utc() : null,
                 'usuario_id' => $dono->id,
             ]);
         }
@@ -158,8 +199,8 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Cria clientes e agendamentos de ontem, hoje e amanhã. A situação de cada horário
-     * depende da hora em que o seeder roda (passado = concluído, agora = em atendimento).
+     * Cria clientes, 30 dias de histórico e os agendamentos de hoje e amanhã. A situação
+     * de hoje depende da hora em que o seeder roda (passado = concluído, agora = em atendimento).
      */
     private function agendamentosDeDemonstracao(Empresa $empresa, $barbeiros, $servicos): void
     {
@@ -182,15 +223,24 @@ class DatabaseSeeder extends Seeder
         ];
 
         $agora = now($empresa->fuso_horario);
-        foreach ([-1, 0, 1] as $diasAFrente) {
+        foreach (range(-30, 1) as $diasAFrente) {
             $dia = $agora->copy()->startOfDay()->addDays($diasAFrente);
+            if ($dia->isSunday()) {
+                continue; // barbearia fechada
+            }
             foreach ($grade as $n => [$b, $hora, $s, $c]) {
+                $semente = $n + $diasAFrente * 7;
+                // Dias anteriores com movimento variado
+                if ($diasAFrente < -1 && $semente % 3 === 0) {
+                    continue;
+                }
                 $servico = $servicos[$s];
                 $inicio = $dia->copy()->setTimeFromTimeString($hora);
                 $fim = $inicio->copy()->addMinutes($servico->duracao_minutos);
 
                 $status = match (true) {
-                    $fim->lte($agora) => $n % 9 === 4 ? 'faltou' : 'concluido',
+                    $diasAFrente < 0 && $semente % 13 === 0 => 'cancelado',
+                    $fim->lte($agora) => abs($semente) % 9 === 4 ? 'faltou' : 'concluido',
                     $inicio->lte($agora) => 'em_atendimento',
                     default => $n % 3 === 0 ? 'agendado' : 'confirmado',
                 };

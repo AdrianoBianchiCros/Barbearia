@@ -11,6 +11,7 @@ use App\Models\Servico;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class WhatsappTest extends TestCase
@@ -55,7 +56,7 @@ class WhatsappTest extends TestCase
         parent::tearDown();
     }
 
-    private function agendarPelaPagina(array $dados = []): \Illuminate\Testing\TestResponse
+    private function agendarPelaPagina(array $dados = []): TestResponse
     {
         return $this->postJson('/api/publico/barbearia-do-ze/agendamentos', $dados + [
             'nome' => 'João Silva',
@@ -225,7 +226,7 @@ class WhatsappTest extends TestCase
 
     // ---------- Webhook ----------
 
-    private function webhook(array $value, array $headers = []): \Illuminate\Testing\TestResponse
+    private function webhook(array $value, array $headers = []): TestResponse
     {
         return $this->postJson('/api/webhooks/whatsapp', ['entry' => [['changes' => [[
             'value' => ['metadata' => ['phone_number_id' => '1234567890']] + $value,
@@ -314,6 +315,21 @@ class WhatsappTest extends TestCase
 
         $this->postJson("/api/a/{$token}/remarcar", ['data' => '2030-01-16', 'hora' => '20:00'])
             ->assertUnprocessable()->assertJsonValidationErrors('hora');
+    }
+
+    public function test_remarcar_pelo_link_respeita_um_horario_por_semana(): void
+    {
+        $this->agendarPelaPagina()->assertCreated(); // terça 15/01
+        $primeiro = $this->agendamento()->token;
+        $this->agendarPelaPagina(['data' => '2030-01-22'])->assertCreated(); // terça seguinte
+        $segundo = $this->agendamento()->token;
+
+        // Trazer o segundo para a semana do primeiro: bloqueado.
+        $this->postJson("/api/a/{$segundo}/remarcar", ['data' => '2030-01-17', 'hora' => '10:00'])
+            ->assertUnprocessable()->assertJsonValidationErrors('data');
+
+        // Mudar o próprio horário dentro da mesma semana: liberado.
+        $this->postJson("/api/a/{$primeiro}/remarcar", ['data' => '2030-01-17', 'hora' => '10:00'])->assertOk();
     }
 
     public function test_cancelamento_respeita_a_antecedencia_minima(): void

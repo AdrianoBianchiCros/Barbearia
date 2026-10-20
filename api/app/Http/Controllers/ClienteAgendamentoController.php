@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use App\Models\Funcionario;
 use App\Services\Disponibilidade;
+use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -92,6 +93,13 @@ class ClienteAgendamentoController extends Controller
             throw ValidationException::withMessages([
                 'data' => 'Escolha uma data entre hoje e os próximos '.PaginaPublicaController::DIAS_ANTECEDENCIA.' dias.',
             ]);
+        }
+
+        $limite = app(LimiteAgendamentoCliente::class)->motivo(
+            $agendamento->cliente, $dados['data'], $agendamento->empresa->fuso_horario, $agendamento->id,
+        );
+        if ($limite) {
+            throw ValidationException::withMessages(['data' => $limite]);
         }
 
         DB::transaction(function () use ($agendamento, $dados) {

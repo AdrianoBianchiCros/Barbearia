@@ -175,7 +175,7 @@ class PaginaPublicaTest extends TestCase
     {
         $this->agendar()->assertCreated();
         $this->agendar(['telefone' => '11977776666'])->assertUnprocessable()->assertJsonValidationErrors('hora');
-        $this->agendar(['hora' => '13:00'])->assertUnprocessable()->assertJsonValidationErrors('hora');
+        $this->agendar(['hora' => '13:00', 'telefone' => '11955554444'])->assertUnprocessable()->assertJsonValidationErrors('hora');
         $this->agendar(['data' => '2030-01-13'])->assertUnprocessable()->assertJsonValidationErrors('data');
     }
 
@@ -191,15 +191,50 @@ class PaginaPublicaTest extends TestCase
         $this->agendar(['servico_ids' => [$alheio->id]])->assertUnprocessable()->assertJsonValidationErrors('servico_ids.0');
     }
 
-    public function test_limite_de_agendamentos_futuros_por_whatsapp(): void
+    public function test_cliente_marca_no_maximo_um_horario_por_semana(): void
     {
-        foreach (['09:00', '09:30', '10:00'] as $hora) {
-            $this->agendar(['hora' => $hora])->assertCreated();
+        $this->agendar()->assertCreated(); // terça 15/01
+
+        // Mesma semana (segunda 14/01 a domingo 20/01): bloqueado.
+        $this->agendar(['data' => '2030-01-17', 'hora' => '10:00'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('data')
+            ->assertJsonPath('errors.data.0', 'Você já tem um horário nesta semana (terça, 15/01 às 09:00). Pela página dá para marcar 1 horário por semana; para outro, fale com a barbearia.');
+
+        // Semana seguinte: liberado. Outro WhatsApp na mesma semana também.
+        $this->horarioNaQuinta('2030-01-24');
+        $this->agendar(['data' => '2030-01-24', 'hora' => '09:00'])->assertCreated();
+        $this->agendar(['telefone' => '11977776666', 'hora' => '10:00'])->assertCreated();
+    }
+
+    public function test_horario_cancelado_libera_a_semana(): void
+    {
+        $this->agendar()->assertCreated();
+        $this->naEmpresa($this->empresa, fn () => Agendamento::first()->update(['status' => 'cancelado']));
+
+        $this->agendar(['hora' => '10:00'])->assertCreated();
+    }
+
+    public function test_cliente_marca_no_maximo_quatro_horarios_no_mes(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2030-03-31 12:00', 'America/Sao_Paulo'));
+        // Abril/2030: terças 2, 9, 16, 23 e 30 — cinco semanas.
+        foreach (['2030-04-02', '2030-04-09', '2030-04-16', '2030-04-23'] as $data) {
+            $this->agendar(['data' => $data])->assertCreated();
         }
 
-        $this->agendar(['hora' => '10:30'])
+        $this->agendar(['data' => '2030-04-30'])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('telefone');
+            ->assertJsonPath('errors.data.0', 'Você já tem 4 horários em abril. Pela página dá para marcar até 4 por mês; para outro, fale com a barbearia.');
+
+        $this->agendar(['data' => '2030-05-07'])->assertCreated();
+    }
+
+    private function horarioNaQuinta(string $data): void
+    {
+        $this->naEmpresa($this->empresa, function () {
+            $this->carlos->horariosTrabalho()->create(['dia_semana' => 4, 'inicio' => '09:00', 'fim' => '12:00']);
+        });
     }
 
     public function test_endereco_reservado_nao_pode_ser_usado(): void

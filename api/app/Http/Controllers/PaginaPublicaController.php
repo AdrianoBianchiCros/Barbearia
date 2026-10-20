@@ -9,6 +9,7 @@ use App\Models\Funcionario;
 use App\Models\GaleriaFoto;
 use App\Models\Servico;
 use App\Services\Disponibilidade;
+use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
 use App\Support\Telefone;
 use Illuminate\Contracts\View\View;
@@ -26,9 +27,6 @@ class PaginaPublicaController extends Controller
 {
     /** Até quantos dias à frente o cliente pode agendar pela página. */
     public const DIAS_ANTECEDENCIA = 60;
-
-    /** Horários futuros que um mesmo WhatsApp pode ter marcados pela página. */
-    public const MAX_AGENDAMENTOS_FUTUROS = 3;
 
     private const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -164,14 +162,9 @@ class PaginaPublicaController extends Controller
         $agendamento = DB::transaction(function () use ($dados, $servicoIds, $candidatos, $disponibilidade) {
             $cliente = $this->cliente($dados);
 
-            $futuros = $cliente->agendamentos()
-                ->whereIn('status', ['agendado', 'confirmado'])
-                ->where('inicio', '>', now())
-                ->count();
-            if ($futuros >= self::MAX_AGENDAMENTOS_FUTUROS) {
-                throw ValidationException::withMessages([
-                    'telefone' => 'Você já tem '.self::MAX_AGENDAMENTOS_FUTUROS.' horários marcados. Para marcar outro, fale com a barbearia.',
-                ]);
+            $limite = app(LimiteAgendamentoCliente::class)->motivo($cliente, $dados['data'], $disponibilidade->fuso);
+            if ($limite) {
+                throw ValidationException::withMessages(['data' => $limite]);
             }
 
             foreach ($candidatos as $barbeiro) {

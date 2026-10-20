@@ -23,7 +23,7 @@ class Disponibilidade
     /** Situações que ocupam a cadeira. Cancelado e faltou liberam o horário. */
     public const STATUS_OCUPAM = ['agendado', 'confirmado', 'em_atendimento', 'concluido'];
 
-    public function __construct(private readonly string $fuso) {}
+    public function __construct(public readonly string $fuso) {}
 
     /**
      * Horários de início ("HH:MM") em que cabe um atendimento de $duracao minutos.

@@ -5,11 +5,31 @@ SaaS de agendamento e gestão para barbearias. Piloto na própria barbearia; dep
 
 > **Para retomar o trabalho:** leia este arquivo inteiro. A seção [Onde paramos](#onde-paramos) diz
 > o próximo passo e a seção [O que falta](#o-que-falta) traz a lista completa, na ordem do documento v4.
+>
+> **Para rodar o sistema na sua máquina:** veja [Como iniciar o projeto](#como-iniciar-o-projeto).
 
 | Pasta | Conteúdo |
 |---|---|
 | `api/` | Laravel 13 (PHP 8.3+): API REST (Sanctum), página pública da barbearia (Blade), fila e agendador |
 | `web/` | Angular 22: painel administrativo (dono, recepção, barbeiro) |
+
+
+## Como iniciar o projeto
+
+Terminal 1 — API (http://localhost:8000)
+cd api
+php artisan serve
+
+Terminal 2 — Painel (http://localhost:4200)
+cd web
+npm start
+
+Para acessar:
+- Painel: http://localhost:4200
+  - dono: dono@demo.test / demo1234
+  - barbeiro: barbeiro@demo.test / demo1234
+- Página pública da barbearia: http://localhost:8000/barbearia-demo
+
 
 ---
 
@@ -160,30 +180,57 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 
 ---
 
-## Rodando localmente
+## Como iniciar o projeto
 
 Pré-requisitos: PHP 8.3+, Composer, Node.js 22+ e npm.
 
-```bash
-# API (http://localhost:8000)
+### No dia a dia (já instalado)
+
+Abra dois terminais na pasta do projeto:
+
+```powershell
+# Terminal 1: API e página pública (http://localhost:8000)
 cd api
-composer install
-cp .env.example .env        # na primeira vez
-php artisan key:generate    # na primeira vez
-php artisan migrate:fresh --seed
-php artisan storage:link    # na primeira vez (logos e fotos enviadas)
 php artisan serve
 
-# Painel (http://localhost:4200), em outro terminal
+# Terminal 2: painel (http://localhost:4200)
 cd web
-npm install
 npm start
 ```
 
+Opcional, em um 3º terminal: `cd api; php artisan schedule:work` roda o agendador (lembretes do WhatsApp e fila).
+Em modo de teste as mensagens só ficam registradas e não são enviadas.
+
+### Primeira vez (máquina nova ou clone novo)
+
+Faça uma vez antes do passo anterior:
+
+```powershell
+# API
+cd api
+composer install                  # no Windows: composer.ps1 install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed  # cria o banco SQLite com os dados de demonstração
+php artisan storage:link          # logos e fotos enviadas
+
+# Painel
+cd ../web
+npm install
+```
+
+### Acessos
+
+- **Painel:** http://localhost:4200
+  - dono: `dono@demo.test` / `demo1234`
+  - barbeiro: `barbeiro@demo.test` / `demo1234`
+  - os dados estão em `api/database/seeders/DatabaseSeeder.php`
 - **Página pública da demo:** http://localhost:8000/barbearia-demo
-- **Login do painel:** `dono@demo.test` / `demo1234` (dono) ou `barbeiro@demo.test` / `demo1234`. Veja `api/database/seeders/DatabaseSeeder.php`.
-- **Fila e lembretes em ambiente local:** `php artisan schedule:work` (roda o agendador) ou `php artisan queue:work`.
-  Nos testes a fila é síncrona.
+
+### Outros comandos úteis
+
+- **Recomeçar o banco com os dados de demonstração:** `cd api; php artisan migrate:fresh --seed`. Isso apaga tudo o que está no banco local.
+- **Processar só a fila:** `php artisan queue:work`. Nos testes a fila é síncrona.
 - **Banco:** em desenvolvimento é SQLite (`api/database/database.sqlite`). Para usar MySQL, ajuste `DB_*` no `api/.env`.
 
 ### Observações do ambiente (Windows)

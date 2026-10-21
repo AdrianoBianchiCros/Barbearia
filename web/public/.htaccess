@@ -1,0 +1,11 @@
+# Painel em app.abianchitech.com/saas/barbearia/painel: rotas do Angular vão para o index.html
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /saas/barbearia/painel/
+
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteRule ^ index.html [L]
+</IfModule>

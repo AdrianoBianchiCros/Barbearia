@@ -1,4 +1,4 @@
-// Produção (HostGator): a API fica no domínio principal, em /api.
+// Produção (HostGator): a API fica em app.abianchitech.com/saas/barbearia/api e o painel em /saas/barbearia/painel.
 export const environment = {
-  apiUrl: 'https://seudominio.com.br/api',
+  apiUrl: 'https://app.abianchitech.com/saas/barbearia/api',
 };

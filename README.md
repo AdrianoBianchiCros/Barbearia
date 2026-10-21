@@ -35,21 +35,24 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 19/10/2026 · último commit: limite de 1 horário por semana e 4 por mês*
+*Atualizado em 21/10/2026 · sistema publicado na HostGator · 108 testes na API*
 
-- **Etapa 1 (MVP):** faltam a **publicação na HostGator** e **ligar o WhatsApp real**. Todo o resto está pronto.
+- **Publicado** em `https://app.abianchitech.com/saas/barbearia` (painel em `/painel`, página de cada barbearia em `/{slug}`).
+  O site principal (`abianchitech.com`, `public_html`) não foi alterado. Banco MySQL ligado e cadastro testado.
+  Detalhes em [Publicação](#publicação-hostgator).
+- **Falta conferir em produção:** permissões (755 pastas, 644 arquivos), cron permanente do `schedule:run`, AutoSSL do
+  subdomínio `app`, envio de logo/foto (link `storage`) e um agendamento de ponta a ponta pela página da barbearia.
 - **WhatsApp:** está em **modo de teste** (`WHATSAPP_DRIVER=log`), em que as mensagens ficam registradas mas não saem.
   O dono da barbearia está criando a conta na Meta e enviando para aprovação os 2 modelos de mensagem. Os textos
   estão em Configurações › WhatsApp no painel.
-- **Próximo passo: publicar na HostGator.** Antes, o dono precisa conferir no cPanel:
-  - o **acesso SSH**;
-  - o **intervalo mínimo do cron**;
-  - o **domínio** que será usado.
-
-  O webhook da Meta e o link do cliente só funcionam com o sistema no ar com HTTPS.
-- **Depois de publicar:** quando a Meta aprovar, informar no painel o **ID do número** e o **token permanente**. No `.env`,
-  colocar `WHATSAPP_APP_SECRET` e `WHATSAPP_VERIFY_TOKEN`, trocar para `WHATSAPP_DRIVER=cloud` e cadastrar o webhook
-  `https://DOMINIO/api/webhooks/whatsapp` (campo `messages`).
+- **Quando a Meta aprovar:** informar no painel o **ID do número** e o **token permanente**. No `.env` do servidor,
+  colocar `WHATSAPP_APP_SECRET`, trocar para `WHATSAPP_DRIVER=cloud`, rodar `config:clear` e `config:cache` e cadastrar o webhook
+  `https://app.abianchitech.com/saas/barbearia/api/webhooks/whatsapp` (campo `messages`) com o `WHATSAPP_VERIFY_TOKEN` do `.env`.
+- **Pendentes da publicação:** a raiz `app.abianchitech.com/saas/barbearia` ainda mostra a página padrão do Laravel
+  (redirecionar ou fazer a landing page de vendas) e o cadastro pelo painel está aberto a qualquer pessoa.
+- **Próximo passo:** (1) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento
+  ou página "em breve"; (2) fechar o cadastro aberto; (3) começar a medir a taxa de faltas da barbearia piloto.
+  Para subir qualquer mudança, siga [Publicar uma atualização](#publicar-uma-atualização).
 
 ---
 
@@ -140,7 +143,7 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 - ✅ Base multiempresa, login, cadastros, agenda com disponibilidade e bloqueios
 - ✅ Página da barbearia com agendamento online
 - ⏳ **WhatsApp real:** código pronto, falta a conta da Meta, os modelos aprovados e a publicação com HTTPS
-- ⬜ **Publicação na HostGator** (passo a passo na seção 4 do v4 e em [Publicação](#publicação-hostgator))
+- ✅ **Publicação na HostGator** em `app.abianchitech.com/saas/barbearia` (veja [Publicação](#publicação-hostgator))
 - ⬜ Medir a taxa de faltas antes e depois (é o principal argumento de venda)
 
 ### Etapa 2 — Operação
@@ -260,17 +263,60 @@ Para restringir uma rota por perfil, use `->middleware('perfil:dono,recepcao')`.
 
 ## Publicação (HostGator)
 
-Detalhes na seção 4 do documento v4. Resumo:
+Detalhes na seção 4 do documento v4. O site principal (`abianchitech.com`, pasta `public_html`) **não é alterado**:
+o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbearia`.
 
-- **`seudominio.com.br`** → Laravel. O `public_html` recebe o conteúdo de `api/public` e o resto do Laravel
-  fica em `/home/USUARIO/api`. Atende a página de cada barbearia (`/nome-da-barbearia`), o link do cliente (`/a/…`) e a API (`/api`).
-- **`app.seudominio.com.br`** → painel Angular compilado (`ng build`), com `.htaccess` que manda as rotas para o `index.html`.
-- **Cron do cPanel, a cada minuto:** `php /home/USUARIO/api/artisan schedule:run`, com o PHP 8.3 (`ea-php83`).
+| Endereço | O que é |
+|---|---|
+| `app.abianchitech.com/saas/barbearia/painel` | Painel Angular (dono, recepção, barbeiro) |
+| `app.abianchitech.com/saas/barbearia/{slug}` | Página de cada barbearia com agendamento online |
+| `app.abianchitech.com/saas/barbearia/a/{token}` | Link do cliente |
+| `app.abianchitech.com/saas/barbearia/api` | API |
+
+| Pasta no servidor (`/home4/adri0667`) | Conteúdo |
+|---|---|
+| `saas/barbearia` | Laravel (código, `vendor`, `.env`), fora da pasta pública |
+| `app.abianchitech.com/saas/barbearia` | Conteúdo de `api/public` + link `storage` |
+| `app.abianchitech.com/saas/barbearia/painel` | Painel compilado (`web/dist/web/browser`) |
+
+- **Banco MySQL:** `adri0667_barbearia`, usuário `adri0667_abianchi`.
+- **`index.php` público:** os caminhos apontam para `__DIR__.'/../../../saas/barbearia/'` em vez de `__DIR__.'/../'`.
+  O `.htaccess` público precisa de `RewriteBase /saas/barbearia/`.
+- **PHP 8.3:** escolhido no MultiPHP Manager **só para o subdomínio `app.abianchitech.com`** (o site principal não muda).
+  Não usar `AddHandler` no `.htaccess`: na HostGator ele fez todo `.php` da pasta responder 404.
+- **Permissões:** 755 nas pastas e 644 nos arquivos (o Extract do cPanel deixou 777/666).
+- **Fotos enviadas:** link `app.abianchitech.com/saas/barbearia/storage` → `/home4/adri0667/saas/barbearia/storage/app/public`
+  (o `php artisan storage:link` não serve nessa estrutura).
+- **Cron do cPanel, a cada minuto:** `/opt/cpanel/ea-php83/root/usr/bin/php /home4/adri0667/saas/barbearia/artisan schedule:run`.
   Ele roda os lembretes a cada 5 min e processa a fila (`queue:work --stop-when-empty`).
-- **`.env` de produção:**
-  - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` e `DB_*` do MySQL;
-  - `QUEUE_CONNECTION=database`;
+- **`.env` de produção** (em `/home4/adri0667/saas/barbearia`):
+  - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://app.abianchitech.com/saas/barbearia` e `DB_*` do MySQL;
+  - `FRONTEND_URL=https://app.abianchitech.com` e `QUEUE_CONNECTION=database`;
   - `WHATSAPP_*` (veja `.env.example`).
-- **Antes do build do painel:** ajustar `web/src/environments/environment.ts` (URL da API) e `FRONTEND_URL`.
-- **Depois do upload:** rodar `php artisan migrate --force`, `config:cache`, `route:cache` e `storage:link`.
-- **Domínio e painel com HTTPS:** ativar o AutoSSL. A Meta exige HTTPS no webhook.
+- **Painel:** `web/src/environments/environment.ts` aponta para `https://app.abianchitech.com/saas/barbearia/api` e o build de
+  produção usa `baseHref` `/saas/barbearia/painel/` (`angular.json`). Compilar com `npx ng build`; o `.htaccess` das rotas vem de `web/public`.
+- **Depois do upload:** rodar `php artisan migrate --force`, `config:cache` e `route:cache`.
+- **Primeiro acesso:** cadastrar a barbearia e o dono pela tela "Cadastro" do painel (não usar `--seed` em produção).
+- **HTTPS:** AutoSSL do subdomínio `app`. A Meta exige HTTPS no webhook.
+- **Pacotes de publicação:** ficam na pasta `deploy/`, que está no `.gitignore` porque contém o `.env` de produção.
+
+### Publicar uma atualização
+
+Sem SSH: os pacotes são montados no PC e enviados pelo Gerenciador de Arquivos do cPanel.
+
+1. **Sistema (Laravel):** copiar `api/` para `deploy/Barbearia/barbearia` (sem `.env`, `database.sqlite`, `storage/logs`,
+   `storage/app/public/*` e `tests/`), rodar `composer.ps1 install --no-dev --optimize-autoloader` nessa cópia e compactar
+   com `tar -a -c -f barbearia-sistema.zip barbearia` (o `Compress-Archive` do PowerShell 5.1 grava `\` nos caminhos e quebra no Linux).
+   No servidor, extrair em `/home4/adri0667/saas/` por cima. O `.env` do servidor não é tocado.
+2. **Painel:** `cd web; npx ng build` e enviar o conteúdo de `web/dist/web/browser` para
+   `/home4/adri0667/app.abianchitech.com/saas/barbearia/painel/`.
+3. **Público (`api/public`):** só se mudou algo em `api/public`. Usar `deploy/Barbearia/app-saas-barbearia`, que já tem o
+   `index.php` e o `.htaccess` ajustados para o servidor; não copiar os de `api/public` por cima deles.
+4. **Migrations e cache:** criar no Cron Jobs uma tarefa "Uma vez por minuto", esperar 2 minutos e **excluí-la**:
+   ```
+   cd /home4/adri0667/saas/barbearia && /opt/cpanel/ea-php83/root/usr/bin/php artisan config:clear > deploy.log 2>&1 ; /opt/cpanel/ea-php83/root/usr/bin/php artisan migrate --force >> deploy.log 2>&1 ; /opt/cpanel/ea-php83/root/usr/bin/php artisan config:cache >> deploy.log 2>&1 ; /opt/cpanel/ea-php83/root/usr/bin/php artisan route:cache >> deploy.log 2>&1 ; /opt/cpanel/ea-php83/root/usr/bin/php artisan view:clear >> deploy.log 2>&1
+   ```
+   O `deploy.log` é sobrescrito a cada minuto em que a tarefa roda; erros ficam em `storage/logs/laravel-AAAA-MM-DD.log`.
+5. **Conferir:** `https://app.abianchitech.com/saas/barbearia/up` deve mostrar "Application up".
+
+Depois de mudar o `.env` no servidor, sempre rodar `config:clear` e `config:cache`: com o cache ligado, o Laravel ignora o `.env`.

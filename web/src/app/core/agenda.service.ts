@@ -33,6 +33,8 @@ export interface AgendaDia {
   fuso_horario: string;
   agora: string;
   meu_funcionario_id: number | null;
+  /** Cadastros iniciais já feitos (guia de primeiros passos). */
+  primeiros_passos: { servicos: boolean; barbeiros: boolean; clientes: boolean };
   barbeiros: ColunaBarbeiro[];
 }
 

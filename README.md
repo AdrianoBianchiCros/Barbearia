@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 21/10/2026 · sistema publicado na HostGator · 108 testes na API*
+*Atualizado em 21/10/2026 · sistema publicado na HostGator · 110 testes na API*
 
 - **Publicado** em `https://app.abianchitech.com/saas/barbearia` (painel em `/painel`, página de cada barbearia em `/{slug}`).
   O site principal (`abianchitech.com`, `public_html`) não foi alterado. Banco MySQL ligado e cadastro testado.
@@ -53,6 +53,8 @@ Para acessar:
 - **Próximo passo:** (1) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento
   ou página "em breve"; (2) fechar o cadastro aberto; (3) começar a medir a taxa de faltas da barbearia piloto.
   Para subir qualquer mudança, siga [Publicar uma atualização](#publicar-uma-atualização).
+- **Última mudança (ainda não publicada):** guia de primeiros passos da agenda com três botões quadrados
+  (serviços, barbeiros, clientes). Some quando os três cadastros existem.
 
 ---
 
@@ -79,6 +81,8 @@ Para acessar:
 
 ### Agenda
 - Agenda do dia em colunas por barbeiro (tela inicial), com linha da hora atual e cores por situação.
+- **Primeiros passos:** barbearia nova vê três botões (cadastrar serviços, barbeiros e clientes), cada um marcado
+  quando feito. Depois dos três, o guia some e esses cadastros ficam só no menu Configurações (`primeiros_passos` em `/api/agenda/dia`).
 - Agendar e remarcar só em horários livres (serviço `Disponibilidade`), com proteção contra dois agendamentos no mesmo horário.
 - **Encaixe:** coloca o cliente no próximo horário vago, ignorando o expediente, mas nunca por cima de outro cliente.
 - Busca de cliente agendado e status: agendado, confirmado, em atendimento, concluído, cancelado e faltou.
@@ -131,7 +135,7 @@ Para acessar:
   - conexão com a Meta (o token fica criptografado e nunca volta para o painel);
   - modelos para aprovar e histórico das mensagens.
 
-**Testes:** 108 testes na API (`php artisan test`), todos passando.
+**Testes:** 110 testes na API (`php artisan test`), todos passando.
 
 ---
 

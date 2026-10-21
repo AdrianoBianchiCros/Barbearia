@@ -455,8 +455,105 @@
   }
 }
 
-.agenda-vazia {
-  max-width: 640px;
+// ---------- Primeiros passos (barbearia recém-cadastrada) ----------
+.primeiros-passos {
+  max-width: 880px;
+
+  h2 {
+    margin: 0 0 4px;
+  }
+}
+
+.passos-botoes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 18px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.passo-botao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  aspect-ratio: 1;
+  padding: 22px;
+  border: 1px solid var(--cor-borda);
+  border-radius: calc(var(--raio) + 4px);
+  background: var(--cor-superficie-2);
+  color: var(--cor-texto);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--cor-primaria);
+    background: var(--cor-primaria-suave);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  }
+
+  strong {
+    font-size: 1.1rem;
+    margin-top: auto;
+  }
+
+  small {
+    color: var(--cor-texto-suave);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 720px) {
+    aspect-ratio: auto;
+    strong {
+      margin-top: 8px;
+    }
+  }
+}
+
+.passo-icone {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--cor-primaria);
+  color: #fff;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.passo-numero {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cor-primaria);
+}
+
+.passo-botao.feito {
+  opacity: 0.7;
+
+  .passo-icone {
+    background: var(--st-confirmado-bd);
+  }
+
+  .passo-numero {
+    color: var(--st-confirmado-bd);
+  }
 }
 
 // Cores por situação (variáveis consumidas pelos cartões, bolinhas e etiquetas)

@@ -159,17 +159,30 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         </span>
       </div>
 
-      @if (a.barbeiros.length === 0) {
-        <div class="cartao-secao agenda-vazia">
+      @if (passos(); as passos) {
+        <div class="cartao-secao primeiros-passos">
           <h2>Vamos montar sua agenda</h2>
-          <p class="texto-suave">A agenda mostra uma coluna para cada barbeiro. Para começar:</p>
-          <ol class="passos">
-            <li><a routerLink="/configuracoes/servicos">Cadastre os serviços</a> com duração e preço.</li>
-            <li><a routerLink="/configuracoes/barbeiros">Cadastre os barbeiros</a>, os serviços que cada um faz e o expediente.</li>
-            <li><a routerLink="/clientes">Cadastre seus clientes</a>.</li>
-          </ol>
+          <p class="texto-suave">Faça estes três cadastros para começar. Depois, eles ficam no menu Configurações.</p>
+          <div class="passos-botoes">
+            @for (p of passos; track p.rota; let i = $index) {
+              <a class="passo-botao" [class.feito]="p.feito" [routerLink]="p.rota">
+                <span class="passo-icone" aria-hidden="true">
+                  @if (p.feito) {
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                  } @else {
+                    <svg viewBox="0 0 24 24"><path [attr.d]="p.icone" /></svg>
+                  }
+                </span>
+                <span class="passo-numero">Passo {{ i + 1 }}{{ p.feito ? ' · feito' : '' }}</span>
+                <strong>{{ p.titulo }}</strong>
+                <small>{{ p.detalhe }}</small>
+              </a>
+            }
+          </div>
         </div>
-      } @else {
+      }
+
+      @if (a.barbeiros.length > 0) {
         <div class="agenda-grade" #grade>
           <div class="agenda-cabecalho" [style.grid-template-columns]="colunasCss()">
             <div class="agenda-canto"></div>
@@ -444,6 +457,20 @@ export class Agenda implements OnInit, OnDestroy {
         meu: barbeiro.id === meuId,
       };
     });
+  });
+
+  /** Guia de primeiros passos: aparece até os três cadastros iniciais existirem. */
+  protected readonly passos = computed(() => {
+    const p = this.agenda()?.primeiros_passos;
+    if (!p || (p.servicos && p.barbeiros && p.clientes)) return null;
+    return [
+      { titulo: 'Cadastre os serviços', detalhe: 'Duração e preço de cada um.', rota: '/configuracoes/servicos', feito: p.servicos,
+        icone: 'M6 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM8.1 7.9 20 18M8.1 16.1 20 6' },
+      { titulo: 'Cadastre os barbeiros', detalhe: 'Serviços que cada um faz e o expediente.', rota: '/configuracoes/barbeiros', feito: p.barbeiros,
+        icone: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0' },
+      { titulo: 'Cadastre os clientes', detalhe: 'Nome e telefone para agendar.', rota: '/clientes', feito: p.clientes,
+        icone: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-6 10a6 6 0 0 1 12 0M16 3.5a4 4 0 0 1 0 7.5M21 21a6 6 0 0 0-3.5-5.5' },
+    ];
   });
 
   protected readonly resumo = computed(() => {

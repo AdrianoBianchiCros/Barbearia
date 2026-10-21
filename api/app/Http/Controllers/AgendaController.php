@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Agendamento;
 use App\Models\BloqueioAgenda;
+use App\Models\Cliente;
 use App\Models\Funcionario;
+use App\Models\Servico;
 use App\Services\Comandas;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +61,12 @@ class AgendaController extends Controller
             'fuso_horario' => $fuso,
             'agora' => $hora(now()),
             'meu_funcionario_id' => Funcionario::where('usuario_id', $usuario->id)->value('id'),
+            // Cadastros iniciais: enquanto faltar algum, a agenda mostra o guia de primeiros passos.
+            'primeiros_passos' => [
+                'servicos' => Servico::exists(),
+                'barbeiros' => $barbeiros->isNotEmpty(),
+                'clientes' => Cliente::exists(),
+            ],
             'barbeiros' => $barbeiros->map(fn (Funcionario $f) => [
                 'id' => $f->id,
                 'nome' => $f->nome,

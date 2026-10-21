@@ -7,6 +7,7 @@ use App\Models\BloqueioAgenda;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Funcionario;
+use App\Models\Servico;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -80,6 +81,24 @@ class AgendaDiaTest extends TestCase
             ->assertJsonPath('barbeiros.0.bloqueios.0.inicio', '2030-01-15T00:00:00-03:00')
             ->assertJsonPath('barbeiros.0.bloqueios.0.fim', '2030-01-16T00:00:00-03:00')
             ->assertJsonCount(2, 'barbeiros.1.bloqueios');
+    }
+
+    public function test_informa_os_cadastros_iniciais_que_faltam(): void
+    {
+        $this->logarComo('dono');
+
+        $this->getJson('/api/agenda/dia?data=2030-01-15')->assertOk()
+            ->assertJsonPath('primeiros_passos', ['servicos' => false, 'barbeiros' => false, 'clientes' => false]);
+    }
+
+    public function test_cadastros_iniciais_completos(): void
+    {
+        $usuario = $this->logarComo('dono');
+        $this->montarBarbearia($usuario);
+        $this->naEmpresa($usuario->empresa_id, fn () => Servico::create(['nome' => 'Corte', 'duracao_minutos' => 30, 'preco' => 45]));
+
+        $this->getJson('/api/agenda/dia?data=2030-01-15')->assertOk()
+            ->assertJsonPath('primeiros_passos', ['servicos' => true, 'barbeiros' => true, 'clientes' => true]);
     }
 
     public function test_informa_o_barbeiro_do_usuario_logado(): void

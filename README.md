@@ -46,7 +46,7 @@ Para acessar:
 - **Modo noturno opcional (ainda não publicado), 09/11/2026:** botão de lua/sol no rodapé do menu, ao lado de "Sair".
   O padrão continua claro; a escolha fica salva no navegador (`barbearia.tema`, `TemaService`) e um script no
   `web/src/index.html` aplica o tema antes de a página desenhar. A paleta escura é o bloco `:root[data-tema='escuro']`
-  em `styles.scss` (mesmos tokens, valores invertidos; botão principal branco).
+  em `styles.scss` (mesmos tokens, valores invertidos; botão principal branco, que inverte para fundo preto e texto branco ao passar o mouse).
   **A página pública da barbearia (Blade, visual escuro) e a vitrine não foram alteradas.**
 
 - **LGPD — etapa 1 feita (ainda não publicada):** Política de privacidade e Termos de uso, aceite registrado no cadastro

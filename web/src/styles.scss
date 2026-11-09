@@ -323,6 +323,13 @@ textarea {
   }
 }
 
+// Modo noturno: o botão principal é branco e, no hover, inverte (fundo preto, texto branco, contorno claro)
+:root[data-tema='escuro'] .botao:not(.botao-secundario):not(.botao-perigo):not(.botao-sangria):hover:not(:disabled) {
+  background: var(--color-canvas-white);
+  border-color: var(--color-primary-action-fill);
+  color: var(--color-primary-action-fill);
+}
+
 // Botão de contorno: o botão de trabalho para a maioria das ações
 .botao-secundario {
   width: auto;

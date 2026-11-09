@@ -5,10 +5,7 @@ import { AvisoService } from '../../core/aviso.service';
 import { CadastrosService } from '../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
 import { EmpresaCompleta, FotoGaleria } from '../../core/modelos';
-import { environment } from '../../../environments/environment';
-
-/** A página pública fica no mesmo domínio da API, sem o /api. */
-const ENDERECO_SITE = environment.apiUrl.replace(/\/api\/?$/, '');
+import { ENDERECO_SITE } from '../../core/plataforma';
 
 /** Dados da barbearia e conteúdo da página pública (somente dono). */
 @Component({

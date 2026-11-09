@@ -197,3 +197,34 @@ a {
   color: var(--cor-texto-suave);
 }
 
+.rodape-legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin-top: 18px;
+  font-size: 0.8rem;
+  color: var(--cor-texto-suave);
+
+  a {
+    color: inherit;
+  }
+}
+
+.check-aceite {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 16px;
+  font-size: 0.88rem;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex: none;
+    accent-color: var(--cor-primaria);
+  }
+}
+

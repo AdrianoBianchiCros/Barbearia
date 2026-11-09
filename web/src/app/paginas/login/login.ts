@@ -3,10 +3,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
+import { RodapeLegal } from '../../layout/rodape-legal';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal],
   template: `
     <main class="tela-acesso">
       <form class="cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
@@ -38,6 +39,7 @@ import { mensagemDeErro } from '../../core/erros';
         </button>
 
         <p class="rodape-cartao">Ainda não tem conta? <a routerLink="/cadastro">Cadastre sua barbearia</a></p>
+        <app-rodape-legal />
       </form>
     </main>
   `,

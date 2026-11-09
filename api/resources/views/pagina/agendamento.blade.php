@@ -20,9 +20,7 @@
     <title>Seu horário · {{ $empresa->nome }}</title>
     <meta name="theme-color" content="#0d0d0e">
     @if ($empresa->logo_url)<link rel="icon" href="{{ $empresa->logo_url }}">@endif
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+    <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <style>
         :root {
             --acento: {{ $empresa->cor_primaria }};

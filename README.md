@@ -35,7 +35,12 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 09/11/2026 · sistema publicado na HostGator · 110 testes na API*
+*Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API*
+
+- **LGPD — etapa 1 feita (ainda não publicada):** Política de privacidade e Termos de uso, aceite registrado no cadastro
+  e no agendamento online (com declaração de maioridade ou responsável), fontes no próprio servidor, mapa do Google só
+  com consentimento, aviso de cookies com "Recusar" e rodapé com CNPJ. **Acompanhamento completo e próximos passos em
+  [`LGPD.md`](LGPD.md).** Falta informar razão social, endereço, contato e encarregado de dados (`PLATAFORMA_*` no `.env`).
 
 - **09/11/2026:** produção ficou fora do ar (erro 500 no cadastro, no login e nas páginas) porque o MySQL passou a
   recusar a senha do `.env`. Resolvido trocando a senha do usuário `adri0667_abianchi` no cPanel e colocando-a
@@ -148,7 +153,13 @@ Para acessar:
   - conexão com a Meta (o token fica criptografado e nunca volta para o painel);
   - modelos para aprovar e histórico das mensagens.
 
-**Testes:** 110 testes na API (`php artisan test`), todos passando.
+### LGPD (detalhes em [`LGPD.md`](LGPD.md))
+- Política de privacidade (`/privacidade`) e Termos de uso (`/termos`), com versão.
+- Aceites guardados na tabela `aceites` (documento, versão, data, IP e navegador): cadastro do dono e agendamento online.
+- Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
+- Rodapé com CNPJ e links legais na página da barbearia, no login/cadastro do painel e na vitrine.
+
+**Testes:** 117 testes na API (`php artisan test`), todos passando.
 
 ---
 
@@ -187,9 +198,14 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 
 ### Etapa 5 — SaaS comercial
 - ⬜ Landing page de vendas do SaaS, cadastro self-service, planos e cobrança recorrente
+  (cumprindo arrependimento de 7 dias, cancelamento pelo mesmo canal, aviso de renovação e preço total: veja `LGPD.md`)
 - ⬜ Cota de mensagens do WhatsApp por plano (a contagem mensal já aparece no painel)
 - ⬜ Multiunidade (filiais), domínio próprio da barbearia, NFS-e, central de ajuda
 - ⬜ Migração para VPS quando o volume exigir (fila com Supervisor, Redis)
+
+### LGPD — etapas 2 e 3
+- ⬜ Consentimento de marketing separado, "Meus dados" (acesso e exclusão), limpeza automática pelos prazos de guarda,
+  descadastro e plano de incidentes (ANPD em 3 dias úteis). Lista completa em [`LGPD.md`](LGPD.md).
 
 ### Pequenos pendentes e ideias
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")

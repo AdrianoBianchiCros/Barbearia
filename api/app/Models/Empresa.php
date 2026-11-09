@@ -55,7 +55,7 @@ class Empresa extends Model
     }
 
     /** Endereços que não podem ser usados como página de barbearia (são rotas do sistema). */
-    public const SLUGS_RESERVADOS = ['a', 'api', 'up', 'storage', 'img', 'login', 'admin', 'app', 'painel'];
+    public const SLUGS_RESERVADOS = ['a', 'api', 'up', 'storage', 'img', 'fonts', 'login', 'admin', 'app', 'painel', 'privacidade', 'termos', 'cookies', 'descadastro', 'meus-dados', 'sistemas'];
 
     public function usuarios(): HasMany
     {

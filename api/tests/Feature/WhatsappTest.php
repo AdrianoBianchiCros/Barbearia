@@ -59,6 +59,8 @@ class WhatsappTest extends TestCase
     private function agendarPelaPagina(array $dados = []): TestResponse
     {
         return $this->postJson('/api/publico/barbearia-do-ze/agendamentos', $dados + [
+            'aceite_privacidade' => true,
+            'maioridade' => true,
             'nome' => 'João Silva',
             'telefone' => '11988887777',
             'aceita_whatsapp' => true,

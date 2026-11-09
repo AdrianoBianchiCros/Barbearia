@@ -37,6 +37,7 @@ export interface DadosRegistro {
   email: string;
   password: string;
   password_confirmation: string;
+  aceite_termos: boolean;
 }
 
 const CHAVE_TOKEN = 'barbearia.token';

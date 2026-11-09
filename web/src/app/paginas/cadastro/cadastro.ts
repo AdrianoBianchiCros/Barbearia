@@ -3,13 +3,15 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
+import { PLATAFORMA } from '../../core/plataforma';
+import { RodapeLegal } from '../../layout/rodape-legal';
 
 const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
   grupo.get('password')?.value === grupo.get('password_confirmation')?.value ? null : { senhasDiferentes: true };
 
 @Component({
   selector: 'app-cadastro',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal],
   template: `
     <main class="tela-acesso">
       <form class="cartao" [formGroup]="form" (ngSubmit)="cadastrar()" novalidate>
@@ -65,11 +67,23 @@ const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
           }
         </label>
 
+        <label class="check-aceite">
+          <input type="checkbox" formControlName="aceite_termos" />
+          <span>
+            Li e aceito os <a [href]="plataforma.termos" target="_blank" rel="noopener">Termos de uso</a> e a
+            <a [href]="plataforma.privacidade" target="_blank" rel="noopener">Política de privacidade</a>.
+          </span>
+        </label>
+        @if (mostrarErro('aceite_termos')) {
+          <small class="erro-campo">{{ errosApi()['aceite_termos'] || 'Para criar a conta, aceite os Termos de uso e a Política de privacidade.' }}</small>
+        }
+
         <button class="botao" type="submit" [disabled]="enviando()">
           {{ enviando() ? 'Criando conta…' : 'Criar conta' }}
         </button>
 
         <p class="rodape-cartao">Já tem conta? <a routerLink="/login">Entrar</a></p>
+        <app-rodape-legal />
       </form>
     </main>
   `,
@@ -86,9 +100,11 @@ export class Cadastro {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/)]],
       password_confirmation: ['', Validators.required],
+      aceite_termos: [false, Validators.requiredTrue],
     },
     { validators: senhasIguais },
   );
+  protected readonly plataforma = PLATAFORMA;
   protected readonly enviando = signal(false);
   protected readonly erro = signal('');
   protected readonly errosApi = signal<Record<string, string>>({});

@@ -6,10 +6,16 @@
   <title>Sistemas | ABianchi Tech</title>
   <meta name="description" content="Sistemas de gestão da ABianchi Tech para pequenos negócios.">
   <meta name="robots" content="noindex">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Fonte servida por aqui mesmo (sem chamar o Google). */
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+      src: url(fontes/inter.woff2) format('woff2');
+    }
+
     :root {
       --fundo: #0f1115;
       --superficie: #171a21;
@@ -165,6 +171,9 @@
     .sistema.bloqueado { opacity: 0.55; cursor: default; }
     .sistema.bloqueado .icone { color: var(--texto-suave); }
 
+    footer p { margin: 4px 0; }
+    footer a { color: var(--texto-suave); }
+
     footer {
       padding-bottom: 28px;
       color: var(--texto-suave);
@@ -191,7 +200,15 @@
     <div class="grade" id="sistemas"></div>
   </main>
 
-  <footer>© <span id="ano"></span> ABianchi Tech</footer>
+  <footer>
+    <!-- Preencher razão social, endereço e contato quando definidos (os mesmos do .env: PLATAFORMA_*). -->
+    <p>© <span id="ano"></span> ABianchi Tech · CNPJ 54.942.870/0001-09</p>
+    <p>[preencher endereço] · Contato: [preencher e-mail]</p>
+    <p>
+      <a href="/saas/barbearia/privacidade">Política de privacidade</a> ·
+      <a href="/saas/barbearia/termos">Termos de uso</a>
+    </p>
+  </footer>
 
   <script>
     // Lista de sistemas. Para incluir um novo, acrescente uma linha.

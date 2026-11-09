@@ -8,6 +8,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Documentos legais da plataforma (LGPD). Precisam vir antes da rota /{slug}.
+Route::view('/privacidade', 'legal.privacidade')->name('privacidade');
+Route::view('/termos', 'legal.termos')->name('termos');
+
 // Link do cliente para confirmar, remarcar ou cancelar: seudominio.com.br/a/{token}
 Route::get('/a/{token}', [ClienteAgendamentoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')

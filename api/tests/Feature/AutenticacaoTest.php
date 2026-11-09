@@ -19,6 +19,7 @@ class AutenticacaoTest extends TestCase
             'email' => 'ze@exemplo.test',
             'password' => 'segredo123',
             'password_confirmation' => 'segredo123',
+            'aceite_termos' => true,
         ]);
 
         $resposta->assertCreated()
@@ -40,6 +41,7 @@ class AutenticacaoTest extends TestCase
             'email' => 'outro@exemplo.test',
             'password' => 'segredo123',
             'password_confirmation' => 'segredo123',
+            'aceite_termos' => true,
         ])->assertCreated()->assertJsonPath('empresa.slug', 'barbearia-do-ze-2');
     }
 
@@ -53,6 +55,7 @@ class AutenticacaoTest extends TestCase
             'email' => 'ze@exemplo.test',
             'password' => '123',
             'password_confirmation' => '123',
+            'aceite_termos' => true,
         ])->assertUnprocessable()->assertJsonValidationErrors(['email', 'password']);
     }
 

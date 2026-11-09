@@ -29,9 +29,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="theme-color" content="#0d0d0e">
     @if ($empresa->logo_url)<link rel="icon" href="{{ $empresa->logo_url }}">@endif
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+    <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <link rel="preload" as="image" href="{{ $fotoCapa }}">
     <style>
         :root {
@@ -262,6 +260,8 @@
         .links { display: flex; flex-wrap: wrap; gap: 12px; }
         .mapa-moldura { border-radius: 24px; overflow: hidden; min-height: 360px; position: relative; background: var(--escuro-2); }
         .mapa-moldura iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(1) invert(.92) contrast(.9); }
+        .mapa-bloqueado { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 24px 110px; text-align: center; color: var(--claro-suave); }
+        .mapa-bloqueado p { margin: 0; max-width: 320px; }
         .mapa-moldura .endereco { position: absolute; left: 16px; right: 16px; bottom: 16px; background: rgba(13,13,14,.88); backdrop-filter: blur(8px); border-radius: 16px; padding: 16px 18px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
         @media (max-width: 860px) { .contato { grid-template-columns: 1fr; } }
 
@@ -271,6 +271,16 @@
         .chamada p { color: var(--claro-suave); margin: 0 auto 34px; max-width: 480px; }
 
         footer { padding: 34px 0 110px; text-align: center; color: rgba(245,241,234,.45); font-size: .88rem; border-top: 1px solid rgba(245,241,234,.06); }
+        footer p { margin: 4px 0; }
+        footer a, footer button { color: rgba(245,241,234,.7); }
+        footer button { background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; }
+
+        /* Aviso de cookies */
+        .aviso-cookies { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 40; max-width: 720px; margin: 0 auto; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: 18px 20px; border-radius: 18px; background: rgba(23,23,26,.97); color: var(--claro); box-shadow: 0 20px 50px -10px rgba(0,0,0,.7); font-size: .92rem; }
+        .aviso-cookies p { margin: 0; flex: 1 1 320px; }
+        .aviso-cookies a { color: var(--ouro); }
+        .aviso-cookies div { display: flex; gap: 10px; }
+        .aviso-cookies .botao { padding: 11px 22px; }
 
         /* Barra fixa no celular + WhatsApp flutuante */
         .cta-celular { position: fixed; left: 12px; right: 84px; bottom: 14px; z-index: 25; transform: translateY(140%); transition: transform .4s cubic-bezier(.2,.8,.2,1); }
@@ -507,8 +517,10 @@
                             <div class="erro" id="erro" hidden></div>
                             <label class="campo"><span>Seu nome</span><input name="nome" autocomplete="name" maxlength="120" required></label>
                             <label class="campo"><span>WhatsApp com DDD</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-0000" required></label>
-                            <label class="check"><input type="checkbox" name="aceita_whatsapp" value="1"><span>Quero receber a confirmação e lembretes do horário pelo WhatsApp.</span></label>
+                            <label class="check"><input type="checkbox" name="aceita_whatsapp" value="1"><span>Quero receber a confirmação e lembretes do horário pelo WhatsApp. <small>(opcional)</small></span></label>
                             <label class="campo"><span>Observação (opcional)</span><textarea name="observacoes" rows="2" maxlength="300" placeholder="Ex.: quero manter o comprimento em cima"></textarea></label>
+                            <label class="check"><input type="checkbox" name="maioridade" value="1" required><span>Tenho 18 anos ou mais, ou sou o responsável legal por quem será atendido e autorizo o uso dos dados para este agendamento.</span></label>
+                            <label class="check"><input type="checkbox" name="aceite_privacidade" value="1" required><span>Li e aceito a <a href="{{ route('privacidade') }}" target="_blank" rel="noopener">Política de privacidade</a> e os <a href="{{ route('termos') }}" target="_blank" rel="noopener">Termos de uso</a>.</span></label>
                             <div class="acoes">
                                 <button class="botao botao-claro" type="button" data-voltar="3">← Voltar</button>
                                 <button class="botao" type="submit" id="confirmar">Confirmar agendamento</button>
@@ -551,8 +563,11 @@
                     </div>
                     @if ($endereco)
                         <div class="mapa-moldura revelar" style="--atraso:.25s">
-                            <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa"
-                                src="https://www.google.com/maps?q={{ urlencode($endereco) }}&output=embed"></iframe>
+                            {{-- O mapa do Google só carrega com o consentimento do visitante (LGPD): até lá, nada é enviado ao Google. --}}
+                            <div class="mapa-bloqueado" id="mapa" data-src="https://www.google.com/maps?q={{ urlencode($endereco) }}&output=embed">
+                                <p>O mapa é fornecido pelo Google, que pode usar cookies.</p>
+                                <button class="botao botao-vazado" type="button" data-cookies="aceitar">Mostrar mapa</button>
+                            </div>
                             <div class="endereco">
                                 <span>{{ $endereco }}</span>
                                 <a class="botao botao-ouro" href="{{ $mapa }}" target="_blank" rel="noopener" style="padding: 10px 18px">Como chegar</a>
@@ -573,8 +588,64 @@
     </main>
 
     <footer>
-        <div class="conteudo">© {{ now()->year }} {{ $empresa->nome }} · Agendamento online</div>
+        <div class="conteudo">
+            <p>© {{ now()->year }} {{ $empresa->nome }}@if ($empresa->documento) · CNPJ {{ $empresa->documento }}@endif</p>
+            @if ($endereco)<p>{{ $endereco }}</p>@endif
+            @if ($empresa->email || $empresa->telefone || $empresa->whatsapp)
+                <p>Contato:
+                    @if ($empresa->email)<a href="mailto:{{ $empresa->email }}">{{ $empresa->email }}</a>@endif
+                    @if ($empresa->whatsapp ?: $empresa->telefone) · {{ \App\Support\Telefone::formatar($empresa->whatsapp ?: $empresa->telefone) }}@endif
+                </p>
+            @endif
+            <p class="rodape-legal">
+                <a href="{{ route('privacidade') }}">Política de privacidade</a> ·
+                <a href="{{ route('termos') }}">Termos de uso</a> ·
+                <button type="button" data-cookies="abrir">Cookies</button>
+            </p>
+            <p>Agendamento online por {{ config('plataforma.nome') }} · CNPJ {{ config('plataforma.cnpj') }}</p>
+        </div>
     </footer>
+
+    <div class="aviso-cookies" id="aviso-cookies" role="dialog" aria-live="polite" aria-label="Aviso de cookies" hidden>
+        <p>Usamos apenas cookies necessários para o site funcionar. O <strong>mapa do Google</strong> é opcional e só é
+            carregado se você permitir. <a href="{{ route('privacidade') }}#cookies" target="_blank" rel="noopener">Saiba mais</a></p>
+        <div>
+            <button class="botao botao-vazado" type="button" data-cookies="recusar">Recusar</button>
+            <button class="botao botao-ouro" type="button" data-cookies="aceitar">Aceitar</button>
+        </div>
+    </div>
+    <script>
+        // Consentimento de cookies: sem escolha (ou com recusa), nada de terceiros é carregado.
+        (() => {
+            const CHAVE = 'cookies-terceiros';
+            const aviso = document.getElementById('aviso-cookies');
+            const mapa = document.getElementById('mapa');
+            const ler = () => { try { return localStorage.getItem(CHAVE); } catch (e) { return null; } };
+            const gravar = (v) => { try { localStorage.setItem(CHAVE, v); } catch (e) { /* sem armazenamento */ } };
+            function carregarMapa() {
+                if (!mapa || mapa.dataset.carregado) return;
+                const f = document.createElement('iframe');
+                f.src = mapa.dataset.src;
+                f.title = 'Mapa';
+                f.loading = 'lazy';
+                f.referrerPolicy = 'no-referrer-when-downgrade';
+                mapa.replaceChildren(f);
+                mapa.dataset.carregado = '1';
+            }
+            function aplicar(escolha) {
+                aviso.hidden = true;
+                if (escolha === 'aceito') carregarMapa();
+            }
+            document.addEventListener('click', (ev) => {
+                const acao = ev.target.closest('[data-cookies]')?.dataset.cookies;
+                if (acao === 'aceitar') { gravar('aceito'); aplicar('aceito'); }
+                if (acao === 'recusar') { gravar('recusado'); aplicar('recusado'); }
+                if (acao === 'abrir') aviso.hidden = false;
+            });
+            const escolha = ler();
+            if (escolha) aplicar(escolha); else aviso.hidden = false;
+        })();
+    </script>
 
     @if ($servicos->isNotEmpty())
         <div class="cta-celular" id="cta-celular"><a class="botao botao-ouro" href="#agendar">Agendar horário</a></div>

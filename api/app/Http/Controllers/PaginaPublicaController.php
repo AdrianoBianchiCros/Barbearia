@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Aceite;
 use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Empresa;
@@ -137,8 +138,12 @@ class PaginaPublicaController extends Controller
             'data' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
             'observacoes' => ['nullable', 'string', 'max:300'],
+            'aceite_privacidade' => ['accepted'],
+            'maioridade' => ['accepted'],
         ], [
             'telefone.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'aceite_privacidade.accepted' => 'Para agendar, aceite a Política de privacidade.',
+            'maioridade.accepted' => 'Confirme que você tem 18 anos ou mais, ou que é o responsável legal por quem será atendido.',
         ], [
             'telefone' => 'WhatsApp',
             'funcionario_id' => 'barbeiro',
@@ -200,6 +205,7 @@ class PaginaPublicaController extends Controller
             ]);
         });
 
+        $this->registrarAceites($empresa, $agendamento->cliente_id, $request);
         $agendamento->load('itens');
         $mensageiro->agendamento($agendamento, 'confirmacao');
         $inicio = $agendamento->inicio->copy()->setTimezone($empresa->fuso_horario);
@@ -249,6 +255,17 @@ class PaginaPublicaController extends Controller
     }
 
     /** Cliente pelo WhatsApp: reaproveita o cadastro existente (inclusive excluído). */
+    /** Guarda o aceite da privacidade e a declaração de maioridade; repete só quando a versão do texto muda. */
+    private function registrarAceites(Empresa $empresa, int $clienteId, Request $request): void
+    {
+        $pendentes = array_filter(['privacidade', 'maioridade'], fn (string $doc) => ! Aceite::where('cliente_id', $clienteId)
+            ->where('documento', $doc)
+            ->where('versao', Aceite::versaoVigente($doc))
+            ->exists());
+
+        Aceite::registrar($pendentes, ['empresa_id' => $empresa->id, 'cliente_id' => $clienteId], 'link_publico', $request);
+    }
+
     private function cliente(array $dados): Cliente
     {
         $cliente = Cliente::withTrashed()->firstOrNew(['telefone' => $dados['telefone']]);

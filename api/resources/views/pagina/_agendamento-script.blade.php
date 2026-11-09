@@ -174,6 +174,11 @@
                 erro.hidden = false;
                 return;
             }
+            if (!form.maioridade.checked || !form.aceite_privacidade.checked) {
+                erro.textContent = 'Para agendar, confirme a declaração de idade e aceite a Política de privacidade.';
+                erro.hidden = false;
+                return;
+            }
             const botao = $('#confirmar');
             botao.disabled = true;
             botao.textContent = 'Agendando…';
@@ -185,6 +190,8 @@
                         nome: form.nome.value.trim(),
                         telefone: form.telefone.value,
                         aceita_whatsapp: form.aceita_whatsapp.checked,
+                        maioridade: form.maioridade.checked,
+                        aceite_privacidade: form.aceite_privacidade.checked,
                         observacoes: form.observacoes.value.trim() || null,
                         funcionario_id: estado.barbeiro ? estado.barbeiro.id : null,
                         servico_ids: estado.servicos,

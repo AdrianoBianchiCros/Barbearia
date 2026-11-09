@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Aceite;
 use App\Models\Empresa;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -24,14 +25,17 @@ class AuthController extends Controller
             'nome' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:180', 'unique:usuarios,email'],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-        ], [], [
+            'aceite_termos' => ['accepted'],
+        ], [
+            'aceite_termos.accepted' => 'Para criar a conta, aceite os Termos de uso e a Política de privacidade.',
+        ], [
             'empresa_nome' => 'nome da barbearia',
             'empresa_telefone' => 'telefone da barbearia',
             'email' => 'e-mail',
             'password' => 'senha',
         ]);
 
-        $usuario = DB::transaction(function () use ($dados) {
+        $usuario = DB::transaction(function () use ($dados, $request) {
             $empresa = Empresa::create([
                 'nome' => $dados['empresa_nome'],
                 'slug' => Empresa::gerarSlug($dados['empresa_nome']),
@@ -39,13 +43,17 @@ class AuthController extends Controller
                 'email' => $dados['email'],
             ])->refresh(); // carrega os valores padrão do banco (ex.: fuso horário)
 
-            return User::create([
+            $usuario = User::create([
                 'empresa_id' => $empresa->id,
                 'nome' => $dados['nome'],
                 'email' => $dados['email'],
                 'password' => $dados['password'],
                 'perfil' => 'dono',
             ]);
+
+            Aceite::registrar(['termos', 'privacidade'], ['empresa_id' => $empresa->id, 'usuario_id' => $usuario->id], 'cadastro_painel', $request);
+
+            return $usuario;
         });
 
         return $this->respostaComToken($usuario, $request, 201);

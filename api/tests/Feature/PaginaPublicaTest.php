@@ -68,6 +68,8 @@ class PaginaPublicaTest extends TestCase
     private function agendar(array $dados = []): \Illuminate\Testing\TestResponse
     {
         return $this->postJson('/api/publico/barbearia-do-ze/agendamentos', $dados + [
+            'aceite_privacidade' => true,
+            'maioridade' => true,
             'nome' => 'João',
             'telefone' => '(11) 98888-7777',
             'servico_ids' => [$this->corte->id],

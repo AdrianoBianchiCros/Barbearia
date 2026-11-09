@@ -4,13 +4,13 @@
   position: absolute;
   bottom: 4px;
   right: 6px;
-  font-size: 0.62rem;
-  font-weight: 600;
-  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 0 8px;
   color: var(--cor-texto);
   background: var(--st-em_atendimento-bg);
   border: 1px solid var(--st-em_atendimento-bd);
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
 }
 
 .compacto .cartao-receber {
@@ -21,9 +21,10 @@
 .pago-info {
   margin: 0;
   padding: 8px 12px;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--cor-sucesso);
   background: var(--st-confirmado-bg);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
 }
 
 .botoes-linha {
@@ -36,37 +37,38 @@
 .indicadores {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 16px;
 }
 
 .indicador {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 12px 14px;
+  gap: 4px;
+  padding: 16px;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
+  border-radius: var(--radius-cards);
 
   span {
-    font-size: 0.78rem;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--cor-texto-suave);
   }
 
   strong {
-    font-size: 1.2rem;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
 
   small {
-    font-size: 0.72rem;
+    font-size: 12px;
     color: var(--cor-texto-suave);
   }
 
+  // Métrica-chave: o número ganha o azul, o cartão continua branco
   &.destaque {
-    background: var(--cor-primaria-suave);
-    border-color: var(--cor-primaria);
-
     strong {
       color: var(--cor-primaria);
     }
@@ -82,12 +84,13 @@
   place-items: center;
   min-width: 22px;
   height: 22px;
-  padding: 0 6px;
-  margin-left: 6px;
-  font-size: 0.75rem;
-  color: #fff;
-  background: var(--cor-primaria);
-  border-radius: 999px;
+  padding: 0 8px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-canvas-white);
+  background: var(--color-charcoal);
+  border-radius: var(--radius-tags);
 }
 
 .lista-simples {
@@ -99,7 +102,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 4px;
+    padding: 12px 4px;
     border-bottom: 1px solid var(--cor-borda);
 
     > div {
@@ -133,13 +136,20 @@
 }
 
 .positivo {
-  color: #1a7f37;
+  color: var(--cor-sucesso);
 }
 
 .etiqueta.etiqueta-erro {
   color: var(--cor-erro);
-  border-color: var(--cor-erro);
   background: var(--cor-erro-fundo);
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-tags);
+    background: currentColor;
+  }
 }
 
 .estoque-baixo {
@@ -162,8 +172,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   input {
@@ -172,17 +182,16 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
 .aviso-caixa {
-  padding: 12px 14px;
+  padding: 12px 16px;
   margin-bottom: 12px;
   background: var(--st-em_atendimento-bg);
-  border: 1px solid var(--st-em_atendimento-bd);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
 }
 
 .filtro-periodo,
@@ -197,8 +206,8 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -240,11 +249,11 @@
     width: 100%;
     padding: 6px 8px;
     font: inherit;
-    font-size: 0.85rem;
+    font-size: 13px;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -255,7 +264,7 @@
   min-width: 0;
 
   select {
-    font-size: 0.78rem;
+    font-size: 12px;
     padding: 3px 6px;
   }
 }
@@ -277,8 +286,8 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px dashed var(--cor-primaria);
-    border-radius: 8px;
+    border: 1px dashed var(--color-primary-action-fill);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -300,13 +309,13 @@
     text-align: right;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 
   .total-geral {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 20px;
+    font-weight: 500;
   }
 }
 
@@ -323,8 +332,8 @@
     text-align: right;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -343,33 +352,26 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
 .restante {
   margin: 10px 0 0;
   padding: 8px 12px;
-  font-weight: 600;
+  font-weight: 500;
   background: var(--cor-fundo);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
 
   &.ok {
-    color: #1a7f37;
+    color: var(--cor-sucesso);
     background: var(--st-confirmado-bg);
   }
 
   &.excesso {
     color: var(--cor-erro);
     background: var(--cor-erro-fundo);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .positivo,
-  .restante.ok {
-    color: #7ee2a0;
   }
 }
 
@@ -385,12 +387,14 @@
 
 // Limite de dinheiro na gaveta
 .botao-sangria {
-  color: #fff;
-  background: #1a7f37;
-  border-color: #1a7f37;
+  color: var(--cor-sucesso);
+  background: var(--cor-superficie);
+  border-color: var(--cor-borda);
+  box-shadow: none;
 
   &:hover:not(:disabled) {
-    background: #15692d;
+    background: var(--cor-sucesso-fundo);
+    border-color: var(--cor-borda);
   }
 }
 
@@ -400,11 +404,10 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 12px 14px;
+  padding: 12px 16px;
   margin-bottom: 12px;
   background: var(--st-confirmado-bg);
-  border: 1px solid #1a7f37;
-  border-radius: 10px;
+  border-radius: var(--radius-cards);
 }
 
 .limite-gaveta {
@@ -421,14 +424,21 @@
 
 // Validade de produtos
 .etiqueta.etiqueta-alerta {
-  color: var(--cor-texto);
-  border-color: var(--st-em_atendimento-bd);
+  color: var(--color-tangerine);
   background: var(--st-em_atendimento-bg);
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-tags);
+    background: currentColor;
+  }
 }
 
 .secao-compras {
   margin-top: 8px;
-  border-top: 2px solid var(--cor-borda);
+  border-top: 1px solid var(--cor-borda);
 }
 
 .acoes-compra {
@@ -440,6 +450,6 @@
 .secao-compras.editando-compra {
   padding: 12px;
   margin: 8px -12px 0;
-  background: var(--cor-primaria-suave);
-  border-radius: 10px;
+  background: var(--cor-superficie-2);
+  border-radius: var(--radius-cards);
 }

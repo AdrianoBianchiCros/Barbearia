@@ -45,7 +45,6 @@
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
   cursor: pointer;
 
   svg {
@@ -60,8 +59,9 @@
   }
 
   &:hover {
-    color: var(--cor-primaria);
-    border-color: var(--cor-primaria);
+    color: var(--cor-texto);
+    background: var(--cor-fundo);
+    border-color: var(--cor-borda-forte);
   }
 }
 
@@ -125,10 +125,10 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: var(--radius-cards);
   background: var(--cor-primaria);
-  color: #fff;
-  font-weight: 700;
+  color: var(--texto-sobre-azul);
+  font-weight: 600;
   flex-shrink: 0;
 }
 
@@ -138,7 +138,8 @@
   min-width: 0;
 
   strong {
-    font-size: 0.95rem;
+    font-size: 15px;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -146,41 +147,48 @@
 
   small {
     color: var(--cor-texto-suave);
-    font-size: 0.75rem;
+    font-size: 12px;
   }
 }
 
 .menu-grupo {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--cor-texto-suave);
-  padding: 14px 10px 6px;
+  padding: 16px 12px 4px;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: var(--cor-texto);
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-buttons);
+  color: var(--color-slate);
   text-decoration: none;
-  font-size: 0.92rem;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transicao), color var(--transicao);
 
   &:hover {
     background: var(--cor-fundo);
+    color: var(--cor-texto);
   }
 
+  // Ativo: fundo azul claro, sem barra lateral
   &.ativo {
     background: var(--cor-primaria-suave);
-    color: var(--cor-primaria);
-    font-weight: 600;
+    color: var(--cor-texto);
+
+    .menu-icone {
+      color: var(--cor-primaria);
+    }
   }
 
   &.desativado {
-    color: var(--cor-texto-suave);
+    color: var(--color-silver);
     cursor: default;
 
     &:hover {
@@ -203,10 +211,11 @@
 
 .em-breve {
   margin-left: auto;
-  font-size: 0.65rem;
+  font-size: 11px;
+  color: var(--cor-texto-suave);
   border: 1px solid var(--cor-borda);
-  border-radius: 999px;
-  padding: 0 6px;
+  border-radius: var(--radius-tags);
+  padding: 0 8px;
 }
 
 .menu-usuario {
@@ -223,11 +232,12 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
-  background: var(--cor-texto);
-  color: var(--cor-superficie);
-  font-size: 0.8rem;
-  font-weight: 700;
+  border-radius: var(--radius-tags);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda);
+  font-size: 12px;
+  font-weight: 500;
   flex-shrink: 0;
 }
 
@@ -238,11 +248,12 @@
   flex: 1;
 
   strong {
-    font-size: 0.85rem;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   small {
-    font-size: 0.72rem;
+    font-size: 12px;
     color: var(--cor-texto-suave);
     white-space: nowrap;
     overflow: hidden;
@@ -256,13 +267,17 @@
   width: 32px;
   height: 32px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   background: none;
   color: var(--cor-texto-suave);
   cursor: pointer;
 
   &:hover {
     background: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  &.botao-sair:hover {
     color: var(--cor-erro);
   }
 }
@@ -277,16 +292,20 @@
 }
 
 .conteudo {
-  padding: 20px 24px;
+  padding: 24px 32px;
 
   h1 {
     margin: 0 0 4px;
-    font-size: 1.45rem;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.33;
+    letter-spacing: -0.01em;
   }
 
   h2 {
     margin: 0 0 12px;
-    font-size: 1.1rem;
+    font-size: 18px;
+    font-weight: 500;
   }
 }
 
@@ -332,7 +351,7 @@
   }
 
   .botao-menu {
-    font-size: 1.3rem;
+    font-size: 20px;
     background: none;
     border: 0;
     color: inherit;
@@ -344,13 +363,22 @@
   }
 }
 
+// Campos em 14px na área logada (no celular ficam em 16px para o iPhone não dar zoom)
+@media (min-width: 801px) {
+  .shell input:not([type='checkbox']):not([type='radio']),
+  .shell select:not([multiple]),
+  .shell textarea:not([readonly]) {
+    font-size: 14px;
+  }
+}
+
 // ---------- Componentes comuns ----------
 .texto-suave {
   color: var(--cor-texto-suave);
 }
 
 .pequeno {
-  font-size: 0.85rem;
+  font-size: 14px;
 }
 
 .cabecalho-pagina {
@@ -359,7 +387,7 @@
   align-items: flex-start;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 
   p {
     margin: 0;
@@ -368,13 +396,13 @@
 
 .acoes-cabecalho {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .botao-auto {
   width: auto;
-  padding: 10px 18px;
+  padding: 8px 16px;
   text-decoration: none;
   display: inline-block;
 }
@@ -382,13 +410,16 @@
 .botao-link {
   background: none;
   border: 0;
-  padding: 4px 6px;
+  border-radius: var(--radius-inputs);
+  padding: 4px 8px;
   font: inherit;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--cor-primaria);
   cursor: pointer;
 
   &:hover {
-    text-decoration: underline;
+    color: var(--cor-primaria-hover);
   }
 
   &.perigo {
@@ -400,16 +431,15 @@
   padding: 32px 16px;
   text-align: center;
   color: var(--cor-texto-suave);
-  background: var(--cor-superficie);
-  border: 1px dashed var(--cor-borda);
-  border-radius: var(--raio);
+  background: var(--cor-superficie-2);
+  border-radius: var(--radius-largecards);
 }
 
 .tabela-container {
   overflow-x: auto;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
+  border-radius: var(--radius-cards);
 }
 
 .tabela {
@@ -419,16 +449,23 @@
   th,
   td {
     text-align: left;
-    padding: 10px 14px;
+    padding: 12px 16px;
+    font-size: 14px;
     border-bottom: 1px solid var(--cor-borda);
     vertical-align: middle;
   }
 
   th {
-    font-size: 0.8rem;
+    font-size: 12px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     color: var(--cor-texto-suave);
+    background: var(--cor-superficie-2);
+  }
+
+  tbody tr:hover td {
+    background: var(--cor-superficie-2);
   }
 
   tbody tr:last-child td {
@@ -445,39 +482,42 @@
   }
 }
 
+// Etiqueta: pílula tingida; as de situação levam um ponto além do texto
 .etiqueta {
-  display: inline-block;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
   background: var(--cor-fundo);
-  color: var(--cor-texto-suave);
-  border: 1px solid var(--cor-borda);
+  color: var(--color-steel);
+  border: 1px solid transparent;
 
   &.etiqueta-ok {
-    color: #1a7f37;
-    border-color: #a6dbb3;
-    background: #e9f7ee;
-  }
-}
+    color: var(--cor-sucesso);
+    background: var(--cor-sucesso-fundo);
 
-@media (prefers-color-scheme: dark) {
-  .etiqueta.etiqueta-ok {
-    color: #7ee2a0;
-    border-color: #2a5b3a;
-    background: #15301f;
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-tags);
+      background: currentColor;
+    }
   }
 }
 
 .campo select,
 .campo textarea {
   width: 100%;
-  padding: 11px 12px;
+  padding: 8px 12px;
   font: inherit;
   color: inherit;
   background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border: var(--borda-campo);
+  border-radius: var(--radius-inputs);
 }
 
 .campo textarea {
@@ -514,13 +554,13 @@ fieldset {
 .campo-busca {
   width: 100%;
   max-width: 420px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   margin-bottom: 16px;
   font: inherit;
   color: inherit;
   background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border: var(--borda-campo);
+  border-radius: var(--radius-inputs);
 }
 
 .paginacao {
@@ -549,7 +589,8 @@ fieldset {
   z-index: 50;
   padding: 24px;
   overflow-y: auto;
-  box-shadow: -8px 0 24px rgb(0 0 0 / 15%);
+  border-left: 1px solid var(--cor-borda);
+  box-shadow: var(--shadow-showcase);
 }
 
 .rodape-painel,
@@ -573,8 +614,8 @@ fieldset {
 .cartao-secao {
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  padding: 20px;
+  border-radius: var(--radius-cards);
+  padding: 24px;
   margin-bottom: 16px;
 }
 
@@ -582,22 +623,24 @@ fieldset {
 .cartoes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  gap: 8px;
 }
 
 .cartao-pessoa {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
   padding: 16px;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
+  border-radius: var(--radius-cards);
   color: inherit;
   text-decoration: none;
+  transition: border-color var(--transicao), background var(--transicao);
 
   &:hover {
-    border-color: var(--cor-primaria);
+    border-color: var(--cor-borda-forte);
+    background: var(--cor-superficie-2);
   }
 
   &.inativo {
@@ -623,16 +666,17 @@ fieldset {
 .avatar-inicial {
   display: grid;
   place-items: center;
-  background: var(--cor-primaria);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.3rem;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda);
+  font-weight: 500;
+  font-size: 20px;
 }
 
 .avatar-grande {
   width: 72px;
   height: 72px;
-  font-size: 1.8rem;
+  font-size: 28px;
 }
 
 .cabecalho-pessoa {
@@ -647,9 +691,11 @@ fieldset {
   text-decoration: none;
 }
 
+// Abas: pílulas ghost; a ativa ganha fundo cinza claro
 .abas {
   display: flex;
   gap: 4px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--cor-borda);
   margin-bottom: 16px;
   overflow-x: auto;
@@ -657,17 +703,23 @@ fieldset {
   button {
     background: none;
     border: 0;
-    border-bottom: 2px solid transparent;
-    padding: 10px 14px;
+    border-radius: var(--radius-tags);
+    padding: 8px 16px;
     font: inherit;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--cor-texto-suave);
     cursor: pointer;
     white-space: nowrap;
+    transition: background var(--transicao), color var(--transicao);
+
+    &:hover {
+      color: var(--cor-texto);
+    }
 
     &.ativa {
-      color: var(--cor-primaria);
-      border-bottom-color: var(--cor-primaria);
-      font-weight: 600;
+      color: var(--cor-texto);
+      background: var(--cor-fundo);
     }
   }
 }
@@ -697,8 +749,8 @@ fieldset {
   font: inherit;
   color: inherit;
   background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border: var(--borda-campo);
+  border-radius: var(--radius-inputs);
 
   &:disabled {
     opacity: 0.5;
@@ -789,18 +841,18 @@ fieldset {
 
 .rotulo {
   display: block;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 4px;
 }
 
 .previa-imagem {
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  background: var(--cor-fundo);
-  border: 1px dashed var(--cor-borda);
-  border-radius: var(--raio);
+  background: var(--cor-superficie-2);
+  border: 1px dashed var(--cor-borda-forte);
+  border-radius: var(--radius-cards);
   overflow: hidden;
   text-align: center;
   padding: 8px;
@@ -838,16 +890,31 @@ fieldset {
     padding: 0 10px;
     margin: 0;
     font-weight: 400;
-    font-size: 0.9rem;
+    font-size: 14px;
     color: var(--cor-texto-suave);
     background: var(--cor-fundo);
-    border: 1px solid var(--cor-borda);
+    border: var(--borda-campo);
     border-right: 0;
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--radius-inputs) 0 0 var(--radius-inputs);
+  }
+
+  span {
+    white-space: nowrap;
   }
 
   input {
-    border-radius: 0 8px 8px 0 !important;
+    border-radius: 0 var(--radius-inputs) var(--radius-inputs) 0 !important;
+  }
+
+  // Texto depois do campo (sufixo): borda e cantos do lado oposto
+  input:first-child {
+    border-radius: var(--radius-inputs) 0 0 var(--radius-inputs) !important;
+  }
+
+  input:first-child + span {
+    border-right: var(--borda-campo);
+    border-left: 0;
+    border-radius: 0 var(--radius-inputs) var(--radius-inputs) 0;
   }
 }
 
@@ -878,19 +945,35 @@ fieldset {
 }
 
 // ---------- Aviso flutuante ----------
+// Aviso flutuante: cartão branco com anel e ponto de situação
 .aviso {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  max-width: calc(100% - 40px);
+  bottom: 24px;
+  right: 24px;
+  max-width: calc(100% - 48px);
   z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 12px 16px;
-  border-radius: 8px;
-  background: #1a7f37;
-  color: #fff;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-cards);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  box-shadow: var(--shadow-ring), var(--shadow-showcase);
 
-  &.aviso-erro {
+  &::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-tags);
+    background: var(--color-vivid-green);
+  }
+
+  &.aviso-erro::before {
     background: var(--cor-erro);
   }
 }

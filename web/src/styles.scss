@@ -1,64 +1,138 @@
 // Estilos globais do sistema.
+// Visual "Dub" (skill-saas): tela branca, estrutura por bordas de 1px, texto monocromático
+// e um único azul de destaque. Nenhum valor visual solto: tudo sai dos tokens abaixo.
+
+// Fonte servida pelo próprio painel (sem chamar o Google). Licença OFL.
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./fontes/inter.woff2') format('woff2');
+}
 
 :root {
-  --cor-fundo: #f5f6fa;
-  --cor-superficie: #ffffff;
-  --cor-superficie-2: #fafbfc;
-  --cor-texto: #1f2430;
-  --cor-texto-suave: #667085;
-  --cor-borda: #e4e7ec;
-  --cor-primaria: #4f46e5;
-  --cor-primaria-hover: #4338ca;
-  --cor-primaria-suave: #eef0ff;
-  --cor-destaque: #c9a227;
-  --cor-erro: #b42318;
-  --cor-erro-fundo: #fdecea;
-  --raio: 10px;
+  // ---------- Tokens do sistema de design ----------
+  --color-canvas-white: #ffffff;
+  --color-paper-mist: #f5f5f5;
+  --color-paper-alt: #fafafa;
+  --color-ash: #e5e5e5;
+  --color-smoke: #d4d4d4;
+  --color-pebble: #c8c8c8;
+  --color-midnight-ink: #0a0a0a;
+  --color-charcoal: #171717;
+  --color-graphite: #262626;
+  --color-slate: #404040;
+  --color-steel: #525252;
+  --color-fog: #737373;
+  --color-silver: #a3a3a3;
+  --color-electric-blue: #2563eb;
+  --color-deep-sapphire: #1e40af;
+  --color-soft-mint: #dcfce7;
+  --color-soft-blue: #dbeaff;
+  --color-soft-amber: #ffedd5;
+  --color-vivid-green: #16a34a;
+  --color-tangerine: #ea580c;
+  --color-lavender: #7c3aed;
+  --color-primary-action-fill: #000000;
+  // Derivados (o sistema original não tem vermelho; erro e falta precisam de um)
+  --color-alert-red: #dc2626;
+  --color-soft-red: #fef2f2;
+  --color-green-ink: #15803d; // verde com contraste suficiente para texto pequeno
 
-  // Situações do agendamento: fundo, borda e texto
-  --st-agendado-bg: #e8e9ff;
-  --st-agendado-bd: #6d68f0;
-  --st-confirmado-bg: #d9f7e3;
-  --st-confirmado-bd: #22a55b;
-  --st-em_atendimento-bg: #fff1c2;
-  --st-em_atendimento-bd: #e0a800;
-  --st-concluido-bg: #eef0f3;
-  --st-concluido-bd: #98a2b3;
-  --st-faltou-bg: #fde4e4;
-  --st-faltou-bd: #d64545;
-  --st-cancelado-bg: #f2f2f2;
-  --st-cancelado-bd: #bbb;
+  --font-display: 'Satoshi', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-inputs: 6px;
+  --radius-buttons: 8px;
+  --radius-cards: 12px;
+  --radius-largecards: 16px;
+  --radius-tags: 9999px;
+
+  --shadow-subtle: rgba(0, 0, 0, 0.05) 0 1px 2px 0;
+  --shadow-ring: rgba(0, 0, 0, 0.1) 0 0 0 4px;
+  --shadow-showcase: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.1) 0 4px 6px -4px;
+  --shadow-pressed: rgba(0, 0, 0, 0.2) 0 2px 6px 0 inset;
+  --shadow-focus: rgb(255, 255, 255) 0 0 0 3px, rgb(0, 0, 0) 0 0 0 4px;
+
+  --borda-campo: 1px solid var(--color-primary-action-fill);
+  --pontos-fundo: rgba(0, 0, 0, 0.12);
+  --texto-sobre-azul: #ffffff;
+  --transicao: 150ms ease-out;
+
+  // ---------- Nomes usados pelas telas (apontam para os tokens) ----------
+  --cor-fundo: var(--color-paper-mist);
+  --cor-superficie: var(--color-canvas-white);
+  --cor-superficie-2: var(--color-paper-alt);
+  --cor-texto: var(--color-charcoal);
+  --cor-texto-suave: var(--color-fog);
+  --cor-borda: var(--color-ash);
+  --cor-borda-forte: var(--color-smoke);
+  --cor-primaria: var(--color-electric-blue);
+  --cor-primaria-hover: var(--color-deep-sapphire);
+  --cor-primaria-suave: var(--color-soft-blue);
+  --cor-destaque: var(--color-electric-blue);
+  --cor-sucesso: var(--color-green-ink);
+  --cor-sucesso-fundo: var(--color-soft-mint);
+  --cor-erro: var(--color-alert-red);
+  --cor-erro-fundo: var(--color-soft-red);
+  --raio: var(--radius-cards);
+
+  // Situações do agendamento: fundo tingido e cor do ponto/borda
+  --st-agendado-bg: var(--color-soft-blue);
+  --st-agendado-bd: var(--color-electric-blue);
+  --st-confirmado-bg: var(--color-soft-mint);
+  --st-confirmado-bd: var(--color-vivid-green);
+  --st-em_atendimento-bg: var(--color-soft-amber);
+  --st-em_atendimento-bd: var(--color-tangerine);
+  --st-concluido-bg: var(--color-paper-mist);
+  --st-concluido-bd: var(--color-silver);
+  --st-faltou-bg: var(--color-soft-red);
+  --st-faltou-bd: var(--color-alert-red);
+  --st-cancelado-bg: var(--color-paper-alt);
+  --st-cancelado-bd: var(--color-smoke);
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cor-fundo: #0f1218;
-    --cor-superficie: #171b23;
-    --cor-superficie-2: #1b2029;
-    --cor-texto: #e6e9ef;
-    --cor-texto-suave: #98a2b3;
-    --cor-borda: #2a303b;
-    --cor-primaria: #818cf8;
-    --cor-primaria-hover: #a5b4fc;
-    --cor-primaria-suave: #23264a;
-    --cor-erro: #ff8a7a;
-    --cor-erro-fundo: #3a1f1c;
+// Modo noturno (opcional, escolhido no menu; o padrão é o claro).
+// Os mesmos tokens com a escala de cinza invertida: os nomes continuam valendo, só mudam os valores.
+// O botão principal vira branco com texto preto, e o azul fica um tom mais claro para manter o contraste.
+:root[data-tema='escuro'] {
+  --color-canvas-white: #0a0a0a;
+  --color-paper-mist: #171717;
+  --color-paper-alt: #111111;
+  --color-ash: #262626;
+  --color-smoke: #404040;
+  --color-pebble: #525252;
+  --color-midnight-ink: #fafafa;
+  --color-charcoal: #ededed;
+  --color-graphite: #d4d4d4;
+  --color-slate: #c8c8c8;
+  --color-steel: #a3a3a3;
+  --color-fog: #a3a3a3;
+  --color-silver: #737373;
+  --color-electric-blue: #3b82f6;
+  --color-deep-sapphire: #93c5fd;
+  --color-soft-mint: #052e16;
+  --color-soft-blue: #172554;
+  --color-soft-amber: #431407;
+  --color-vivid-green: #22c55e;
+  --color-tangerine: #fb923c;
+  --color-lavender: #a78bfa;
+  --color-primary-action-fill: #ffffff;
+  --color-alert-red: #f87171;
+  --color-soft-red: #450a0a;
+  --color-green-ink: #4ade80;
 
-    --st-agendado-bg: #262a55;
-    --st-agendado-bd: #818cf8;
-    --st-confirmado-bg: #173a27;
-    --st-confirmado-bd: #3ccf7a;
-    --st-em_atendimento-bg: #3d3214;
-    --st-em_atendimento-bd: #f2c230;
-    --st-concluido-bg: #252a33;
-    --st-concluido-bd: #667085;
-    --st-faltou-bg: #3d1d1d;
-    --st-faltou-bd: #f07171;
-    --st-cancelado-bg: #222;
-    --st-cancelado-bd: #555;
-    color-scheme: dark;
-  }
+  --shadow-subtle: none;
+  --shadow-ring: rgba(255, 255, 255, 0.08) 0 0 0 4px;
+  --shadow-showcase: rgba(0, 0, 0, 0.5) 0 10px 15px -3px, rgba(0, 0, 0, 0.5) 0 4px 6px -4px;
+  --shadow-focus: rgb(10, 10, 10) 0 0 0 3px, rgb(255, 255, 255) 0 0 0 4px;
+
+  --borda-campo: 1px solid var(--color-fog);
+  --pontos-fundo: rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
 }
 
 *,
@@ -67,16 +141,72 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: var(--cor-fundo);
+  font-family: var(--font-inter);
+  font-size: 16px;
+  background: var(--color-canvas-white);
   color: var(--cor-texto);
   line-height: 1.5;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+strong,
+b,
+th {
+  font-weight: 600;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+}
+
 a {
   color: var(--cor-primaria);
+  transition: color var(--transicao);
+
+  &:hover {
+    color: var(--cor-primaria-hover);
+  }
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+// Campos de formulário: borda preta de 1px e raio 6px (assinatura do sistema)
+input,
+select,
+textarea {
+  accent-color: var(--color-primary-action-fill);
+
+  &::placeholder {
+    color: var(--color-fog);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--shadow-focus);
+  }
+
+  &:disabled {
+    color: var(--color-fog);
+    border-color: var(--color-ash);
+    background: var(--color-paper-alt);
+  }
 }
 
 // Telas de login e cadastro
@@ -85,6 +215,10 @@ a {
   display: grid;
   place-items: center;
   padding: 24px 16px;
+  background-color: var(--color-canvas-white);
+  // Pontilhado sutil de fundo (textura "blueprint")
+  background-image: radial-gradient(var(--pontos-fundo) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .cartao {
@@ -92,14 +226,17 @@ a {
   max-width: 400px;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  padding: 32px 28px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
+  border-radius: var(--radius-largecards);
+  padding: 32px 24px;
+  box-shadow: var(--shadow-ring);
 }
 
 .marca {
   margin: 0 0 4px;
-  font-size: 1.6rem;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   color: var(--cor-primaria);
 }
 
@@ -114,9 +251,9 @@ a {
 
   span {
     display: block;
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 4px;
   }
 
   em {
@@ -126,17 +263,12 @@ a {
 
   input {
     width: 100%;
-    padding: 11px 12px;
+    padding: 8px 12px;
     font: inherit;
-    color: inherit;
+    color: var(--cor-texto);
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
-
-    &:focus {
-      outline: 2px solid var(--cor-primaria);
-      outline-offset: 1px;
-    }
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
 
     &.ng-touched.ng-invalid {
       border-color: var(--cor-erro);
@@ -147,53 +279,69 @@ a {
 .erro-campo {
   display: block;
   margin-top: 4px;
+  font-size: 14px;
   color: var(--cor-erro);
 }
 
 .alerta {
   background: var(--cor-erro-fundo);
   color: var(--cor-erro);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: var(--radius-buttons);
+  padding: 12px;
   margin-bottom: 16px;
+  font-size: 14px;
 }
 
+// Botão principal: preto, um por superfície
 .botao {
   width: 100%;
-  padding: 12px;
+  padding: 12px 16px;
   font: inherit;
-  font-weight: 600;
-  color: #fff;
-  background: var(--cor-primaria);
-  border: 0;
-  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.43;
+  color: var(--color-canvas-white);
+  background: var(--color-primary-action-fill);
+  border: 1px solid var(--color-primary-action-fill);
+  border-radius: var(--radius-buttons);
+  box-shadow: var(--shadow-subtle);
   cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao), color var(--transicao);
 
   &:hover:not(:disabled) {
-    background: var(--cor-primaria-hover);
+    background: var(--color-charcoal);
+    border-color: var(--color-charcoal);
+  }
+
+  &:active:not(:disabled) {
+    box-shadow: var(--shadow-pressed);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: wait;
   }
 }
 
+// Botão de contorno: o botão de trabalho para a maioria das ações
 .botao-secundario {
   width: auto;
-  padding: 8px 14px;
+  padding: 8px 16px;
   color: var(--cor-texto);
-  background: transparent;
+  background: var(--color-canvas-white);
   border: 1px solid var(--cor-borda);
+  box-shadow: none;
 
   &:hover:not(:disabled) {
-    background: var(--cor-fundo);
+    background: var(--color-paper-mist);
+    border-color: var(--cor-borda);
   }
 }
 
 .rodape-cartao {
   margin: 20px 0 0;
   text-align: center;
+  font-size: 14px;
   color: var(--cor-texto-suave);
 }
 
@@ -201,9 +349,9 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 4px 14px;
-  margin-top: 18px;
-  font-size: 0.8rem;
+  gap: 4px 16px;
+  margin-top: 20px;
+  font-size: 12px;
   color: var(--cor-texto-suave);
 
   a {
@@ -213,18 +361,16 @@ a {
 
 .check-aceite {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
   margin: 4px 0 16px;
-  font-size: 0.88rem;
+  font-size: 14px;
   cursor: pointer;
 
   input {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     margin-top: 2px;
     flex: none;
-    accent-color: var(--cor-primaria);
   }
 }
-

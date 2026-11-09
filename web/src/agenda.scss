@@ -19,30 +19,28 @@
 .config-link {
   display: flex;
   flex-direction: column;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  padding: 8px 12px;
+  border-radius: var(--radius-buttons);
   color: var(--cor-texto);
   text-decoration: none;
+  font-size: 14px;
+  transition: background var(--transicao);
+
+  strong {
+    font-weight: 500;
+  }
 
   small {
     color: var(--cor-texto-suave);
-    font-size: 0.78rem;
+    font-size: 12px;
   }
 
   &:hover {
-    background: var(--cor-superficie);
-    border-color: var(--cor-borda);
+    background: var(--cor-fundo);
   }
 
   &.ativo {
-    background: var(--cor-superficie);
-    border-color: var(--cor-borda);
-    box-shadow: inset 3px 0 0 var(--cor-primaria);
-
-    strong {
-      color: var(--cor-primaria);
-    }
+    background: var(--cor-primaria-suave);
   }
 }
 
@@ -50,7 +48,7 @@
   min-width: 0;
 
   h1 {
-    font-size: 1.2rem;
+    font-size: 20px;
   }
 }
 
@@ -101,8 +99,8 @@
   font: inherit;
   color: inherit;
   background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border: var(--borda-campo);
+  border-radius: var(--radius-inputs);
 }
 
 .botao-icone-borda {
@@ -110,17 +108,17 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  font-size: 1.2rem;
+  font-size: 18px;
   line-height: 1;
   color: var(--cor-texto);
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   cursor: pointer;
+  transition: background var(--transicao);
 
   &:hover {
-    border-color: var(--cor-primaria);
-    color: var(--cor-primaria);
+    background: var(--cor-fundo);
   }
 }
 
@@ -128,13 +126,14 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 7px 14px;
+  padding: 8px 16px;
   min-width: 230px;
   justify-content: center;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   cursor: pointer;
 
   span::first-letter {
@@ -159,12 +158,13 @@
 .resumo-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  font-size: 0.85rem;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 500;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
 }
 
 .resumo-valor {
@@ -173,17 +173,16 @@
 
 .bolinha {
   display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-tags);
   margin-right: 2px;
-  background: var(--st-bg);
-  border: 2px solid var(--st-bd);
+  background: var(--st-bd);
 }
 
 .bolinha-bloqueio {
-  background: repeating-linear-gradient(135deg, var(--cor-borda) 0 3px, transparent 3px 6px);
-  border-color: var(--cor-borda);
+  background: var(--cor-superficie);
+  border: 1px dashed var(--color-silver);
 }
 
 // ---------- Agenda: grade ----------
@@ -194,7 +193,7 @@
   overflow: auto;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
+  border-radius: var(--radius-cards);
 }
 
 .agenda-cabecalho {
@@ -231,7 +230,7 @@
 .avatar-pequeno {
   width: 36px;
   height: 36px;
-  font-size: 0.95rem;
+  font-size: 14px;
 }
 
 .agenda-barbeiro-textos {
@@ -241,11 +240,11 @@
   min-width: 0;
 
   strong {
-    font-size: 0.92rem;
+    font-size: 14px;
   }
 
   small {
-    font-size: 0.78rem;
+    font-size: 12px;
   }
 }
 
@@ -254,14 +253,14 @@
   padding: 1px 8px;
   margin-top: 2px;
   font: inherit;
-  font-size: 0.76rem;
+  font-size: 12px;
   color: var(--cor-texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   background: var(--st-confirmado-bg);
   border: 1px solid var(--st-confirmado-bd);
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
   cursor: pointer;
 
   &.agora {
@@ -288,7 +287,7 @@
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
-  font-size: 0.72rem;
+  font-size: 12px;
   color: var(--cor-texto-suave);
   background: var(--cor-superficie);
   padding: 0 2px;
@@ -332,9 +331,9 @@
   z-index: 1;
   padding: 4px 8px;
   border: 1px dashed var(--cor-texto-suave);
-  border-radius: 6px;
+  border-radius: var(--radius-inputs);
   background: repeating-linear-gradient(135deg, var(--cor-fundo) 0 6px, var(--cor-borda) 6px 7px);
-  font-size: 0.78rem;
+  font-size: 12px;
   color: var(--cor-texto-suave);
   overflow: hidden;
 }
@@ -352,16 +351,15 @@
   text-align: left;
   color: var(--cor-texto);
   background: var(--st-bg);
-  border: 0;
-  border-left: 4px solid var(--st-bd);
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
+  border: 1px solid color-mix(in srgb, var(--st-bd) 30%, transparent);
+  border-left: 3px solid var(--st-bd);
+  border-radius: var(--radius-inputs);
   cursor: pointer;
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition: box-shadow var(--transicao);
 
   &:hover {
     z-index: 3;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 14%);
+    box-shadow: var(--shadow-ring);
   }
 
   &.st-concluido .cartao-cliente,
@@ -387,8 +385,8 @@
 }
 
 .cartao-cliente {
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -397,8 +395,8 @@
 
 .cartao-servico,
 .cartao-hora {
-  font-size: 0.75rem;
-  color: var(--cor-texto-suave);
+  font-size: 12px;
+  color: var(--color-steel);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -409,9 +407,9 @@
   position: absolute;
   top: 5px;
   right: 6px;
-  font-size: 0.62rem;
+  font-size: 11px;
   padding: 0 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
   border: 1px solid var(--st-bd);
   color: var(--cor-texto-suave);
 }
@@ -425,7 +423,7 @@
   left: 0;
   right: 0;
   z-index: 5;
-  border-top: 2px solid #e5484d;
+  border-top: 2px solid var(--cor-erro);
   pointer-events: none;
 
   &::before {
@@ -436,7 +434,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #e5484d;
+    background: var(--cor-erro);
   }
 }
 
@@ -445,7 +443,7 @@
   flex-wrap: wrap;
   gap: 14px;
   margin-top: 10px;
-  font-size: 0.8rem;
+  font-size: 12px;
   color: var(--cor-texto-suave);
 
   > span {
@@ -481,24 +479,23 @@
   align-items: flex-start;
   gap: 6px;
   aspect-ratio: 1;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--cor-borda);
-  border-radius: calc(var(--raio) + 4px);
-  background: var(--cor-superficie-2);
+  border-radius: var(--radius-largecards);
+  background: var(--cor-superficie);
   color: var(--cor-texto);
   text-decoration: none;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition: border-color var(--transicao), box-shadow var(--transicao);
 
-  &:hover,
-  &:focus-visible {
-    border-color: var(--cor-primaria);
-    background: var(--cor-primaria-suave);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  &:hover {
+    color: var(--cor-texto);
+    border-color: var(--cor-borda-forte);
+    box-shadow: var(--shadow-ring);
   }
 
   strong {
-    font-size: 1.1rem;
+    font-size: 18px;
+    font-weight: 500;
     margin-top: auto;
   }
 
@@ -518,15 +515,15 @@
 .passo-icone {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: var(--cor-primaria);
-  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-cards);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria);
 
   svg {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
@@ -537,24 +534,26 @@
 
 // Nome próprio: `.passo-numero` (mais abaixo) é a bolinha numerada de outro formulário.
 .passo-rotulo {
-  margin-top: 10px;
+  margin-top: 12px;
   white-space: nowrap;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--cor-primaria);
 }
 
 .passo-botao.feito {
-  opacity: 0.7;
+  background: var(--cor-superficie-2);
 
   .passo-icone {
-    background: var(--st-confirmado-bd);
+    background: var(--cor-sucesso-fundo);
+    color: var(--cor-sucesso);
   }
 
   .passo-rotulo {
-    color: var(--st-confirmado-bd);
+    color: var(--cor-sucesso);
   }
 }
 
@@ -567,11 +566,11 @@
   width: min(520px, calc(100% - 32px));
   max-height: calc(100% - 32px);
   overflow-y: auto;
-  padding: 28px;
+  padding: 24px;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: calc(var(--raio) + 4px);
-  box-shadow: 0 20px 50px rgb(0 0 0 / 25%);
+  border-radius: var(--radius-largecards);
+  box-shadow: var(--shadow-showcase);
   z-index: 50;
 
   h2 {
@@ -585,20 +584,20 @@
 
 .boas-vindas-fechar {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-tags);
   background: transparent;
   color: var(--cor-texto-suave);
-  font-size: 1.5rem;
+  font-size: 24px;
   line-height: 1;
   cursor: pointer;
 
   &:hover {
-    background: var(--cor-superficie-2);
+    background: var(--cor-fundo);
     color: var(--cor-texto);
   }
 }
@@ -613,11 +612,11 @@
   li {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px;
+    gap: 12px;
+    padding: 16px;
     border: 1px solid var(--cor-borda);
-    border-radius: var(--raio);
-    background: var(--cor-superficie-2);
+    border-radius: var(--radius-cards);
+    background: var(--cor-superficie);
 
     div {
       display: flex;
@@ -631,14 +630,15 @@
   }
 
   li.feito {
-    opacity: 0.7;
+    background: var(--cor-superficie-2);
 
     .boas-vindas-icone {
-      background: var(--st-confirmado-bd);
+      background: var(--cor-sucesso-fundo);
+      color: var(--cor-sucesso);
     }
 
     .passo-rotulo {
-      color: var(--st-confirmado-bd);
+      color: var(--cor-sucesso);
     }
   }
 }
@@ -647,11 +647,11 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--cor-primaria);
-  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-cards);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria);
 
   svg {
     width: 22px;
@@ -674,18 +674,28 @@
 
 // ---------- Detalhe do agendamento ----------
 .detalhe-agendamento h2 {
-  margin: 10px 0 2px;
-  font-size: 1.3rem;
+  margin: 12px 0 4px;
+  font-size: 20px;
 }
 
 .etiqueta-status {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 2px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cor-texto);
   background: var(--st-bg);
-  border: 1px solid var(--st-bd);
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-tags);
+    background: var(--st-bd);
+  }
 }
 
 .detalhes {
@@ -696,7 +706,7 @@
 
   dt {
     color: var(--cor-texto-suave);
-    font-size: 0.85rem;
+    font-size: 14px;
   }
 
   dd {
@@ -712,8 +722,9 @@
 
 .botao-perigo {
   color: var(--cor-erro);
-  background: transparent;
-  border: 1px solid var(--cor-erro);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  box-shadow: none;
 
   &:hover:not(:disabled) {
     background: var(--cor-erro-fundo);
@@ -764,8 +775,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 0 0 10px;
-    font-size: 0.95rem;
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   .campo {
@@ -776,12 +788,13 @@
 .passo-numero {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  font-size: 0.75rem;
-  color: #fff;
-  background: var(--cor-primaria);
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-canvas-white);
+  background: var(--color-charcoal);
+  border-radius: var(--radius-tags);
 }
 
 .campo-busca-cheio {
@@ -794,7 +807,7 @@
   margin: 0 0 8px;
   padding: 0;
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   overflow: hidden;
 
   button {
@@ -809,7 +822,7 @@
     cursor: pointer;
 
     &:hover {
-      background: var(--cor-primaria-suave);
+      background: var(--cor-fundo);
     }
   }
 
@@ -822,9 +835,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background: var(--cor-primaria-suave);
-  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--cor-fundo);
+  border-radius: var(--radius-buttons);
 }
 
 .chips {
@@ -838,29 +851,30 @@
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 6px 12px;
+  padding: 8px 12px;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--cor-texto);
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao);
 
   small {
     color: var(--cor-texto-suave);
-    font-size: 0.72rem;
+    font-size: 12px;
+    font-weight: 400;
   }
 
   &:hover {
-    border-color: var(--cor-primaria);
+    background: var(--cor-fundo);
   }
 
   &.selecionado {
-    color: var(--cor-primaria);
     background: var(--cor-primaria-suave);
     border-color: var(--cor-primaria);
-    font-weight: 600;
   }
 }
 
@@ -880,8 +894,8 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 
   .encaixe {
@@ -897,8 +911,8 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -924,25 +938,25 @@
 }
 
 .horario {
-  padding: 7px 0;
+  padding: 8px 0;
   font: inherit;
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
   color: var(--cor-texto);
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 6px;
+  border-radius: var(--radius-inputs);
   cursor: pointer;
+  transition: background var(--transicao);
 
   &:hover {
-    border-color: var(--cor-primaria);
-    color: var(--cor-primaria);
+    background: var(--cor-fundo);
   }
 
   &.selecionado {
-    color: #fff;
-    background: var(--cor-primaria);
-    border-color: var(--cor-primaria);
-    font-weight: 600;
+    color: var(--color-canvas-white);
+    background: var(--color-primary-action-fill);
+    border-color: var(--color-primary-action-fill);
   }
 }
 
@@ -952,8 +966,8 @@
   font: inherit;
   color: inherit;
   background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border: var(--borda-campo);
+  border-radius: var(--radius-inputs);
   resize: vertical;
 }
 
@@ -969,7 +983,6 @@
   padding: 14px 24px;
   background: var(--cor-superficie);
   border-top: 1px solid var(--cor-borda);
-  box-shadow: 0 -6px 16px rgb(0 0 0 / 6%);
 
   > div:first-child {
     display: flex;
@@ -1008,16 +1021,11 @@
     width: 100%;
     padding: 9px 12px 9px 34px;
     font: inherit;
-    font-size: 0.9rem;
+    font-size: 14px;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
-
-    &:focus {
-      outline: 2px solid var(--cor-primaria);
-      outline-offset: 1px;
-    }
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -1032,15 +1040,15 @@
   padding: 6px;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 10px;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 16%);
+  border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-showcase);
 }
 
 .busca-grupo {
   display: block;
   padding: 8px 8px 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cor-texto-suave);
@@ -1050,7 +1058,7 @@
   margin: 0;
   padding: 12px;
   color: var(--cor-texto-suave);
-  font-size: 0.9rem;
+  font-size: 14px;
 }
 
 .busca-item {
@@ -1064,16 +1072,16 @@
   color: inherit;
   background: none;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-buttons);
   cursor: pointer;
 
   &:hover {
-    background: var(--cor-primaria-suave);
+    background: var(--cor-fundo);
   }
 
   .etiqueta-status {
     margin-left: auto;
-    font-size: 0.7rem;
+    font-size: 11px;
     white-space: nowrap;
   }
 }
@@ -1085,7 +1093,7 @@
   min-width: 0;
 
   small {
-    font-size: 0.75rem;
+    font-size: 12px;
     color: var(--cor-texto-suave);
     white-space: nowrap;
     overflow: hidden;
@@ -1126,7 +1134,7 @@
   color: var(--cor-texto-suave);
   background: none;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-inputs);
   cursor: pointer;
 
   svg {
@@ -1140,7 +1148,7 @@
   }
 
   &:hover {
-    color: var(--cor-primaria);
+    color: var(--cor-texto);
     background: var(--cor-fundo);
   }
 }
@@ -1150,10 +1158,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   background: var(--cor-primaria-suave);
-  border: 1px solid var(--cor-primaria);
-  border-radius: 10px;
+  border-radius: var(--radius-cards);
 
   > div {
     display: flex;
@@ -1162,7 +1169,8 @@
 }
 
 .sugestao-hora {
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
   color: var(--cor-primaria);
 }

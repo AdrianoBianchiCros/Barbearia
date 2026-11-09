@@ -44,25 +44,26 @@ const MODELOS = [
   selector: 'app-config-whatsapp',
   imports: [ReactiveFormsModule, DatePipe],
   styles: `
-    .faixa-modo { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--raio); margin-bottom: 18px; border: 1px solid var(--cor-borda); background: var(--cor-superficie); }
-    .faixa-modo.teste { border-color: var(--st-em_atendimento-bd); background: var(--st-em_atendimento-bg); }
-    .faixa-modo strong { display: block; margin-bottom: 2px; }
-    .numeros-mes { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
-    .numeros-mes div { padding: 10px 12px; border: 1px solid var(--cor-borda); border-radius: 10px; }
-    .numeros-mes strong { display: block; font-size: 1.4rem; }
-    .numeros-mes small { color: var(--cor-texto-suave); }
+    .faixa-modo { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: var(--radius-cards); margin-bottom: 16px; border: 1px solid var(--cor-borda); background: var(--cor-superficie); font-size: 14px; }
+    .faixa-modo.teste { border-color: transparent; background: var(--st-em_atendimento-bg); }
+    .faixa-modo strong { display: block; margin-bottom: 4px; font-weight: 500; }
+    .numeros-mes { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .numeros-mes div { padding: 16px; border: 1px solid var(--cor-borda); border-radius: var(--radius-cards); }
+    .numeros-mes strong { display: block; font-size: 24px; font-weight: 500; }
+    .numeros-mes small { font-size: 12px; color: var(--cor-texto-suave); }
     .copiar { display: flex; gap: 8px; align-items: center; }
-    .copiar code { flex: 1; padding: 10px 12px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); overflow-x: auto; white-space: nowrap; font-size: 0.85rem; }
-    .modelo { border: 1px solid var(--cor-borda); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-    .modelo pre { white-space: pre-wrap; font: inherit; margin: 8px 0; padding: 10px 12px; background: var(--cor-fundo); border-radius: 8px; }
+    .copiar code { flex: 1; padding: 8px 12px; border: 1px solid var(--cor-borda); border-radius: var(--radius-inputs); background: var(--cor-superficie-2); overflow-x: auto; white-space: nowrap; font-size: 13px; }
+    .modelo { border: 1px solid var(--cor-borda); border-radius: var(--radius-cards); padding: 16px; margin-bottom: 12px; }
+    .modelo pre { white-space: pre-wrap; font: inherit; margin: 8px 0; padding: 12px; background: var(--cor-superficie-2); border-radius: var(--radius-buttons); }
     .modelo .cabeca { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
     .passos-meta { margin: 0 0 12px; padding-left: 20px; }
     .passos-meta li { margin-bottom: 6px; }
-    .filtros { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-    .filtros select { padding: 8px 10px; font: inherit; color: inherit; background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: 8px; }
+    .filtros { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .filtros select { padding: 8px 12px; font: inherit; color: inherit; background: var(--cor-superficie); border: var(--borda-campo); border-radius: var(--radius-inputs); }
     .paginacao { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; }
     td small { display: block; color: var(--cor-texto-suave); }
     .erro-msg { color: var(--cor-erro); }
+    .campo-horas { max-width: 320px; }
   `,
   template: `
     <div class="cabecalho-pagina">
@@ -96,7 +97,7 @@ const MODELOS = [
           <label class="campo-check"><input type="checkbox" formControlName="wa_lembrete_24h" /> Lembrete 24 h antes do horário</label>
           <label class="campo-check"><input type="checkbox" formControlName="wa_lembrete_2h" /> Lembrete 2 h antes do horário</label>
           <p class="texto-suave pequeno">A confirmação sai sempre que um horário é marcado ou remarcado. Só recebe quem autorizou mensagens no WhatsApp; quem responder PARAR deixa de receber.</p>
-          <label class="campo campo-curto">
+          <label class="campo campo-horas">
             <span>Cliente pode remarcar/cancelar pelo link até</span>
             <div class="campo-prefixo"><input type="number" min="0" max="72" formControlName="cancelamento_antecedencia_horas" /><span>horas antes</span></div>
             @if (erroCampo('cancelamento_antecedencia_horas')) {<small class="erro-campo">{{ erroCampo('cancelamento_antecedencia_horas') }}</small>}

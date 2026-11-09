@@ -35,7 +35,19 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API*
+*Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API · 4 testes no painel*
+
+- **Novo visual do painel (ainda não publicado), 09/11/2026:** o painel Angular (`web/`) seguiu o sistema de design
+  "Dub" (skill `skill-saas`): fundo branco, estrutura por bordas de 1px, fonte Inter servida pelo próprio painel
+  (`web/src/fontes/`), texto em tons de cinza e um único azul de destaque (`#2563eb`). Botão principal preto (um por
+  tela), botões secundários com contorno, campos com borda preta de 1px, menu ativo com fundo azul claro, abas em
+  pílula, etiquetas de situação tingidas com ponto, aviso flutuante branco. O tema escuro automático foi removido.
+  Os tokens ficam no topo de `web/src/styles.scss`; os nomes antigos (`--cor-*`, `--st-*`) apontam para eles.
+- **Modo noturno opcional (ainda não publicado), 09/11/2026:** botão de lua/sol no rodapé do menu, ao lado de "Sair".
+  O padrão continua claro; a escolha fica salva no navegador (`barbearia.tema`, `TemaService`) e um script no
+  `web/src/index.html` aplica o tema antes de a página desenhar. A paleta escura é o bloco `:root[data-tema='escuro']`
+  em `styles.scss` (mesmos tokens, valores invertidos; botão principal branco).
+  **A página pública da barbearia (Blade, visual escuro) e a vitrine não foram alteradas.**
 
 - **LGPD — etapa 1 feita (ainda não publicada):** Política de privacidade e Termos de uso, aceite registrado no cadastro
   e no agendamento online (com declaração de maioridade ou responsável), fontes no próprio servidor, mapa do Google só
@@ -81,6 +93,8 @@ Para acessar:
 - Multiempresa desde o início: todas as tabelas têm `empresa_id`, com filtro automático (veja [Multiempresa](#multiempresa)).
 - Login por token, perfis **dono**, **recepção** e **barbeiro**, com permissões por rota.
 - Datas gravadas em UTC e exibidas no fuso da barbearia.
+- **Visual do painel** no sistema de design "Dub" (`skill-saas`): tokens de cor, raio, sombra e fonte em
+  `web/src/styles.scss`; nenhum valor visual solto nas telas. **Modo noturno** opcional pelo botão de lua/sol no menu.
 - Exclusão lógica (soft delete) nos cadastros.
 
 ### Cadastros (Configurações)
@@ -208,6 +222,8 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
   descadastro e plano de incidentes (ANPD em 3 dias úteis). Lista completa em [`LGPD.md`](LGPD.md).
 
 ### Pequenos pendentes e ideias
+- Visual "Dub": conferir no navegador o painel de agendamento, a comanda e os relatórios com dados; decidir se a fonte
+  Satoshi (títulos ≥ 36px) entra no painel (hoje os títulos usam Inter) e se a vitrine e as telas legais seguem o mesmo visual
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")
 - Limites do agendamento online (1 por semana e 4 por mês) configuráveis pelo painel; hoje são constantes em `LimiteAgendamentoCliente`
 - Antes de a conta da Meta ficar pronta: botão na agenda para enviar a confirmação manualmente por `wa.me`

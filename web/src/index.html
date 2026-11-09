@@ -6,6 +6,10 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Aplica o modo noturno salvo antes de desenhar a página (evita piscar em branco) -->
+  <script>
+    try { if (localStorage.getItem('barbearia.tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}
+  </script>
 </head>
 <body>
   <app-root></app-root>

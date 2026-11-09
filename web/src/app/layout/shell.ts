@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, Perfil } from '../core/auth.service';
 import { AvisoService } from '../core/aviso.service';
+import { TemaService } from '../core/tema.service';
 
 interface ItemMenu {
   rota: string;
@@ -43,6 +44,8 @@ const ICONES: Record<string, string> = {
   relatorios: 'M4 20V10M10 20V4M16 20v-7M21 20H3',
   config: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z',
   sair: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3',
+  lua: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z',
+  sol: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
 };
 
 const CHAVE_RECOLHIDO = 'barbearia.menuRecolhido';
@@ -105,7 +108,12 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
               <strong>{{ s.usuario.nome }}</strong>
               <small>{{ nomePerfil() }} · {{ s.usuario.email }}</small>
             </div>
-            <button class="botao-icone" type="button" title="Sair" aria-label="Sair" (click)="auth.logout()">
+            <button class="botao-icone" type="button" (click)="tema.alternar()"
+              [title]="tema.tema() === 'escuro' ? 'Usar modo claro' : 'Usar modo noturno'"
+              [attr.aria-label]="tema.tema() === 'escuro' ? 'Usar modo claro' : 'Usar modo noturno'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones[tema.tema() === 'escuro' ? 'sol' : 'lua']" /></svg>
+            </button>
+            <button class="botao-icone botao-sair" type="button" title="Sair" aria-label="Sair" (click)="auth.logout()">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones['sair']" /></svg>
             </button>
           </div>
@@ -132,6 +140,7 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
 export class Shell {
   protected readonly auth = inject(AuthService);
   protected readonly aviso = inject(AvisoService);
+  protected readonly tema = inject(TemaService);
   protected readonly sessao = this.auth.sessao;
   protected readonly menuAberto = signal(false);
   /** Menu só com ícones (desktop). A escolha fica salva neste navegador. */

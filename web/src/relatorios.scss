@@ -1,14 +1,8 @@
 // Relatórios: filtros, indicadores e gráficos.
 
-// Cor da série nos gráficos (validada contra a superfície: claro e escuro)
+// Cor da série nos gráficos: o azul de destaque do sistema
 :root {
-  --grafico-serie: #4f46e5;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --grafico-serie: #7c7ff5;
-  }
+  --grafico-serie: var(--color-electric-blue);
 }
 
 .filtros-relatorio {
@@ -25,24 +19,18 @@
 }
 
 .indicadores-relatorio .indicador strong {
-  font-size: 1.35rem;
+  font-size: 24px;
 }
 
 .variacao {
-  font-weight: 600;
+  font-weight: 500;
 
   &.boa {
-    color: #1a7f37;
+    color: var(--cor-sucesso);
   }
 
   &.ruim {
     color: var(--cor-erro);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .variacao.boa {
-    color: #7ee2a0;
   }
 }
 
@@ -59,7 +47,7 @@
   }
 
   h3 {
-    font-size: 0.95rem;
+    font-size: 14px;
   }
 
   select {
@@ -67,8 +55,8 @@
     font: inherit;
     color: inherit;
     background: var(--cor-superficie);
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
+    border: var(--borda-campo);
+    border-radius: var(--radius-inputs);
   }
 }
 
@@ -141,14 +129,14 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 8px 10px;
-  font-size: 0.82rem;
+  padding: 8px 12px;
+  font-size: 13px;
   white-space: nowrap;
   pointer-events: none;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 14%);
+  border-radius: var(--radius-buttons);
+  box-shadow: var(--shadow-showcase);
 
   small {
     color: var(--cor-texto-suave);
@@ -171,7 +159,7 @@
 }
 
 .barras-h-nome {
-  font-size: 0.88rem;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -187,15 +175,15 @@
   height: 100%;
   min-width: 2px;
   background: var(--grafico-serie);
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--radius-inputs) var(--radius-inputs) 0;
 }
 
 .barras-h-valor {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
 
   small {
     font-weight: 400;
@@ -215,8 +203,8 @@
   display: block;
   width: 90px;
   height: 8px;
-  background: var(--cor-primaria-suave);
-  border-radius: 999px;
+  background: var(--cor-fundo);
+  border-radius: var(--radius-tags);
   overflow: hidden;
 }
 
@@ -224,7 +212,7 @@
   display: block;
   height: 100%;
   background: var(--grafico-serie);
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
 }
 
 // Mapa de calor
@@ -232,7 +220,7 @@
   display: grid;
   gap: 2px;
   overflow-x: auto;
-  font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .mapa-hora {
@@ -248,7 +236,7 @@
 
 .mapa-celula {
   height: 26px;
-  border-radius: 4px;
+  border-radius: var(--radius-inputs);
   // Sequencial em um tom: mistura a cor da série com a superfície
   background: color-mix(in oklab, var(--grafico-serie) calc(12% + var(--intensidade) * 88%), var(--cor-superficie));
 
@@ -263,13 +251,13 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--cor-texto-suave);
 }
 
 .mapa-gradiente {
   width: 120px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-tags);
   background: linear-gradient(90deg, color-mix(in oklab, var(--grafico-serie) 12%, var(--cor-superficie)), var(--grafico-serie));
 }

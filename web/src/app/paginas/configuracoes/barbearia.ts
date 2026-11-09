@@ -15,10 +15,10 @@ import { ENDERECO_SITE } from '../../core/plataforma';
     .cabeca-galeria { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
     .cabeca-galeria h2 { margin-bottom: 4px; }
     .desativado { opacity: 0.6; pointer-events: none; }
-    .grade-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-top: 16px; }
+    .grade-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-top: 16px; }
     .grade-galeria figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .grade-galeria img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
-    .grade-galeria input { width: 100%; padding: 6px 8px; font: inherit; font-size: 0.85rem; border: 1px solid var(--borda, #ddd); border-radius: 8px; }
+    .grade-galeria img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-cards); border: 1px solid var(--cor-borda); }
+    .grade-galeria input { width: 100%; padding: 8px 12px; font: inherit; font-size: 14px; border: var(--borda-campo); border-radius: var(--radius-inputs); }
     .grade-galeria button { align-self: flex-start; }
   `,
   template: `

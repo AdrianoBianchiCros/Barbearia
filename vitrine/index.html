@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistemas | ABianchi Tech</title>
+  <meta name="description" content="Sistemas de gestão da ABianchi Tech para pequenos negócios.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --fundo: #0f1115;
+      --superficie: #171a21;
+      --superficie-2: #1e222b;
+      --borda: #2a2f3a;
+      --texto: #eef0f4;
+      --texto-suave: #9aa1ad;
+      --destaque: #c8a165;
+      --destaque-escuro: #a9844c;
+      --raio: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: radial-gradient(1200px 600px at 50% -200px, #1d2230 0%, var(--fundo) 60%);
+      color: var(--texto);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header, main, footer {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    header {
+      padding-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .marca {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--destaque);
+      color: #15120c;
+      font-size: 0.95rem;
+    }
+
+    main { flex: 1; padding-top: 56px; padding-bottom: 56px; }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      line-height: 1.15;
+    }
+
+    .subtitulo {
+      margin: 0 0 40px;
+      max-width: 620px;
+      color: var(--texto-suave);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .grade {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .sistema {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 230px;
+      padding: 24px;
+      border: 1px solid var(--borda);
+      border-radius: var(--raio);
+      background: var(--superficie);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+
+    a.sistema:hover, a.sistema:focus-visible {
+      border-color: var(--destaque);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      outline: none;
+    }
+
+    .icone {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--superficie-2);
+      color: var(--destaque);
+    }
+
+    .icone svg {
+      width: 28px;
+      height: 28px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sistema h2 {
+      margin: 8px 0 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sistema p {
+      margin: 0;
+      color: var(--texto-suave);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .acao {
+      margin-top: auto;
+      padding-top: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--destaque);
+    }
+
+    .etiqueta {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .etiqueta.disponivel { background: rgba(76, 175, 120, 0.15); color: #6fd39a; }
+    .etiqueta.em-breve { background: var(--superficie-2); color: var(--texto-suave); }
+
+    .sistema.bloqueado { opacity: 0.55; cursor: default; }
+    .sistema.bloqueado .icone { color: var(--texto-suave); }
+
+    footer {
+      padding-bottom: 28px;
+      color: var(--texto-suave);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 520px) {
+      main { padding-top: 36px; }
+      .grade { grid-template-columns: 1fr; }
+      .sistema { min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="marca">AB</span>
+    <span>ABianchi Tech</span>
+  </header>
+
+  <main>
+    <h1>Nossos sistemas</h1>
+    <p class="subtitulo">Gestão completa para pequenos negócios: agenda online, lembretes pelo WhatsApp,
+      financeiro e relatórios. Escolha um sistema para conhecer.</p>
+    <div class="grade" id="sistemas"></div>
+  </main>
+
+  <footer>© <span id="ano"></span> ABianchi Tech</footer>
+
+  <script>
+    // Lista de sistemas. Para incluir um novo, acrescente uma linha.
+    // status: 'disponivel' (abre o endereço) ou 'em-breve' (aparece apagado, sem link).
+    const SISTEMAS = [
+      {
+        nome: 'Barbearia',
+        descricao: 'Agenda por barbeiro, agendamento online, comanda, caixa e comissões.',
+        endereco: '/saas/barbearia/painel/',
+        status: 'disponivel',
+        icone: 'M6 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM8.1 7.9 20 18M8.1 16.1 20 6',
+      },
+      {
+        nome: 'Odontologia',
+        descricao: 'Agenda de consultas, prontuário e lembretes para os pacientes.',
+        endereco: '',
+        status: 'em-breve',
+        icone: 'M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7.5.5 3 1 6 2.5 6s1.5-4 2.5-6c.4-.8 1.6-.8 2 0 1 2 1 6 2.5 6s2-3 2.5-6c.5-3 2-4.5 2-7.5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3Z',
+      },
+      {
+        nome: 'Massagista',
+        descricao: 'Agenda de sessões, pacotes e histórico de cada cliente.',
+        endereco: '',
+        status: 'em-breve',
+        icone: 'M12 21c-4-2.5-8-6-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 3.5C20 15 16 18.5 12 21Z',
+      },
+    ];
+
+    const ROTULO = { disponivel: 'Disponível', 'em-breve': 'Em breve' };
+
+    const grade = document.getElementById('sistemas');
+    for (const s of SISTEMAS) {
+      const ativo = s.status === 'disponivel' && s.endereco;
+      const cartao = document.createElement(ativo ? 'a' : 'div');
+      cartao.className = 'sistema' + (ativo ? '' : ' bloqueado');
+      if (ativo) cartao.href = s.endereco;
+      else cartao.setAttribute('aria-disabled', 'true');
+
+      cartao.innerHTML = `
+        <span class="etiqueta ${s.status}">${ROTULO[s.status] ?? ''}</span>
+        <span class="icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${s.icone}"/></svg></span>
+        <h2></h2>
+        <p></p>
+        <span class="acao">${ativo ? 'Acessar →' : 'Em desenvolvimento'}</span>`;
+      cartao.querySelector('h2').textContent = s.nome;
+      cartao.querySelector('p').textContent = s.descricao;
+      grade.appendChild(cartao);
+    }
+
+    document.getElementById('ano').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

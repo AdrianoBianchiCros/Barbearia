@@ -61,7 +61,8 @@ Para acessar:
   (serviços, barbeiros, clientes). Some quando os três cadastros existem. Em 09/11/2026 o rótulo passou a
   "PASSO 01/02/03" numa linha só (antes quebrava letra por letra por conflito com a classe `.passo-numero`) e as telas
   de Configurações e Clientes ganharam o botão "← Voltar aos primeiros passos" enquanto o guia estiver incompleto
-  (`VoltarPassos`, sinal `guiaPendente` no `AgendaService`).
+  (`VoltarPassos`, sinal `guiaPendente` no `AgendaService`). No primeiro acesso do dono abre um popup de boas-vindas
+  (`boas-vindas.ts`) com os três passos e o botão "Começar"; depois de fechado não volta (guardado no navegador por usuário).
 - **Publicação automática preparada** (`.github/workflows/publicar.yml`): a cada push na `main`, o GitHub roda os testes
   e envia para a HostGator por SSH/rsync. **Ainda desligada:** SSH já liberado (`adri0667@abianchitech.com`, porta 2222); falta autorizar a chave
   `barbearia-deploy` no cPanel e cadastrar os Secrets. Seguir [Publicação automática](#publicação-automática-github-actions)
@@ -94,6 +95,7 @@ Para acessar:
 - Agenda do dia em colunas por barbeiro (tela inicial), com linha da hora atual e cores por situação.
 - **Primeiros passos:** barbearia nova vê três botões (cadastrar serviços, barbeiros e clientes), cada um marcado
   quando feito. Depois dos três, o guia some e esses cadastros ficam só no menu Configurações (`primeiros_passos` em `/api/agenda/dia`).
+  No primeiro acesso, o dono vê um popup de boas-vindas com os três passos, que pode ser fechado.
 - Agendar e remarcar só em horários livres (serviço `Disponibilidade`), com proteção contra dois agendamentos no mesmo horário.
 - **Encaixe:** coloca o cliente no próximo horário vago, ignorando o expediente, mas nunca por cima de outro cliente.
 - Busca de cliente agendado e status: agendado, confirmado, em atendimento, concluído, cancelado e faltou.
@@ -287,6 +289,7 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
 | `app.abianchitech.com/saas/barbearia/{slug}` | Página de cada barbearia com agendamento online |
 | `app.abianchitech.com/saas/barbearia/a/{token}` | Link do cliente |
 | `app.abianchitech.com/saas/barbearia/api` | API |
+| `app.abianchitech.com/saas/sistemas` | Vitrine com os SaaS da ABianchi Tech (`vitrine/index.html`, página estática). Para incluir um sistema, editar a lista `SISTEMAS` no arquivo e subir de novo |
 
 | Pasta no servidor (`/home4/adri0667`) | Conteúdo |
 |---|---|
@@ -314,6 +317,8 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
   - Se mudar o `.env` e nada mudar, apague `bootstrap/cache/config.php` (equivale a `config:clear`).
 - **Painel:** `web/src/environments/environment.ts` aponta para `https://app.abianchitech.com/saas/barbearia/api` e o build de
   produção usa `baseHref` `/saas/barbearia/painel/` (`angular.json`). Compilar com `npx ng build`; o `.htaccess` das rotas vem de `web/public`.
+  Esse `.htaccess` também manda o navegador sempre conferir o `index.html` (sem isso, depois de uma atualização o painel
+  abria a versão antiga até apertar F5).
 - **Depois do upload:** rodar `php artisan migrate --force`, `config:cache` e `route:cache`.
 - **Primeiro acesso:** cadastrar a barbearia e o dono pela tela "Cadastro" do painel (não usar `--seed` em produção).
 - **HTTPS:** AutoSSL do subdomínio `app`. A Meta exige HTTPS no webhook.

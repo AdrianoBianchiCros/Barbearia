@@ -20,6 +20,7 @@ import { AuthService } from '../../core/auth.service';
 import { AvisoService } from '../../core/aviso.service';
 import { mensagemDeErro } from '../../core/erros';
 import { TelefonePipe } from '../../core/telefone.pipe';
+import { BoasVindas, PassoInicial } from './boas-vindas';
 import { FormularioAgendamento, InicioFormulario } from './formulario-agendamento';
 import { AbrirComanda, PainelComanda } from '../financeiro/painel-comanda';
 import { podeEditar } from '../../core/auth.guards';
@@ -74,7 +75,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento, PainelComanda],
+  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento, PainelComanda, BoasVindas],
   template: `
     <div class="agenda-barra">
       <div class="agenda-navegacao">
@@ -333,6 +334,10 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
     @if (formulario(); as f) {
       <app-formulario-agendamento [inicio]="f" (fechar)="formulario.set(null)" (salvo)="agendamentoSalvo()" />
     }
+
+    @if (boasVindas() && passos(); as passos) {
+      <app-boas-vindas [passos]="passos" (fechar)="fecharBoasVindas()" />
+    }
   `,
 })
 export class Agenda implements OnInit, OnDestroy {
@@ -460,7 +465,7 @@ export class Agenda implements OnInit, OnDestroy {
   });
 
   /** Guia de primeiros passos: aparece até os três cadastros iniciais existirem. */
-  protected readonly passos = computed(() => {
+  protected readonly passos = computed((): PassoInicial[] | null => {
     const p = this.agenda()?.primeiros_passos;
     if (!p || (p.servicos && p.barbeiros && p.clientes)) return null;
     return [
@@ -472,6 +477,32 @@ export class Agenda implements OnInit, OnDestroy {
         icone: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-6 10a6 6 0 0 1 12 0M16 3.5a4 4 0 0 1 0 7.5M21 21a6 6 0 0 0-3.5-5.5' },
     ];
   });
+
+  /** Popup de boas-vindas: abre para o dono enquanto o guia está incompleto, até ele fechar uma vez. */
+  protected readonly boasVindas = signal(false);
+
+  private get chaveBoasVindas(): string {
+    return `barbearia.boas-vindas.${this.auth.sessao()?.usuario.id ?? ''}`;
+  }
+
+  private abrirBoasVindasSePrimeiroAcesso(): void {
+    if (!podeEditar(this.auth, 'dono') || !this.passos()) return;
+    try {
+      if (localStorage.getItem(this.chaveBoasVindas)) return;
+    } catch {
+      return;
+    }
+    this.boasVindas.set(true);
+  }
+
+  protected fecharBoasVindas(): void {
+    this.boasVindas.set(false);
+    try {
+      localStorage.setItem(this.chaveBoasVindas, '1');
+    } catch {
+      // Sem armazenamento local (navegação privada): o popup pode reaparecer, sem prejuízo.
+    }
+  }
 
   protected readonly resumo = computed(() => {
     const todos = this.barbeirosVisiveis().flatMap((b) => b.agendamentos);
@@ -521,6 +552,7 @@ export class Agenda implements OnInit, OnDestroy {
         this.agenda.set(a);
         const p = a.primeiros_passos;
         this.api.guiaPendente.set(!(p.servicos && p.barbeiros && p.clientes));
+        if (primeiraCarga) this.abrirBoasVindasSePrimeiroAcesso();
         this.abrirPendente(a);
         this.data.set(a.data);
         this.relogio.set({ min: this.minutosRelogio(a.agora, a.data), em: Date.now() });

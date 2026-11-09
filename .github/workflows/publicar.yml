@@ -95,9 +95,10 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          # tr -d '\r': secrets colados a partir do Windows podem vir com CRLF, que o OpenSSH recusa
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
           cat > ~/.ssh/config <<EOF
           Host hostgator
             HostName $SSH_HOST
@@ -107,6 +108,33 @@ jobs:
             StrictHostKeyChecking yes
             ServerAliveInterval 30
           EOF
+
+      - name: Testar conexão com a HostGator
+        # Falha cedo e com o motivo no resumo da execução, antes de colocar o sistema em manutenção.
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          if ! ssh-keygen -y -f ~/.ssh/id_deploy > /dev/null 2>&1; then
+            echo "::error::O secret SSH_KEY está incompleto ou com formato inválido. Cole de novo o arquivo barbearia-deploy inteiro, do -----BEGIN ao -----END."
+            exit 1
+          fi
+          if ! timeout 15 bash -c "</dev/tcp/$SSH_HOST/${SSH_PORT:-22}" 2> /dev/null; then
+            echo "::error::O GitHub não conseguiu abrir conexão com o servidor na porta informada. Provável bloqueio (firewall) da HostGator para IPs de fora, ou SSH_HOST/SSH_PORT errados."
+            exit 1
+          fi
+          if ! ssh -o ConnectTimeout=20 -o BatchMode=yes hostgator true 2> erro-ssh.txt; then
+            cat erro-ssh.txt
+            if grep -q "Host key verification failed" erro-ssh.txt; then
+              echo "::error::O secret SSH_KNOWN_HOSTS não confere com o servidor. Cole de novo o conteúdo inteiro de barbearia-known_hosts.txt."
+            elif grep -q "Permission denied" erro-ssh.txt; then
+              echo "::error::O servidor recusou a chave. Confira se SSH_KEY é a chave privada barbearia-deploy e se SSH_USER é adri0667."
+            else
+              echo "::error::Falha no SSH: $(tail -n 1 erro-ssh.txt)"
+            fi
+            exit 1
+          fi
+          echo "Conexão com a HostGator ok."
 
       - name: Modo manutenção
         run: ssh hostgator "cd $DIR_SISTEMA && $PHP_REMOTO artisan down --retry=30"

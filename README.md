@@ -81,9 +81,12 @@ Para acessar:
   (`VoltarPassos`, sinal `guiaPendente` no `AgendaService`). No primeiro acesso do dono abre um popup de boas-vindas
   (`boas-vindas.ts`) com os três passos e o botão "Começar"; depois de fechado não volta (guardado no navegador por usuário).
 - **Publicação automática preparada** (`.github/workflows/publicar.yml`): a cada push na `main`, o GitHub roda os testes
-  e envia para a HostGator por SSH/rsync. **Ainda desligada:** SSH já liberado (`adri0667@abianchitech.com`, porta 2222); falta autorizar a chave
-  `barbearia-deploy` no cPanel e cadastrar os Secrets. Seguir [Publicação automática](#publicação-automática-github-actions)
-  e o registro em `conversas/2026-10-21-primeiros-passos-e-publicacao-automatica.md`.
+  e envia para a HostGator por SSH/rsync. **Em 09/11/2026:** chave `barbearia-deploy` autorizada (precisou ser
+  acrescentada à mão em `~/.ssh/authorized_keys`: o "Autorizar" do cPanel mostrou "authorized" mas não gravou a linha),
+  Secrets e `PUBLICAR_AUTOMATICO` cadastrados, testes passando no GitHub (a suíte `Unit` vazia do `phpunit.xml` quebrava
+  o PHPUnit lá). A publicação ainda falhava no primeiro SSH; o workflow passou a remover CRLF dos Secrets (chave colada
+  pelo navegador vem com quebras do Windows) e ganhou o passo "Testar conexão com a HostGator", que diz o motivo da falha.
+  **Falta confirmar a primeira publicação automática com sucesso.** Detalhes em [Publicação automática](#publicação-automática-github-actions).
 
 ---
 

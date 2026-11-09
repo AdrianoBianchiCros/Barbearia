@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -94,6 +94,9 @@ export interface BuscaAgendamentos {
 @Injectable({ providedIn: 'root' })
 export class AgendaService {
   private readonly http = inject(HttpClient);
+
+  /** Guia de primeiros passos ainda incompleto (atualizado ao carregar a agenda). */
+  readonly guiaPendente = signal(false);
 
   dia(data?: string): Observable<AgendaDia> {
     const params = data ? new HttpParams().set('data', data) : undefined;

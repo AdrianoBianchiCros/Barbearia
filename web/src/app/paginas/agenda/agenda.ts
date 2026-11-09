@@ -173,7 +173,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
                     <svg viewBox="0 0 24 24"><path [attr.d]="p.icone" /></svg>
                   }
                 </span>
-                <span class="passo-numero">Passo {{ i + 1 }}{{ p.feito ? ' · feito' : '' }}</span>
+                <span class="passo-rotulo">Passo {{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}{{ p.feito ? ' · feito' : '' }}</span>
                 <strong>{{ p.titulo }}</strong>
                 <small>{{ p.detalhe }}</small>
               </a>
@@ -519,6 +519,8 @@ export class Agenda implements OnInit, OnDestroy {
       next: (a) => {
         const primeiraCarga = !this.agenda();
         this.agenda.set(a);
+        const p = a.primeiros_passos;
+        this.api.guiaPendente.set(!(p.servicos && p.barbeiros && p.clientes));
         this.abrirPendente(a);
         this.data.set(a.data);
         this.relogio.set({ min: this.minutosRelogio(a.agora, a.data), em: Date.now() });

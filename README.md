@@ -35,7 +35,11 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 21/10/2026 · sistema publicado na HostGator · 110 testes na API*
+*Atualizado em 09/11/2026 · sistema publicado na HostGator · 110 testes na API*
+
+- **09/11/2026:** produção ficou fora do ar (erro 500 no cadastro, no login e nas páginas) porque o MySQL passou a
+  recusar a senha do `.env`. Resolvido trocando a senha do usuário `adri0667_abianchi` no cPanel e colocando-a
+  entre aspas no `.env`. Veja a nota em [Publicação](#publicação-hostgator).
 
 - **Publicado** em `https://app.abianchitech.com/saas/barbearia` (painel em `/painel`, página de cada barbearia em `/{slug}`).
   O site principal (`abianchitech.com`, `public_html`) não foi alterado. Banco MySQL ligado e cadastro testado.
@@ -52,9 +56,16 @@ Para acessar:
   (redirecionar ou fazer a landing page de vendas) e o cadastro pelo painel está aberto a qualquer pessoa.
 - **Próximo passo:** (1) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento
   ou página "em breve"; (2) fechar o cadastro aberto; (3) começar a medir a taxa de faltas da barbearia piloto.
-  Para subir qualquer mudança, siga [Publicar uma atualização](#publicar-uma-atualização).
+  Para subir qualquer mudança, siga [Publicar uma atualização (manual)](#publicar-uma-atualização-manual).
 - **Última mudança (ainda não publicada):** guia de primeiros passos da agenda com três botões quadrados
-  (serviços, barbeiros, clientes). Some quando os três cadastros existem.
+  (serviços, barbeiros, clientes). Some quando os três cadastros existem. Em 09/11/2026 o rótulo passou a
+  "PASSO 01/02/03" numa linha só (antes quebrava letra por letra por conflito com a classe `.passo-numero`) e as telas
+  de Configurações e Clientes ganharam o botão "← Voltar aos primeiros passos" enquanto o guia estiver incompleto
+  (`VoltarPassos`, sinal `guiaPendente` no `AgendaService`).
+- **Publicação automática preparada** (`.github/workflows/publicar.yml`): a cada push na `main`, o GitHub roda os testes
+  e envia para a HostGator por SSH/rsync. **Ainda desligada:** SSH já liberado (`adri0667@abianchitech.com`, porta 2222); falta autorizar a chave
+  `barbearia-deploy` no cPanel e cadastrar os Secrets. Seguir [Publicação automática](#publicação-automática-github-actions)
+  e o registro em `conversas/2026-10-21-primeiros-passos-e-publicacao-automatica.md`.
 
 ---
 
@@ -296,7 +307,11 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
 - **`.env` de produção** (em `/home4/adri0667/saas/barbearia`):
   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://app.abianchitech.com/saas/barbearia` e `DB_*` do MySQL;
   - `FRONTEND_URL=https://app.abianchitech.com` e `QUEUE_CONNECTION=database`;
-  - `WHATSAPP_*` (veja `.env.example`).
+  - `WHATSAPP_*` (veja `.env.example`);
+  - `DB_PASSWORD` **entre aspas** (`DB_PASSWORD="..."`). Em 09/11/2026 o banco recusou o acesso
+    (`SQLSTATE[HY000] [1045] Access denied`) e o cadastro, o login e as páginas deram erro 500. Só voltou depois de
+    trocar a senha no cPanel e colocá-la entre aspas no `.env`.
+  - Se mudar o `.env` e nada mudar, apague `bootstrap/cache/config.php` (equivale a `config:clear`).
 - **Painel:** `web/src/environments/environment.ts` aponta para `https://app.abianchitech.com/saas/barbearia/api` e o build de
   produção usa `baseHref` `/saas/barbearia/painel/` (`angular.json`). Compilar com `npx ng build`; o `.htaccess` das rotas vem de `web/public`.
 - **Depois do upload:** rodar `php artisan migrate --force`, `config:cache` e `route:cache`.
@@ -304,7 +319,35 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
 - **HTTPS:** AutoSSL do subdomínio `app`. A Meta exige HTTPS no webhook.
 - **Pacotes de publicação:** ficam na pasta `deploy/`, que está no `.gitignore` porque contém o `.env` de produção.
 
-### Publicar uma atualização
+### Publicação automática (GitHub Actions)
+
+O workflow `.github/workflows/publicar.yml` roda a cada push na `main` (ou à mão, em Actions › Publicar na HostGator › Run workflow):
+
+1. **Testes** da API e do painel. Se algum falhar, nada é enviado.
+2. Monta o Laravel (`composer install --no-dev`) e o painel (`ng build`) no GitHub.
+3. Coloca o sistema em manutenção (`artisan down`) e envia por **rsync** só o que mudou:
+   - `api/` → `/home4/adri0667/saas/barbearia` (com `--delete`; nunca toca em `.env`, `storage/`, `bootstrap/cache/` e `public/`);
+   - `api/public/` → pasta pública (sem `--delete`, porque o painel fica dentro dela; `index.php`, `.htaccess` e `storage` do servidor ficam intactos);
+   - `web/dist/web/browser/` → `.../painel/` (com `--delete`).
+4. Roda `config:clear`, `package:discover`, `migrate --force`, `config:cache`, `route:cache` e `view:clear`, tira da manutenção
+   (mesmo se algo falhar) e confere `/up`.
+
+**Para ligar (uma vez, depois que a HostGator liberar o SSH):**
+
+1. No PC, criar uma chave só para a publicação: `ssh-keygen -t ed25519 -f barbearia-deploy -N "" -C "github-actions"`.
+2. No cPanel › **Acesso SSH** › Gerenciar chaves SSH › **Importar chave**: colar o conteúdo de `barbearia-deploy.pub` e **autorizar** a chave.
+3. Testar do PC: `ssh -i barbearia-deploy -p PORTA adri0667@SERVIDOR "which rsync"` (porta e servidor informados pela HostGator).
+4. Gerar a impressão digital do servidor: `ssh-keyscan -p PORTA SERVIDOR`.
+5. No GitHub › repositório › Settings › Secrets and variables › Actions:
+   - **Secrets:** `SSH_HOST` (servidor), `SSH_PORT` (porta), `SSH_USER` (`adri0667`), `SSH_KEY` (conteúdo inteiro de
+     `barbearia-deploy`, a chave privada) e `SSH_KNOWN_HOSTS` (saída do `ssh-keyscan`);
+   - **Variables:** `PUBLICAR_AUTOMATICO` = `true`.
+6. Rodar à mão uma vez (Actions › Publicar na HostGator › Run workflow) e acompanhar. A primeira envia o `vendor` inteiro e demora mais.
+7. Apagar os arquivos `barbearia-deploy` do PC depois de guardar a chave no GitHub.
+
+Enquanto `PUBLICAR_AUTOMATICO` não for `true`, o push só roda os testes.
+
+### Publicar uma atualização (manual)
 
 Sem SSH: os pacotes são montados no PC e enviados pelo Gerenciador de Arquivos do cPanel.
 

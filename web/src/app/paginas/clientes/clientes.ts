@@ -10,19 +10,23 @@ import { CadastrosService } from '../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
 import { Cliente, Pagina } from '../../core/modelos';
 import { TelefonePipe } from '../../core/telefone.pipe';
+import { VoltarPassos } from '../../layout/voltar-passos';
 
 @Component({
   selector: 'app-clientes',
-  imports: [ReactiveFormsModule, TelefonePipe, DatePipe],
+  imports: [ReactiveFormsModule, TelefonePipe, DatePipe, VoltarPassos],
   template: `
     <div class="cabecalho-pagina">
       <div>
         <h1>Clientes</h1>
         <p class="texto-suave">{{ pagina()?.total ?? 0 }} cliente(s) cadastrado(s).</p>
       </div>
-      @if (editavel) {
-        <button class="botao botao-auto" type="button" (click)="abrir()">+ Novo cliente</button>
-      }
+      <div class="acoes-cabecalho">
+        <app-voltar-passos />
+        @if (editavel) {
+          <button class="botao botao-auto" type="button" (click)="abrir()">+ Novo cliente</button>
+        }
+      </div>
     </div>
 
     <input class="campo-busca" type="search" placeholder="Buscar por nome ou telefone…"

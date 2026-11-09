@@ -1,0 +1,165 @@
+# Publicação automática na HostGator a cada push na main (também pode ser disparada à mão em Actions).
+# Roda os testes, monta o Laravel e o painel e envia por rsync via SSH. Detalhes no README, seção Publicação.
+name: Publicar na HostGator
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nunca duas publicações ao mesmo tempo; a mais nova espera a anterior terminar.
+concurrency:
+  group: publicar-producao
+  cancel-in-progress: false
+
+env:
+  PHP_REMOTO: /opt/cpanel/ea-php83/root/usr/bin/php
+  DIR_SISTEMA: /home4/adri0667/saas/barbearia
+  DIR_PUBLICO: /home4/adri0667/app.abianchitech.com/saas/barbearia
+  URL_SAUDE: https://app.abianchitech.com/saas/barbearia/up
+
+jobs:
+  testes:
+    name: Testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, mbstring, intl, gd, zip
+          coverage: none
+
+      - name: API — dependências
+        working-directory: api
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: API — testes
+        working-directory: api
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Painel — testes
+        working-directory: web
+        run: |
+          npm ci
+          npx ng test --watch=false
+
+  publicar:
+    name: Publicar
+    needs: testes
+    # Só publica depois de configurar o SSH e criar a variável PUBLICAR_AUTOMATICO = true no repositório.
+    if: vars.PUBLICAR_AUTOMATICO == 'true'
+    runs-on: ubuntu-latest
+    environment: producao
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: API — dependências de produção
+        working-directory: api
+        # Sem scripts: o package:discover roda no servidor, com o .env de produção.
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Painel — build de produção
+        working-directory: web
+        run: |
+          npm ci
+          npx ng build
+
+      - name: Chave SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host hostgator
+            HostName $SSH_HOST
+            Port ${SSH_PORT:-22}
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+          EOF
+
+      - name: Modo manutenção
+        run: ssh hostgator "cd $DIR_SISTEMA && $PHP_REMOTO artisan down --retry=30"
+
+      - name: Enviar o sistema (Laravel)
+        # --delete remove do servidor o que saiu do código; o que está em --exclude nunca é tocado.
+        run: |
+          rsync -az --delete --no-perms --chmod=D755,F644 \
+            --exclude='/.env' \
+            --exclude='/.env.*' \
+            --exclude='/storage/' \
+            --exclude='/bootstrap/cache/' \
+            --exclude='/public/' \
+            --exclude='/tests/' \
+            --exclude='/database/*.sqlite' \
+            --exclude='/node_modules/' \
+            --exclude='/deploy.log' \
+            api/ hostgator:$DIR_SISTEMA/
+
+      - name: Enviar a pasta pública
+        # Sem --delete: o painel fica dentro desta pasta. index.php e .htaccess do servidor têm caminhos próprios.
+        run: |
+          rsync -az --no-perms --chmod=D755,F644 \
+            --exclude='/index.php' \
+            --exclude='/.htaccess' \
+            --exclude='/storage' \
+            api/public/ hostgator:$DIR_PUBLICO/
+
+      - name: Enviar o painel
+        run: |
+          rsync -az --delete --no-perms --chmod=D755,F644 \
+            web/dist/web/browser/ hostgator:$DIR_PUBLICO/painel/
+
+      - name: Migrations e cache
+        run: |
+          ssh hostgator "cd $DIR_SISTEMA && \
+            $PHP_REMOTO artisan config:clear && \
+            $PHP_REMOTO artisan package:discover --ansi && \
+            $PHP_REMOTO artisan migrate --force && \
+            $PHP_REMOTO artisan config:cache && \
+            $PHP_REMOTO artisan route:cache && \
+            $PHP_REMOTO artisan view:clear && \
+            $PHP_REMOTO artisan queue:restart"
+
+      - name: Sair do modo manutenção
+        # Roda mesmo se um passo anterior falhar, para o sistema não ficar fora do ar.
+        if: always()
+        run: ssh hostgator "cd $DIR_SISTEMA && $PHP_REMOTO artisan up" || true
+
+      - name: Conferir se está no ar
+        run: |
+          for i in 1 2 3 4 5; do
+            curl -fsS "$URL_SAUDE" > /dev/null && echo "Sistema no ar." && exit 0
+            sleep 5
+          done
+          echo "O endereço $URL_SAUDE não respondeu." && exit 1

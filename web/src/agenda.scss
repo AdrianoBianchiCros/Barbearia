@@ -535,8 +535,10 @@
   }
 }
 
-.passo-numero {
+// Nome próprio: `.passo-numero` (mais abaixo) é a bolinha numerada de outro formulário.
+.passo-rotulo {
   margin-top: 10px;
+  white-space: nowrap;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -551,7 +553,7 @@
     background: var(--st-confirmado-bd);
   }
 
-  .passo-numero {
+  .passo-rotulo {
     color: var(--st-confirmado-bd);
   }
 }

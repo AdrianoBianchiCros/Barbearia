@@ -366,6 +366,12 @@
   }
 }
 
+.acoes-cabecalho {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .botao-auto {
   width: auto;
   padding: 10px 18px;

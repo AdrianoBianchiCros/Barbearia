@@ -94,6 +94,11 @@ export class AuthService {
     this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({ next: sair, error: sair });
   }
 
+  /** Atualiza os dados da empresa na sessão (por exemplo, depois de mudar o endereço da página). */
+  atualizarEmpresa(dados: Partial<Empresa>): void {
+    this._sessao.update((s) => (s ? { ...s, empresa: { ...s.empresa, ...dados } } : s));
+  }
+
   /** Encerra a sessão local (token expirado ou acesso revogado). */
   limpar(): void {
     try {

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, Perfil } from '../core/auth.service';
 import { AvisoService } from '../core/aviso.service';
+import { ENDERECO_SITE } from '../core/plataforma';
 import { TemaService } from '../core/tema.service';
 
 interface ItemMenu {
@@ -9,6 +10,10 @@ interface ItemMenu {
   rotulo: string;
   icone: string;
   emBreve?: boolean;
+  /** Link para a página pública da barbearia (abre em nova aba); `rota` serve só de identificador. */
+  paginaPublica?: boolean;
+  /** Texto curto mostrado abaixo do rótulo. */
+  descricao?: string;
   /** Perfis que veem o item (todos, se omitido). */
   perfis?: Perfil[];
 }
@@ -32,6 +37,7 @@ const MENU: GrupoMenu[] = [
       { rota: '/financeiro', rotulo: 'Financeiro', icone: 'financeiro' },
       { rota: '/relatorios', rotulo: 'Relatórios', icone: 'relatorios', perfis: ['dono'] },
       { rota: '/configuracoes', rotulo: 'Configurações', icone: 'config' },
+      { rota: 'pagina-publica', rotulo: 'Minha página', icone: 'pagina', paginaPublica: true, descricao: 'Agendamento online dos clientes' },
     ],
   },
 ];
@@ -43,6 +49,8 @@ const ICONES: Record<string, string> = {
   financeiro: 'M12 3v18M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3',
   relatorios: 'M4 20V10M10 20V4M16 20v-7M21 20H3',
   config: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z',
+  pagina: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3.5 9h17M3.5 15h17M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
+  externo: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
   sair: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3',
   lua: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z',
   sol: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
@@ -91,6 +99,16 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
                     <span class="menu-rotulo">{{ item.rotulo }}</span>
                     <small class="em-breve">em breve</small>
                   </span>
+                } @else if (item.paginaPublica) {
+                  <a class="menu-item" [href]="enderecoPagina()" target="_blank" rel="noopener" (click)="menuAberto.set(false)"
+                    [title]="recolhido() ? item.rotulo : enderecoPagina()" [attr.aria-label]="item.rotulo + ' (abre em nova aba)'">
+                    <svg class="menu-icone" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones[item.icone]" /></svg>
+                    <span class="menu-rotulo menu-textos">
+                      <span>{{ item.rotulo }}</span>
+                      <small class="menu-descricao">{{ item.descricao }}</small>
+                    </span>
+                    <svg class="menu-icone menu-icone-externo menu-rotulo" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="icones['externo']" /></svg>
+                  </a>
                 } @else {
                   <a class="menu-item" [routerLink]="item.rota" routerLinkActive="ativo" (click)="menuAberto.set(false)"
                     [title]="recolhido() ? item.rotulo : ''" [attr.aria-label]="item.rotulo">
@@ -153,6 +171,8 @@ export class Shell {
     );
   });
   protected readonly icones = ICONES;
+  /** Endereço da página pública da barbearia, por exemplo app.abianchitech.com/saas/barbearia/{slug}. */
+  protected readonly enderecoPagina = computed(() => `${ENDERECO_SITE}/${this.sessao()?.empresa.slug ?? ''}`);
 
   protected readonly nomePerfil = computed(() => {
     const perfil = this.sessao()?.usuario.perfil;

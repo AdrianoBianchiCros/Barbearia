@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService } from '../../core/auth.service';
 import { AvisoService } from '../../core/aviso.service';
 import { CadastrosService } from '../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
@@ -175,6 +176,7 @@ import { ENDERECO_SITE } from '../../core/plataforma';
 export class DadosBarbearia implements OnInit {
   private readonly api = inject(CadastrosService);
   private readonly aviso = inject(AvisoService);
+  private readonly auth = inject(AuthService);
 
   protected readonly imagens = [
     { tipo: 'logo' as const, rotulo: 'Logo', dica: 'Quadrada, mínimo 300×300' },
@@ -296,6 +298,8 @@ export class DadosBarbearia implements OnInit {
       next: (e) => {
         this.salvando.set(false);
         this.aplicar(e);
+        // Mantém o nome e o link "Minha página" do menu em dia
+        this.auth.atualizarEmpresa({ nome: e.nome, slug: e.slug });
         this.aviso.sucesso('Dados da barbearia salvos.');
       },
       error: (e) => {

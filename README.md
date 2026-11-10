@@ -37,6 +37,10 @@ Para acessar:
 
 *Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API · 4 testes no painel*
 
+- **Link "Minha página" no menu (09/11/2026):** logo abaixo de Configurações, com ícone de globo, a descrição
+  "Agendamento online dos clientes" e a seta de link externo. Abre em nova aba a página pública da barbearia
+  (`app.abianchitech.com/saas/barbearia/{slug}`). Se o dono mudar o endereço em Configurações › Barbearia e página,
+  o link do menu já acompanha (`AuthService.atualizarEmpresa`).
 - **Novo visual do painel (publicado), 09/11/2026:** o painel Angular (`web/`) seguiu o sistema de design
   "Dub" (skill `skill-saas`): fundo branco, estrutura por bordas de 1px, fonte Inter servida pelo próprio painel
   (`web/src/fontes/`), texto em tons de cinza e um único azul de destaque (`#2563eb`). Botão principal preto (um por

@@ -37,19 +37,19 @@ Para acessar:
 
 *Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API · 4 testes no painel*
 
-- **Novo visual do painel (ainda não publicado), 09/11/2026:** o painel Angular (`web/`) seguiu o sistema de design
+- **Novo visual do painel (publicado), 09/11/2026:** o painel Angular (`web/`) seguiu o sistema de design
   "Dub" (skill `skill-saas`): fundo branco, estrutura por bordas de 1px, fonte Inter servida pelo próprio painel
   (`web/src/fontes/`), texto em tons de cinza e um único azul de destaque (`#2563eb`). Botão principal preto (um por
   tela), botões secundários com contorno, campos com borda preta de 1px, menu ativo com fundo azul claro, abas em
   pílula, etiquetas de situação tingidas com ponto, aviso flutuante branco. O tema escuro automático foi removido.
   Os tokens ficam no topo de `web/src/styles.scss`; os nomes antigos (`--cor-*`, `--st-*`) apontam para eles.
-- **Modo noturno opcional (ainda não publicado), 09/11/2026:** botão de lua/sol no rodapé do menu, ao lado de "Sair".
+- **Modo noturno opcional (publicado), 09/11/2026:** botão de lua/sol no rodapé do menu, ao lado de "Sair".
   O padrão continua claro; a escolha fica salva no navegador (`barbearia.tema`, `TemaService`) e um script no
   `web/src/index.html` aplica o tema antes de a página desenhar. A paleta escura é o bloco `:root[data-tema='escuro']`
   em `styles.scss` (mesmos tokens, valores invertidos; botão principal branco, que inverte para fundo preto e texto branco ao passar o mouse).
   **A página pública da barbearia (Blade, visual escuro) e a vitrine não foram alteradas.**
 
-- **LGPD — etapa 1 feita (ainda não publicada):** Política de privacidade e Termos de uso, aceite registrado no cadastro
+- **LGPD — etapa 1 feita (publicada):** Política de privacidade e Termos de uso, aceite registrado no cadastro
   e no agendamento online (com declaração de maioridade ou responsável), fontes no próprio servidor, mapa do Google só
   com consentimento, aviso de cookies com "Recusar" e rodapé com CNPJ. **Acompanhamento completo e próximos passos em
   [`LGPD.md`](LGPD.md).** Falta informar razão social, endereço, contato e encarregado de dados (`PLATAFORMA_*` no `.env`).
@@ -73,20 +73,23 @@ Para acessar:
   (redirecionar ou fazer a landing page de vendas) e o cadastro pelo painel está aberto a qualquer pessoa.
 - **Próximo passo:** (1) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento
   ou página "em breve"; (2) fechar o cadastro aberto; (3) começar a medir a taxa de faltas da barbearia piloto.
-  Para subir qualquer mudança, siga [Publicar uma atualização (manual)](#publicar-uma-atualização-manual).
-- **Última mudança (ainda não publicada):** guia de primeiros passos da agenda com três botões quadrados
+  Para subir qualquer mudança, basta dar push na `main` (publicação automática, veja abaixo).
+- **Guia de primeiros passos (publicado):** guia de primeiros passos da agenda com três botões quadrados
   (serviços, barbeiros, clientes). Some quando os três cadastros existem. Em 09/11/2026 o rótulo passou a
   "PASSO 01/02/03" numa linha só (antes quebrava letra por letra por conflito com a classe `.passo-numero`) e as telas
   de Configurações e Clientes ganharam o botão "← Voltar aos primeiros passos" enquanto o guia estiver incompleto
   (`VoltarPassos`, sinal `guiaPendente` no `AgendaService`). No primeiro acesso do dono abre um popup de boas-vindas
   (`boas-vindas.ts`) com os três passos e o botão "Começar"; depois de fechado não volta (guardado no navegador por usuário).
-- **Publicação automática preparada** (`.github/workflows/publicar.yml`): a cada push na `main`, o GitHub roda os testes
+- **Publicação automática funcionando** (`.github/workflows/publicar.yml`): a cada push na `main`, o GitHub roda os testes
   e envia para a HostGator por SSH/rsync. **Em 09/11/2026:** chave `barbearia-deploy` autorizada (precisou ser
   acrescentada à mão em `~/.ssh/authorized_keys`: o "Autorizar" do cPanel mostrou "authorized" mas não gravou a linha),
   Secrets e `PUBLICAR_AUTOMATICO` cadastrados, testes passando no GitHub (a suíte `Unit` vazia do `phpunit.xml` quebrava
   o PHPUnit lá). A publicação ainda falhava no primeiro SSH; o workflow passou a remover CRLF dos Secrets (chave colada
   pelo navegador vem com quebras do Windows) e ganhou o passo "Testar conexão com a HostGator", que diz o motivo da falha.
-  **Falta confirmar a primeira publicação automática com sucesso.** Detalhes em [Publicação automática](#publicação-automática-github-actions).
+  Em 09/11/2026 o secret `SSH_KNOWN_HOSTS` foi trocado pela linha da chave ED25519 do servidor
+  (`SHA256:rkkb7e8Vl3tHYC7CyLycOZZB7gcuVOukA/VJ6xKH+Ok`) e a **primeira publicação automática deu certo**.
+  Se o passo de conexão falhar com "não conseguiu abrir conexão", é o firewall da HostGator barrando o IP daquela
+  máquina do GitHub (costuma acontecer depois de várias falhas de SSH): rodar de novo (Re-run) ou esperar 30–60 min. Detalhes em [Publicação automática](#publicação-automática-github-actions).
 
 ---
 

@@ -41,7 +41,8 @@ Para acessar:
   página pública (componente `VitrineAcesso`, estilos em `web/src/acesso.scss`): à esquerda, foto de barbearia,
   frase "Sua cadeira sempre *ocupada.*", prévia animada da agenda do dia e letreiro com os recursos; no meio, um poste
   de barbeiro girando; à direita, o formulário escuro com dourado e saudação pela hora ("Bom dia. *Bora abrir a casa?*").
-  Sempre escura, independente do modo noturno. No celular, a foto vira o topo e a prévia some. Respeita "reduzir
+  Sempre escura, independente do modo noturno. No computador ocupa exatamente a janela, sem barra de rolagem (em
+  janelas baixas a prévia da agenda encolhe ou some). No celular, a foto vira o topo e a prévia some. Respeita "reduzir
   movimento" do sistema. Foto do Unsplash (`web/public/img/acesso/CREDITOS.txt`); fontes Bebas Neue e Playfair itálico
   servidas pelo painel. O login do administrador continua com o visual simples.
 - **Farol da mensalidade no menu (10/11/2026):** logo abaixo de "Minha página", o dono vê "Vence em dd/mm/aaaa" com

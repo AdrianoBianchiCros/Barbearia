@@ -135,9 +135,10 @@
         .sobre { display: grid; grid-template-columns: 1.05fr 1fr; gap: 70px; align-items: center; }
         .sobre-fotos { position: relative; aspect-ratio: 4/5; }
         .sobre-fotos img { position: absolute; object-fit: cover; border-radius: 22px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.45); }
-        .sobre-fotos img:first-child { inset: 0 18% 14% 0; width: 82%; height: 86%; }
-        .sobre-fotos img:last-child { right: 0; bottom: 0; width: 52%; height: 50%; border: 8px solid var(--creme); }
-        .sobre-fotos .carimbo { position: absolute; left: -18px; bottom: 8%; width: 128px; height: 128px; border-radius: 50%; background: var(--escuro); color: var(--ouro); display: grid; place-items: center; animation: girar-lento 18s linear infinite; }
+        /* Duas fotos lado a lado e desencontradas, sem sobreposição; o carimbo fica no espaço acima da segunda */
+        .sobre-fotos img:first-child { left: 0; top: 0; width: 58%; height: 88%; }
+        .sobre-fotos img:last-child { right: 0; bottom: 0; width: 38%; height: 62%; }
+        .sobre-fotos .carimbo { position: absolute; right: 5%; top: 6%; width: 128px; height: 128px; border-radius: 50%; background: var(--escuro); color: var(--ouro); display: grid; place-items: center; animation: girar-lento 18s linear infinite; }
         .carimbo svg { width: 100%; height: 100%; }
         .carimbo b { position: absolute; font-size: 1.8rem; color: var(--claro); animation: girar-lento 18s linear infinite reverse; }
         .sobre p.texto { white-space: pre-line; color: #3d3a35; font-size: 1.08rem; margin: 0 0 30px; }
@@ -147,7 +148,7 @@
         @media (max-width: 860px) {
             .sobre { grid-template-columns: 1fr; gap: 56px; }
             .sobre-fotos { max-width: 460px; width: 100%; margin: 0 auto; }
-            .sobre-fotos .carimbo { left: -6px; width: 104px; height: 104px; }
+            .sobre-fotos .carimbo { width: 104px; height: 104px; }
         }
 
         /* Serviços — cardápio */

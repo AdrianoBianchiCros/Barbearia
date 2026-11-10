@@ -98,16 +98,26 @@ jobs:
           # tr -d '\r': secrets colados a partir do Windows podem vir com CRLF, que o OpenSSH recusa
           printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          # Espaços invisíveis nos secrets de endereço, porta e usuário quebrariam a conexão
+          HOST=$(printf '%s' "$SSH_HOST" | tr -d '[:space:]')
+          PORTA=$(printf '%s' "${SSH_PORT:-22}" | tr -d '[:space:]')
+          USUARIO=$(printf '%s' "$SSH_USER" | tr -d '[:space:]')
+          # Do known_hosts vale só a impressão digital (tipo + chave); o nome do servidor em cada linha
+          # é trocado pelo apelido "hostgator" (HostKeyAlias), para não depender de como foi escrito.
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' | awk '!/^#/ && NF >= 3 { print "hostgator", $2, $3 }' > ~/.ssh/known_hosts
           cat > ~/.ssh/config <<EOF
           Host hostgator
-            HostName $SSH_HOST
-            Port ${SSH_PORT:-22}
-            User $SSH_USER
+            HostName $HOST
+            Port $PORTA
+            User $USUARIO
             IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            HostKeyAlias hostgator
             StrictHostKeyChecking yes
             ServerAliveInterval 30
           EOF
+          echo "Impressões digitais aceitas para o servidor:"
+          ssh-keygen -lf ~/.ssh/known_hosts || echo "(nenhuma: o secret SSH_KNOWN_HOSTS está vazio ou sem linhas válidas)"
 
       - name: Testar conexão com a HostGator
         # Falha cedo e com o motivo no resumo da execução, antes de colocar o sistema em manutenção.
@@ -119,14 +129,18 @@ jobs:
             echo "::error::O secret SSH_KEY está incompleto ou com formato inválido. Cole de novo o arquivo barbearia-deploy inteiro, do -----BEGIN ao -----END."
             exit 1
           fi
-          if ! timeout 15 bash -c "</dev/tcp/$SSH_HOST/${SSH_PORT:-22}" 2> /dev/null; then
+          HOST=$(printf '%s' "$SSH_HOST" | tr -d '[:space:]')
+          PORTA=$(printf '%s' "${SSH_PORT:-22}" | tr -d '[:space:]')
+          if ! timeout 15 bash -c "</dev/tcp/$HOST/$PORTA" 2> /dev/null; then
             echo "::error::O GitHub não conseguiu abrir conexão com o servidor na porta informada. Provável bloqueio (firewall) da HostGator para IPs de fora, ou SSH_HOST/SSH_PORT errados."
             exit 1
           fi
           if ! ssh -o ConnectTimeout=20 -o BatchMode=yes hostgator true 2> erro-ssh.txt; then
             cat erro-ssh.txt
             if grep -q "Host key verification failed" erro-ssh.txt; then
-              echo "::error::O secret SSH_KNOWN_HOSTS não confere com o servidor. Cole de novo o conteúdo inteiro de barbearia-known_hosts.txt."
+              echo "Impressões digitais que o servidor apresentou agora:"
+              ssh-keyscan -p "$PORTA" "$HOST" 2> /dev/null | ssh-keygen -lf - || true
+              echo "::error::O secret SSH_KNOWN_HOSTS não confere com o servidor. Compare, no registro deste passo, as impressões aceitas com as que o servidor apresentou."
             elif grep -q "Permission denied" erro-ssh.txt; then
               echo "::error::O servidor recusou a chave. Confira se SSH_KEY é a chave privada barbearia-deploy e se SSH_USER é adri0667."
             else

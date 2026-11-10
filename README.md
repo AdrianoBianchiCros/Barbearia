@@ -76,12 +76,14 @@ Para acessar:
   conta, mitigado pelo limite de 10 pedidos por hora por IP), recusa usuário ou barbearia desativados, pede para
   aguardar 1 min entre pedidos e responde 503 se o envio falhar (erro no `laravel.log`). O link vale 60 min e a troca
   encerra as sessões abertas.
-- **E-mail em produção (10/11/2026):** `MAIL_*` e `PAINEL_URL` configurados no `.env` com a conta
-  `nao-responda@abianchitech.com`, mas o SMTP recusava o login ("535 Incorrect authentication data") e o Webmail
-  avisou que o envio do domínio está bloqueado até reconfigurar o **DKIM** (cPanel › Entregabilidade de e-mail ›
-  Reparar DKIM e SPF). Em 10/11/2026 o envio pelo Webmail voltou a funcionar, mas o "Esqueci a senha" ainda não envia.
-  Para descobrir o motivo: `php artisan email:testar SEU@EMAIL` no servidor mostra a configuração em uso (sem a senha)
-  e o erro exato do envio.
+- **E-mail em produção funcionando (10/11/2026):** as caixas de `abianchitech.com` ficam no **Titan Email**
+  (MX `mx1/mx2.titan.email`), não no cPanel. Por isso o SMTP `mail.abianchitech.com` (servidor da HostGator) recusava
+  o login com "535". Configuração que funciona: `MAIL_HOST=smtp.titan.email`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`,
+  `MAIL_USERNAME=nao-responda@abianchitech.com` e `MAIL_PASSWORD` = **senha de app** do Titan, entre aspas simples.
+  O Titan só aceitou SMTP depois de ligar a verificação em duas etapas na conta e gerar uma senha de app: com a senha
+  normal ele respondia "535 5.7.8 authentication failed", embora o Webmail entrasse. Depois de mudar o `.env`, rodar
+  `config:clear && config:cache`. Diagnóstico: `php artisan email:testar SEU@EMAIL` mostra a configuração em uso (sem a
+  senha) e o erro exato. **Pendente:** trocar a senha normal do `nao-responda@` no Titan (apareceu numa conversa).
 - **Página da barbearia, "Sobre a casa" (10/11/2026):** uma foto só, larga e centralizada, com o carimbo giratório
   no canto inferior esquerdo (antes eram duas fotos sobrepostas).
 
@@ -294,7 +296,7 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
   descadastro e plano de incidentes (ANPD em 3 dias úteis). Lista completa em [`LGPD.md`](LGPD.md).
 
 ### Pequenos pendentes e ideias
-- **E-mail em produção:** reparar o DKIM de `abianchitech.com` (o envio do domínio está bloqueado) para o "Esqueci a senha" enviar de verdade
+- **E-mail:** trocar a senha normal do `nao-responda@` no Titan (a senha de app do sistema continua valendo)
 - Visual "Dub": conferir no navegador o painel de agendamento, a comanda e os relatórios com dados; decidir se a fonte
   Satoshi (títulos ≥ 36px) entra no painel (hoje os títulos usam Inter) e se a vitrine e as telas legais seguem o mesmo visual
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")
@@ -417,9 +419,10 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://app.abianchitech.com/saas/barbearia` e `DB_*` do MySQL;
   - `FRONTEND_URL=https://app.abianchitech.com` e `QUEUE_CONNECTION=database`;
   - `PAINEL_URL=https://app.abianchitech.com/saas/barbearia/painel` (link do e-mail de "Esqueci a senha");
-  - e-mail por uma conta criada no cPanel (ex.: `nao-responda@abianchitech.com`): `MAIL_MAILER=smtp`,
-    `MAIL_HOST=mail.abianchitech.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME` e `MAIL_PASSWORD` (entre aspas **simples**: nas duplas, um `$` na senha some e o SMTP responde "535 Incorrect authentication data")
-    dessa conta, `MAIL_FROM_ADDRESS` igual ao usuário e `MAIL_FROM_NAME="Barbearia"`;
+  - e-mail pela conta `nao-responda@abianchitech.com` do **Titan** (o e-mail do domínio fica lá, não no cPanel):
+    `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.titan.email`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME` = a conta e
+    `MAIL_PASSWORD` = **senha de app** do Titan (verificação em duas etapas ligada; a senha normal é recusada no SMTP),
+    entre aspas **simples**; `MAIL_FROM_ADDRESS` igual ao usuário e `MAIL_FROM_NAME="Barbearia"`;
   - `WHATSAPP_*` (veja `.env.example`);
   - `DB_PASSWORD` **entre aspas** (`DB_PASSWORD="..."`). Em 09/11/2026 o banco recusou o acesso
     (`SQLSTATE[HY000] [1045] Access denied`) e o cadastro, o login e as páginas deram erro 500. Só voltou depois de

@@ -120,6 +120,17 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
             }
           </nav>
 
+          @if (farol(); as f) {
+            <div class="farol-plano" [class]="'farol-' + f.cor" role="status"
+              [title]="f.titulo + ' · ' + f.detalhe" [attr.aria-label]="f.titulo + '. ' + f.detalhe">
+              <span class="farol-luz" aria-hidden="true"></span>
+              <span class="menu-rotulo menu-textos">
+                <span>{{ f.titulo }}</span>
+                <small class="menu-descricao">{{ f.detalhe }}</small>
+              </span>
+            </div>
+          }
+
           <div class="menu-usuario">
             <span class="avatar-usuario" [title]="recolhido() ? s.usuario.nome + ' (' + nomePerfil() + ')' : ''">{{ iniciais() }}</span>
             <div class="menu-usuario-textos">
@@ -192,6 +203,22 @@ export class Shell {
     }
     const quando = dias === 0 ? 'vence hoje' : dias === 1 ? 'vence amanhã' : `vence em ${dias} dias (${data(acesso.vence_em)})`;
     return { carencia: false, texto: `O plano da barbearia ${quando}. Para renovar, fale com a ${PLATAFORMA.nome}.` };
+  });
+
+  /**
+   * Farol do vencimento da mensalidade, abaixo de "Minha página":
+   * verde com mais de 15 dias, amarelo de 15 a 6 dias, vermelho com 5 dias ou menos (e depois de vencer).
+   */
+  protected readonly farol = computed(() => {
+    const acesso = this.sessao()?.acesso;
+    if (!acesso?.vence_em || acesso.dias_restantes === null) return null;
+
+    const dias = acesso.dias_restantes;
+    const data = acesso.vence_em.split('-').reverse().join('/');
+    const cor = dias > 15 ? 'verde' : dias > 5 ? 'amarelo' : 'vermelho';
+    const detalhe =
+      dias > 1 ? `faltam ${dias} dias` : dias === 1 ? 'vence amanhã' : dias === 0 ? 'vence hoje' : `venceu há ${-dias} dia(s)`;
+    return { cor, titulo: `${dias < 0 ? 'Venceu em' : 'Vence em'} ${data}`, detalhe };
   });
 
   protected readonly nomePerfil = computed(() => {

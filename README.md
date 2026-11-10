@@ -37,6 +37,10 @@ Para acessar:
 
 *Atualizado em 10/11/2026 · sistema publicado na HostGator · 137 testes na API · 6 testes no painel*
 
+- **Farol da mensalidade no menu (10/11/2026):** logo abaixo de "Minha página", o dono vê "Vence em dd/mm/aaaa" com
+  os dias que faltam e uma luz: **verde** com mais de 15 dias, **amarelo** de 15 a 6 dias e **vermelho** com 5 dias ou
+  menos (e depois de vencer). Com o menu recolhido, aparece só a luz. Barbearia sem prazo não mostra o farol.
+  Cores nos tokens `--farol-*` de `web/src/styles.scss`.
 - **Venda do SaaS: administrador e prazo de acesso (10/11/2026):** acabou o "Cadastre sua barbearia". Agora quem
   cadastra é o administrador da plataforma, em **`/painel/admin`** (login próprio, tabela `administradores`):
   - **Nova barbearia:** dados, dono (nome e e-mail), período (**teste de 7 dias, 1, 3, 6 ou 12 meses**), forma de

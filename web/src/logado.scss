@@ -1122,3 +1122,47 @@ fieldset {
     padding-right: 16px;
   }
 }
+
+// ---------- Farol do vencimento do plano (menu lateral, abaixo de "Minha página") ----------
+.farol-plano {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-buttons);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cor-texto);
+
+  .farol-luz {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    margin: 0 4px;
+    border-radius: 50%;
+    background: var(--farol-cor);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--farol-cor) 25%, transparent);
+  }
+
+  &.farol-verde {
+    --farol-cor: var(--farol-verde);
+  }
+
+  &.farol-amarelo {
+    --farol-cor: var(--farol-amarelo);
+  }
+
+  &.farol-vermelho {
+    --farol-cor: var(--farol-vermelho);
+    border-color: color-mix(in srgb, var(--farol-vermelho) 40%, transparent);
+  }
+}
+
+@media (min-width: 801px) {
+  .shell.menu-recolhido .farol-plano {
+    justify-content: center;
+    padding: 8px 0;
+  }
+}

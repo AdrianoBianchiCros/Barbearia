@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Administrador;
 use App\Models\Agendamento;
 use App\Models\Caixa;
 use App\Models\Cliente;
@@ -22,11 +23,14 @@ use Illuminate\Support\Carbon;
  * Acessos de teste (somente ambiente local):
  *  - dono@demo.test / demo1234 (dono)
  *  - barbeiro@demo.test / demo1234 (barbeiro Rafael)
+ *  - admin@demo.test / demo1234 (administrador da plataforma, em /admin)
  */
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        Administrador::create(['nome' => 'Administrador Demo', 'email' => 'admin@demo.test', 'password' => 'demo1234', 'ativo' => true]);
+
         $empresa = Empresa::create([
             'nome' => 'Barbearia Demo',
             'slug' => 'barbearia-demo',

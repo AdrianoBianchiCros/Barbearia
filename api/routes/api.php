@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\AuthController;
@@ -22,25 +23,45 @@ use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('registrar', [AuthController::class, 'registrar'])->middleware('throttle:registro');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('esqueci-senha', [AuthController::class, 'esqueciSenha'])->middleware('throttle:senha');
     Route::post('redefinir-senha', [AuthController::class, 'redefinirSenha'])->middleware('throttle:senha');
 });
 
 // Agendamento online pela página da barbearia (sem login).
-Route::prefix('publico/{slug}')->middleware('empresa.publica')->group(function () {
+Route::prefix('publico/{slug}')->middleware(['empresa.publica', 'acesso.liberado'])->group(function () {
     Route::get('horarios', [PaginaPublicaController::class, 'horarios'])->middleware('throttle:60,1');
     Route::post('agendamentos', [PaginaPublicaController::class, 'agendar'])->middleware('throttle:agendamento-publico');
 });
 
 // Link do cliente recebido no WhatsApp: confirmar, remarcar ou cancelar o horário.
+// Com o prazo da barbearia vencido, o cliente ainda confirma ou cancela, mas não remarca.
 Route::prefix('a/{token}')->middleware('agendamento.token')->group(function () {
-    Route::get('horarios', [ClienteAgendamentoController::class, 'horarios'])->middleware('throttle:60,1');
+    Route::get('horarios', [ClienteAgendamentoController::class, 'horarios'])->middleware(['throttle:60,1', 'acesso.liberado']);
     Route::middleware('throttle:20,1')->group(function () {
         Route::post('confirmar', [ClienteAgendamentoController::class, 'confirmar']);
         Route::post('cancelar', [ClienteAgendamentoController::class, 'cancelar']);
-        Route::post('remarcar', [ClienteAgendamentoController::class, 'remarcar']);
+        Route::post('remarcar', [ClienteAgendamentoController::class, 'remarcar'])->middleware('acesso.liberado');
+    });
+});
+
+// Área do administrador da plataforma: cadastro das barbearias, contrato e prazo de acesso.
+Route::prefix('admin')->group(function () {
+    Route::post('auth/login', [Admin\AuthController::class, 'login'])->middleware('throttle:login');
+
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::get('auth/eu', [Admin\AuthController::class, 'eu']);
+        Route::post('auth/logout', [Admin\AuthController::class, 'logout']);
+
+        Route::get('opcoes', [Admin\BarbeariaController::class, 'opcoes']);
+        Route::get('barbearias', [Admin\BarbeariaController::class, 'index']);
+        Route::post('barbearias', [Admin\BarbeariaController::class, 'store']);
+        Route::get('barbearias/{empresa}', [Admin\BarbeariaController::class, 'show']);
+        Route::post('barbearias/{empresa}/renovar', [Admin\BarbeariaController::class, 'renovar']);
+        Route::post('barbearias/{empresa}/suspender', [Admin\BarbeariaController::class, 'suspender']);
+        Route::post('barbearias/{empresa}/reativar', [Admin\BarbeariaController::class, 'reativar']);
+        Route::post('barbearias/{empresa}/nova-senha', [Admin\BarbeariaController::class, 'novaSenha']);
+        Route::get('assinaturas/{assinatura}/contrato', [Admin\BarbeariaController::class, 'contrato']);
     });
 });
 

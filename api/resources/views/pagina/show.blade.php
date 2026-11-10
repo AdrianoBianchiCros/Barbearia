@@ -476,8 +476,8 @@
                         </div>
                         <p>Rápido, sem cadastro e sem baixar aplicativo. Só os horários realmente livres aparecem.</p>
                     </div>
-                    @if ($servicos->isEmpty())
-                        <p class="aviso">O agendamento online ainda não está disponível.@if ($whatsapp) Fale com a gente pelo <a href="{{ $whatsapp }}">WhatsApp</a>.@endif</p>
+                    @if ($servicos->isEmpty() || ! $agendamentoLiberado)
+                        <p class="aviso">O agendamento online {{ $agendamentoLiberado ? 'ainda não está disponível' : 'não está disponível no momento' }}.@if ($whatsapp) Fale com a gente pelo <a href="{{ $whatsapp }}">WhatsApp</a>.@endif</p>
                     @else
                         <div class="passos" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
 
@@ -759,7 +759,7 @@
     })();
     </script>
 
-    @if ($servicos->isNotEmpty())
+    @if ($servicos->isNotEmpty() && $agendamentoLiberado)
         @include('pagina._agendamento-script')
     @endif
 </body>

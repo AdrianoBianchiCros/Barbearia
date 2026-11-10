@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Aceite;
-use App\Models\Empresa;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password as SenhaBroker;
 use Illuminate\Validation\Rules\Password;
@@ -15,51 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Cadastro de uma nova barbearia com o usuário dono.
-     */
-    public function registrar(Request $request): JsonResponse
-    {
-        $dados = $request->validate([
-            'empresa_nome' => ['required', 'string', 'max:120'],
-            'empresa_telefone' => ['nullable', 'string', 'max:20'],
-            'nome' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:180', 'unique:usuarios,email'],
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-            'aceite_termos' => ['accepted'],
-        ], [
-            'aceite_termos.accepted' => 'Para criar a conta, aceite os Termos de uso e a Política de privacidade.',
-        ], [
-            'empresa_nome' => 'nome da barbearia',
-            'empresa_telefone' => 'telefone da barbearia',
-            'email' => 'e-mail',
-            'password' => 'senha',
-        ]);
-
-        $usuario = DB::transaction(function () use ($dados, $request) {
-            $empresa = Empresa::create([
-                'nome' => $dados['empresa_nome'],
-                'slug' => Empresa::gerarSlug($dados['empresa_nome']),
-                'telefone' => $dados['empresa_telefone'] ?? null,
-                'email' => $dados['email'],
-            ])->refresh(); // carrega os valores padrão do banco (ex.: fuso horário)
-
-            $usuario = User::create([
-                'empresa_id' => $empresa->id,
-                'nome' => $dados['nome'],
-                'email' => $dados['email'],
-                'password' => $dados['password'],
-                'perfil' => 'dono',
-            ]);
-
-            Aceite::registrar(['termos', 'privacidade'], ['empresa_id' => $empresa->id, 'usuario_id' => $usuario->id], 'cadastro_painel', $request);
-
-            return $usuario;
-        });
-
-        return $this->respostaComToken($usuario, $request, 201);
-    }
-
     public function login(Request $request): JsonResponse
     {
         $dados = $request->validate([
@@ -75,6 +27,10 @@ class AuthController extends Controller
 
         if (! $usuario->ativo || ! $usuario->empresa?->ativo) {
             throw ValidationException::withMessages(['email' => 'Acesso desativado. Fale com o responsável pela barbearia.']);
+        }
+
+        if (! $usuario->empresa->acessoLiberado()) {
+            throw ValidationException::withMessages(['email' => $usuario->empresa->mensagemBloqueio()]);
         }
 
         return $this->respostaComToken($usuario, $request);
@@ -169,6 +125,8 @@ class AuthController extends Controller
         return [
             'usuario' => $usuario->only(['id', 'nome', 'email', 'perfil']),
             'empresa' => $empresa->only(['id', 'nome', 'slug', 'telefone', 'fuso_horario']),
+            // Prazo do acesso pago: o painel mostra o aviso de vencimento só para o dono.
+            'acesso' => $usuario->temPerfil('dono') ? $empresa->resumoAcesso() : null,
         ];
     }
 }

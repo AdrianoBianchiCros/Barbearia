@@ -31,7 +31,7 @@ class EnviarLembretesWhatsapp extends Command
     {
         $criados = 0;
 
-        foreach (Empresa::where('ativo', true)->where('wa_ativo', true)->get() as $empresa) {
+        foreach (Empresa::comAcessoLiberado()->where('wa_ativo', true)->get() as $empresa) {
             $empresaAtual->definir($empresa->id);
 
             foreach (self::LEMBRETES as $tipo => $regra) {

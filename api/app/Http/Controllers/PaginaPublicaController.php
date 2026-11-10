@@ -60,6 +60,8 @@ class PaginaPublicaController extends Controller
             'funcionamento' => $this->funcionamento($barbeiros),
             'endereco' => $this->endereco($empresa),
             'corTexto' => $this->corDoTexto($empresa->cor_primaria),
+            // Prazo de acesso vencido: a página continua no ar, mas sem o agendamento online.
+            'agendamentoLiberado' => $empresa->acessoLiberado(),
             'config' => [
                 'urlHorarios' => url("/api/publico/{$empresa->slug}/horarios"),
                 'urlAgendar' => url("/api/publico/{$empresa->slug}/agendamentos"),

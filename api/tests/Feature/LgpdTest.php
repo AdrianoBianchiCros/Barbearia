@@ -6,9 +6,9 @@ use App\Models\Aceite;
 use App\Models\Empresa;
 use App\Models\Funcionario;
 use App\Models\Servico;
-use App\Support\EmpresaAtual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class LgpdTest extends TestCase
@@ -16,41 +16,6 @@ class LgpdTest extends TestCase
     use RefreshDatabase;
 
     private const DIA = '2026-10-20'; // terça-feira
-
-    private function registrar(array $dados = []): \Illuminate\Testing\TestResponse
-    {
-        return $this->postJson('/api/auth/registrar', $dados + [
-            'empresa_nome' => 'Barbearia do Zé',
-            'nome' => 'José Silva',
-            'email' => 'ze@exemplo.test',
-            'password' => 'segredo123',
-            'password_confirmation' => 'segredo123',
-        ]);
-    }
-
-    public function test_cadastro_exige_aceite_dos_termos(): void
-    {
-        $this->registrar()
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['aceite_termos']);
-
-        $this->assertDatabaseCount('usuarios', 0);
-    }
-
-    public function test_cadastro_registra_aceite_de_termos_e_privacidade(): void
-    {
-        $id = $this->registrar(['aceite_termos' => true])->assertCreated()->json('usuario.id');
-
-        foreach (['termos', 'privacidade'] as $documento) {
-            $this->assertDatabaseHas('aceites', [
-                'usuario_id' => $id,
-                'documento' => $documento,
-                'versao' => Aceite::versaoVigente($documento),
-                'origem' => 'cadastro_painel',
-                'ip' => '127.0.0.1',
-            ]);
-        }
-    }
 
     private function prepararPagina(): void
     {
@@ -64,7 +29,7 @@ class LgpdTest extends TestCase
         });
     }
 
-    private function agendar(array $dados = []): \Illuminate\Testing\TestResponse
+    private function agendar(array $dados = []): TestResponse
     {
         return $this->postJson('/api/publico/barbearia-do-ze/agendamentos', $dados + [
             'nome' => 'João',

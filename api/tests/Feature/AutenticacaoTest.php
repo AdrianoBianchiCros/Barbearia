@@ -15,52 +15,18 @@ class AutenticacaoTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registra_barbearia_com_usuario_dono(): void
+    public function test_nao_existe_mais_cadastro_pelo_painel(): void
     {
-        $resposta = $this->postJson('/api/auth/registrar', [
+        // Quem cadastra as barbearias é o administrador da plataforma (AdminBarbeariasTest).
+        $this->postJson('/api/auth/registrar', [
             'empresa_nome' => 'Barbearia do Zé',
             'nome' => 'José Silva',
             'email' => 'ze@exemplo.test',
             'password' => 'segredo123',
             'password_confirmation' => 'segredo123',
-            'aceite_termos' => true,
-        ]);
+        ])->assertNotFound();
 
-        $resposta->assertCreated()
-            ->assertJsonStructure(['token', 'usuario' => ['id', 'nome', 'email', 'perfil'], 'empresa' => ['id', 'nome', 'slug']])
-            ->assertJsonPath('usuario.perfil', 'dono')
-            ->assertJsonPath('empresa.slug', 'barbearia-do-ze')
-            ->assertJsonPath('empresa.fuso_horario', 'America/Sao_Paulo');
-
-        $this->assertDatabaseHas('usuarios', ['email' => 'ze@exemplo.test', 'perfil' => 'dono']);
-    }
-
-    public function test_slug_repetido_recebe_sufixo(): void
-    {
-        Empresa::factory()->create(['nome' => 'Barbearia do Zé', 'slug' => 'barbearia-do-ze']);
-
-        $this->postJson('/api/auth/registrar', [
-            'empresa_nome' => 'Barbearia do Zé',
-            'nome' => 'Outro Zé',
-            'email' => 'outro@exemplo.test',
-            'password' => 'segredo123',
-            'password_confirmation' => 'segredo123',
-            'aceite_termos' => true,
-        ])->assertCreated()->assertJsonPath('empresa.slug', 'barbearia-do-ze-2');
-    }
-
-    public function test_registro_rejeita_email_duplicado_e_senha_fraca(): void
-    {
-        User::factory()->create(['email' => 'ze@exemplo.test']);
-
-        $this->postJson('/api/auth/registrar', [
-            'empresa_nome' => 'Barbearia',
-            'nome' => 'Zé',
-            'email' => 'ze@exemplo.test',
-            'password' => '123',
-            'password_confirmation' => '123',
-            'aceite_termos' => true,
-        ])->assertUnprocessable()->assertJsonValidationErrors(['email', 'password']);
+        $this->assertDatabaseCount('empresas', 0);
     }
 
     public function test_login_com_credenciais_validas_retorna_token(): void

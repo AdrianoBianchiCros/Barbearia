@@ -45,8 +45,6 @@ class AppServiceProvider extends ServiceProvider
             ], 429));
         });
 
-        RateLimiter::for('registro', fn (Request $request) => Limit::perHour(10)->by($request->ip()));
-
         // Esqueci a senha / redefinir: evita disparar e-mails em massa e testar links por força bruta.
         RateLimiter::for('senha', fn (Request $request) => Limit::perHour(10)->by($request->ip())
             ->response(fn () => response()->json([

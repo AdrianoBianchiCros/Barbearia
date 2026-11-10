@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
@@ -192,5 +193,14 @@ class AutenticacaoTest extends TestCase
             'password' => '123',
             'password_confirmation' => '123',
         ])->assertUnprocessable()->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_comando_testa_o_envio_de_email(): void
+    {
+        Mail::fake();
+
+        $this->artisan('email:testar', ['para' => 'ze@exemplo.test'])
+            ->expectsOutputToContain('Enviado.')
+            ->assertSuccessful();
     }
 }

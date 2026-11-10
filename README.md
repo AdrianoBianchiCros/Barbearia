@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 10/11/2026 · sistema publicado na HostGator · 137 testes na API · 6 testes no painel*
+*Atualizado em 10/11/2026 · sistema publicado na HostGator · 138 testes na API · 6 testes no painel*
 
 - **Nova tela de entrada do painel (10/11/2026):** login, "Esqueci a senha" e "Nova senha" ganharam o visual da
   página pública (componente `VitrineAcesso`, estilos em `web/src/acesso.scss`): à esquerda, foto de barbearia,
@@ -79,7 +79,9 @@ Para acessar:
 - **E-mail em produção (10/11/2026):** `MAIL_*` e `PAINEL_URL` configurados no `.env` com a conta
   `nao-responda@abianchitech.com`, mas o SMTP recusava o login ("535 Incorrect authentication data") e o Webmail
   avisou que o envio do domínio está bloqueado até reconfigurar o **DKIM** (cPanel › Entregabilidade de e-mail ›
-  Reparar DKIM e SPF). **Pendente:** reparar o DKIM, testar envio pelo Webmail e depois o "Esqueci a senha".
+  Reparar DKIM e SPF). Em 10/11/2026 o envio pelo Webmail voltou a funcionar, mas o "Esqueci a senha" ainda não envia.
+  Para descobrir o motivo: `php artisan email:testar SEU@EMAIL` no servidor mostra a configuração em uso (sem a senha)
+  e o erro exato do envio.
 - **Página da barbearia, "Sobre a casa" (10/11/2026):** uma foto só, larga e centralizada, com o carimbo giratório
   no canto inferior esquerdo (antes eram duas fotos sobrepostas).
 

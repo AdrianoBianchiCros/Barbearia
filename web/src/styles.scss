@@ -316,18 +316,11 @@ textarea {
   }
 }
 
-// Linha com o rótulo do campo à esquerda e um link à direita (ex.: "Senha" · "Esqueci a senha")
-.campo .rotulo-com-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
+// Link logo abaixo de um campo (ex.: "Esqueci a senha")
+.link-abaixo-campo {
+  display: inline-block;
+  margin-top: 6px;
   font-size: 14px;
-
-  label {
-    font-weight: 500;
-  }
 }
 
 .aviso-sucesso {

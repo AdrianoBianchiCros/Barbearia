@@ -31,10 +31,7 @@ import { VerSenha } from '../../layout/ver-senha';
         </label>
 
         <div class="campo">
-          <div class="rotulo-com-link">
-            <label for="senha">Senha</label>
-            <a routerLink="/esqueci-senha">Esqueci a senha</a>
-          </div>
+          <label for="senha"><span>Senha</span></label>
           <div class="campo-senha">
             <input #senha id="senha" type="password" formControlName="password" autocomplete="current-password" />
             <app-ver-senha [campo]="senha" />
@@ -42,6 +39,7 @@ import { VerSenha } from '../../layout/ver-senha';
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <small class="erro-campo">Informe sua senha.</small>
           }
+          <a class="link-abaixo-campo" routerLink="/esqueci-senha">Esqueci a senha</a>
         </div>
 
         <button class="botao" type="submit" [disabled]="enviando()">

@@ -35,16 +35,20 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 10/11/2026 · sistema publicado na HostGator · 122 testes na API · 4 testes no painel*
+*Atualizado em 10/11/2026 · sistema publicado na HostGator · 123 testes na API · 4 testes no painel*
 
-- **Login do painel: "olho" e "Esqueci a senha" (10/11/2026, ainda não publicado):** botão de olho para ver a senha
-  digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" → tela
-  `/esqueci-senha` (informa o e-mail cadastrado) → e-mail com link para `/redefinir-senha?token=…&email=…` → nova senha →
-  volta ao login com aviso. A API (`POST /api/auth/esqueci-senha` e `/api/auth/redefinir-senha`) responde igual exista
-  ou não o e-mail, só envia para usuário e barbearia ativos, o link vale 60 min, a troca encerra as sessões abertas e
-  há limite de 10 pedidos por hora por IP. **Para funcionar em produção falta configurar o e-mail no `.env` do servidor**
-  (`MAIL_*` com uma conta SMTP do cPanel e `PAINEL_URL`, veja [Publicação](#publicação-hostgator)); hoje `MAIL_MAILER=log`
-  só grava o e-mail em `storage/logs`.
+- **Login do painel: "olho" e "Esqueci a senha" (10/11/2026, publicado):** botão de olho para ver a senha
+  digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" logo abaixo do
+  campo de senha → tela `/esqueci-senha` (informa o e-mail cadastrado) → e-mail com link para
+  `/redefinir-senha?token=…&email=…` → nova senha → volta ao login com aviso. A API (`POST /api/auth/esqueci-senha` e
+  `/api/auth/redefinir-senha`) avisa "E-mail não encontrado para recuperar a senha" (decisão do produto: revela quem tem
+  conta, mitigado pelo limite de 10 pedidos por hora por IP), recusa usuário ou barbearia desativados, pede para
+  aguardar 1 min entre pedidos e responde 503 se o envio falhar (erro no `laravel.log`). O link vale 60 min e a troca
+  encerra as sessões abertas.
+- **E-mail em produção (10/11/2026):** `MAIL_*` e `PAINEL_URL` configurados no `.env` com a conta
+  `nao-responda@abianchitech.com`, mas o SMTP recusava o login ("535 Incorrect authentication data") e o Webmail
+  avisou que o envio do domínio está bloqueado até reconfigurar o **DKIM** (cPanel › Entregabilidade de e-mail ›
+  Reparar DKIM e SPF). **Pendente:** reparar o DKIM, testar envio pelo Webmail e depois o "Esqueci a senha".
 - **Página da barbearia, "Sobre a casa" (10/11/2026):** uma foto só, larga e centralizada, com o carimbo giratório
   no canto inferior esquerdo (antes eram duas fotos sobrepostas).
 
@@ -195,7 +199,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login/cadastro do painel e na vitrine.
 
-**Testes:** 122 testes na API (`php artisan test`), todos passando.
+**Testes:** 123 testes na API (`php artisan test`), todos passando.
 
 ---
 
@@ -244,7 +248,7 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
   descadastro e plano de incidentes (ANPD em 3 dias úteis). Lista completa em [`LGPD.md`](LGPD.md).
 
 ### Pequenos pendentes e ideias
-- **E-mail em produção:** configurar `MAIL_*` e `PAINEL_URL` no `.env` do servidor para o "Esqueci a senha" enviar de verdade
+- **E-mail em produção:** reparar o DKIM de `abianchitech.com` (o envio do domínio está bloqueado) para o "Esqueci a senha" enviar de verdade
 - Visual "Dub": conferir no navegador o painel de agendamento, a comanda e os relatórios com dados; decidir se a fonte
   Satoshi (títulos ≥ 36px) entra no painel (hoje os títulos usam Inter) e se a vitrine e as telas legais seguem o mesmo visual
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")

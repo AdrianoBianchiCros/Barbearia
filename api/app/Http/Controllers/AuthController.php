@@ -81,8 +81,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Envia o link de redefinição de senha. A resposta é a mesma exista ou não o e-mail,
-     * para não revelar quem tem conta no sistema.
+     * Envia o link de redefinição de senha para um e-mail cadastrado.
+     * Avisa quando o e-mail não existe (decisão do produto; o limite "senha" segura tentativas em massa).
      */
     public function esqueciSenha(Request $request): JsonResponse
     {
@@ -90,18 +90,30 @@ class AuthController extends Controller
 
         $usuario = User::where('email', $dados['email'])->first();
 
-        if ($usuario?->ativo && $usuario->empresa?->ativo) {
-            try {
-                SenhaBroker::sendResetLink(['email' => $usuario->email]);
-            } catch (\Throwable $e) {
-                // Falha no envio (ex.: SMTP recusou a senha) fica no log, mas a resposta não muda:
-                // um erro só para e-mails cadastrados revelaria quem tem conta.
-                report($e);
-            }
+        if (! $usuario) {
+            throw ValidationException::withMessages(['email' => 'E-mail não encontrado para recuperar a senha.']);
+        }
+
+        if (! $usuario->ativo || ! $usuario->empresa?->ativo) {
+            throw ValidationException::withMessages(['email' => 'Acesso desativado. Fale com o responsável pela barbearia.']);
+        }
+
+        try {
+            $status = SenhaBroker::sendResetLink(['email' => $usuario->email]);
+        } catch (\Throwable $e) {
+            report($e); // ex.: o servidor de e-mail recusou o login (SMTP 535)
+
+            return response()->json([
+                'message' => 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.',
+            ], 503);
+        }
+
+        if ($status === SenhaBroker::RESET_THROTTLED) {
+            throw ValidationException::withMessages(['email' => 'Já enviamos um link há pouco. Aguarde um minuto para pedir outro.']);
         }
 
         return response()->json([
-            'message' => 'Se esse e-mail estiver cadastrado, você vai receber em instantes um link para criar uma nova senha.',
+            'message' => 'Enviamos um link para criar uma nova senha. Confira sua caixa de entrada.',
         ]);
     }
 

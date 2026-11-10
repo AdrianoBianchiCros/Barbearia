@@ -154,27 +154,41 @@ class AutenticacaoTest extends TestCase
         });
     }
 
-    public function test_esqueci_a_senha_nao_revela_se_o_email_existe(): void
+    public function test_esqueci_a_senha_avisa_email_nao_encontrado_ou_desativado(): void
     {
         Notification::fake();
         User::factory()->create(['email' => 'inativo@exemplo.test', 'ativo' => false]);
 
-        $existe = $this->postJson('/api/auth/esqueci-senha', ['email' => 'inativo@exemplo.test'])->assertOk()->json('message');
-        $naoExiste = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])->assertOk()->json('message');
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.email.0', 'E-mail não encontrado para recuperar a senha.');
 
-        $this->assertSame($existe, $naoExiste);
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'inativo@exemplo.test'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
+
         Notification::assertNothingSent();
     }
 
-    public function test_esqueci_a_senha_com_falha_no_envio_responde_igual(): void
+    public function test_esqueci_a_senha_avisa_quando_o_envio_falha(): void
     {
         User::factory()->create(['email' => 'ze@exemplo.test']);
         Password::shouldReceive('sendResetLink')->once()->andThrow(new \RuntimeException('535 Incorrect authentication data'));
 
-        $comFalha = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk()->json('message');
-        $naoExiste = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])->assertOk()->json('message');
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.');
+    }
 
-        $this->assertSame($comFalha, $naoExiste);
+    public function test_esqueci_a_senha_pede_para_aguardar_entre_pedidos(): void
+    {
+        Notification::fake();
+        User::factory()->create(['email' => 'ze@exemplo.test']);
+
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk();
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
     }
 
     public function test_redefine_a_senha_com_token_valido_e_encerra_sessoes(): void

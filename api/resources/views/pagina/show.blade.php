@@ -133,12 +133,10 @@
 
         /* Sobre */
         .sobre { display: grid; grid-template-columns: 1.05fr 1fr; gap: 70px; align-items: center; }
-        .sobre-fotos { position: relative; aspect-ratio: 4/5; }
-        .sobre-fotos img { position: absolute; object-fit: cover; border-radius: 22px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.45); }
-        /* Duas fotos lado a lado e desencontradas, sem sobreposição; o carimbo fica no espaço acima da segunda */
-        .sobre-fotos img:first-child { left: 0; top: 0; width: 58%; height: 88%; }
-        .sobre-fotos img:last-child { right: 0; bottom: 0; width: 38%; height: 62%; }
-        .sobre-fotos .carimbo { position: absolute; right: 5%; top: 6%; width: 128px; height: 128px; border-radius: 50%; background: var(--escuro); color: var(--ouro); display: grid; place-items: center; animation: girar-lento 18s linear infinite; }
+        /* Uma foto só, centralizada na coluna; o carimbo gira sobre o canto inferior esquerdo */
+        .sobre-fotos { position: relative; }
+        .sobre-fotos img { display: block; width: 100%; aspect-ratio: 3/2; object-fit: cover; border-radius: 22px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.45); }
+        .sobre-fotos .carimbo { position: absolute; left: -18px; bottom: -48px; width: 128px; height: 128px; border-radius: 50%; background: var(--escuro); color: var(--ouro); display: grid; place-items: center; animation: girar-lento 18s linear infinite; }
         .carimbo svg { width: 100%; height: 100%; }
         .carimbo b { position: absolute; font-size: 1.8rem; color: var(--claro); animation: girar-lento 18s linear infinite reverse; }
         .sobre p.texto { white-space: pre-line; color: #3d3a35; font-size: 1.08rem; margin: 0 0 30px; }
@@ -148,7 +146,7 @@
         @media (max-width: 860px) {
             .sobre { grid-template-columns: 1fr; gap: 56px; }
             .sobre-fotos { max-width: 460px; width: 100%; margin: 0 auto; }
-            .sobre-fotos .carimbo { width: 104px; height: 104px; }
+            .sobre-fotos .carimbo { left: -6px; bottom: -38px; width: 104px; height: 104px; }
         }
 
         /* Serviços — cardápio */
@@ -385,7 +383,6 @@
             <div class="conteudo sobre">
                 <div class="sobre-fotos revelar">
                     <img src="{{ $galeria[0]['url'] }}" alt="" loading="lazy">
-                    <img src="{{ $fotoSobre }}" alt="" loading="lazy">
                     <div class="carimbo" aria-hidden="true">
                         <svg viewBox="0 0 100 100"><defs><path id="circulo" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0"/></defs>
                             <text font-size="10.5" font-weight="700" letter-spacing="3.2" fill="currentColor"><textPath href="#circulo">CORTE • BARBA • ESTILO • TRADIÇÃO •</textPath></text></svg>

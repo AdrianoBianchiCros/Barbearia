@@ -54,7 +54,6 @@ class PaginaPublicaController extends Controller
             'empresa' => $empresa,
             'galeria' => $galeria,
             'fotoCapa' => $empresa->capa_url ?? asset('img/pagina/salao.jpg'),
-            'fotoSobre' => asset('img/pagina/barba.jpg'),
             'acentoClaro' => $this->clarear($empresa->cor_primaria),
             'servicos' => $servicos,
             'barbeiros' => $barbeiros,

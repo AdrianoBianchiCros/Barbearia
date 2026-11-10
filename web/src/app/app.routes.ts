@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { AuthService } from './core/auth.service';
+import { exigeAdmin, somenteVisitanteAdmin } from './core/admin.guards';
 import { exigeLogin, exigePerfil, somenteVisitante } from './core/auth.guards';
 
 export const routes: Routes = [
@@ -11,10 +12,39 @@ export const routes: Routes = [
     loadComponent: () => import('./paginas/login/login').then((m) => m.Login),
   },
   {
-    path: 'cadastro',
-    canActivate: [somenteVisitante],
-    title: 'Cadastro | Barbearia',
-    loadComponent: () => import('./paginas/cadastro/cadastro').then((m) => m.Cadastro),
+    // Área do administrador da plataforma: cadastro das barbearias, contrato e prazo de acesso.
+    path: 'admin',
+    children: [
+      {
+        path: 'login',
+        canActivate: [somenteVisitanteAdmin],
+        title: 'Administração | Entrar',
+        loadComponent: () => import('./paginas/admin/admin-login').then((m) => m.AdminLogin),
+      },
+      {
+        path: '',
+        canActivate: [exigeAdmin],
+        loadComponent: () => import('./paginas/admin/admin-shell').then((m) => m.AdminShell),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'barbearias' },
+          {
+            path: 'barbearias',
+            title: 'Barbearias | Administração',
+            loadComponent: () => import('./paginas/admin/barbearias').then((m) => m.AdminBarbearias),
+          },
+          {
+            path: 'barbearias/nova',
+            title: 'Nova barbearia | Administração',
+            loadComponent: () => import('./paginas/admin/nova-barbearia').then((m) => m.NovaBarbearia),
+          },
+          {
+            path: 'barbearias/:id',
+            title: 'Barbearia | Administração',
+            loadComponent: () => import('./paginas/admin/barbearia-detalhe').then((m) => m.BarbeariaDetalhe),
+          },
+        ],
+      },
+    ],
   },
   {
     path: 'esqueci-senha',
@@ -119,6 +149,7 @@ export const routes: Routes = [
       },
       // Endereços antigos
       { path: 'painel', redirectTo: 'agenda' },
+      { path: 'cadastro', redirectTo: 'agenda' },
       { path: 'servicos', redirectTo: 'configuracoes/servicos' },
       { path: 'barbeiros', redirectTo: 'configuracoes/barbeiros' },
     ],

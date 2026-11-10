@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
+import { PLATAFORMA } from '../../core/plataforma';
 import { RodapeLegal } from '../../layout/rodape-legal';
 import { VerSenha } from '../../layout/ver-senha';
 
@@ -15,6 +16,9 @@ import { VerSenha } from '../../layout/ver-senha';
         <h1 class="marca">Barbearia</h1>
         <p class="subtitulo">Entre para acessar a agenda da sua barbearia.</p>
 
+        @if (acessoVencido && !erro()) {
+          <div class="alerta" role="alert">O acesso da barbearia está bloqueado porque o plano venceu. Para renovar, fale com a {{ plataforma.nome }}.</div>
+        }
         @if (senhaAlterada && !erro()) {
           <div class="aviso-sucesso" role="status">Senha alterada. Entre com a nova senha.</div>
         }
@@ -46,7 +50,7 @@ import { VerSenha } from '../../layout/ver-senha';
           {{ enviando() ? 'Entrando…' : 'Entrar' }}
         </button>
 
-        <p class="rodape-cartao">Ainda não tem conta? <a routerLink="/cadastro">Cadastre sua barbearia</a></p>
+        <p class="rodape-cartao">O acesso é liberado pela {{ plataforma.nome }} na contratação do plano.</p>
         <app-rodape-legal />
       </form>
     </main>
@@ -56,8 +60,12 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  private readonly parametros = inject(ActivatedRoute).snapshot.queryParamMap;
   /** Veio da tela de nova senha (/login?senha=alterada). */
-  protected readonly senhaAlterada = inject(ActivatedRoute).snapshot.queryParamMap.get('senha') === 'alterada';
+  protected readonly senhaAlterada = this.parametros.get('senha') === 'alterada';
+  /** A sessão foi encerrada porque o prazo do plano acabou (/login?acesso=vencido). */
+  protected readonly acessoVencido = this.parametros.get('acesso') === 'vencido';
+  protected readonly plataforma = PLATAFORMA;
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

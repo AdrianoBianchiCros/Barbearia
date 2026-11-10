@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
@@ -10,6 +10,7 @@ import { authInterceptor } from './auth.interceptor';
 const sessao = {
   usuario: { id: 1, nome: 'José Silva', email: 'ze@exemplo.test', perfil: 'dono' as const },
   empresa: { id: 1, nome: 'Barbearia do Zé', slug: 'barbearia-do-ze', telefone: null, fuso_horario: 'America/Sao_Paulo' },
+  acesso: null,
 };
 
 describe('AuthService', () => {
@@ -60,5 +61,30 @@ describe('AuthService', () => {
     expect(resultado).toBe(false);
     expect(auth.token).toBeNull();
     expect(auth.logado()).toBe(false);
+  });
+
+  it('plano vencido (403 acesso_vencido) encerra a sessão e leva ao login com o aviso', () => {
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    localStorage.setItem('barbearia.token', 'abc');
+
+    TestBed.inject(HttpClient).get(`${environment.apiUrl}/agenda/dia`).subscribe({ error: () => undefined });
+    http.expectOne(`${environment.apiUrl}/agenda/dia`).flush(
+      { message: 'O acesso desta barbearia venceu.', codigo: 'acesso_vencido' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+
+    expect(auth.token).toBeNull();
+    expect(navegar).toHaveBeenCalledWith(['/login'], { queryParams: { acesso: 'vencido' } });
+  });
+
+  it('chamadas da área do administrador usam o token do administrador', () => {
+    localStorage.setItem('barbearia.token', 'dono');
+    localStorage.setItem('barbearia.tokenAdmin', 'admin');
+
+    TestBed.inject(HttpClient).get(`${environment.apiUrl}/admin/barbearias`).subscribe();
+    const req = http.expectOne(`${environment.apiUrl}/admin/barbearias`);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer admin');
+    req.flush({ barbearias: [] });
   });
 });

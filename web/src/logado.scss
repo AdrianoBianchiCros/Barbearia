@@ -1001,3 +1001,124 @@ fieldset {
     background: var(--cor-erro);
   }
 }
+
+// ---------- Aviso de vencimento do plano (só o dono vê) ----------
+.faixa-acesso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 32px;
+  font-size: 14px;
+  color: var(--color-tangerine);
+  background: var(--st-em_atendimento-bg);
+  border-bottom: 1px solid var(--cor-borda);
+
+  &.faixa-acesso-carencia {
+    color: var(--cor-erro);
+    background: var(--cor-erro-fundo);
+  }
+}
+
+@media (max-width: 600px) {
+  .faixa-acesso {
+    padding: 10px 16px;
+  }
+}
+
+// ---------- Área do administrador da plataforma ----------
+.topo-admin {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 12px 32px;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+
+  nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+
+    a {
+      padding: 6px 12px;
+      border-radius: var(--radius-buttons);
+      color: var(--cor-texto-suave);
+      text-decoration: none;
+
+      &.ativo {
+        background: var(--cor-primaria-suave);
+        color: var(--cor-texto);
+      }
+    }
+  }
+}
+
+.topo-admin-marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: var(--cor-texto-suave);
+  }
+}
+
+.topo-admin-usuario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  small {
+    color: var(--cor-texto-suave);
+  }
+}
+
+.conteudo-admin {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  h1 .etiqueta {
+    vertical-align: middle;
+  }
+}
+
+.cartao-acesso {
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 16px 0;
+  }
+
+  dt {
+    color: var(--cor-texto-suave);
+  }
+
+  dd {
+    margin: 0;
+    word-break: break-all;
+  }
+
+  code {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+}
+
+@media (max-width: 600px) {
+  .topo-admin,
+  .conteudo-admin {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

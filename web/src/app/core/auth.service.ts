@@ -21,23 +21,24 @@ export interface Empresa {
   fuso_horario: string;
 }
 
+export type SituacaoAcesso = 'sem_prazo' | 'em_dia' | 'vencendo' | 'carencia' | 'vencida' | 'suspensa';
+
+/** Prazo do acesso pago da barbearia (a API só envia para o dono). */
+export interface ResumoAcesso {
+  situacao: SituacaoAcesso;
+  vence_em: string | null;
+  dias_restantes: number | null;
+  bloqueia_em: string | null;
+}
+
 export interface Sessao {
   usuario: Usuario;
   empresa: Empresa;
+  acesso: ResumoAcesso | null;
 }
 
 interface RespostaLogin extends Sessao {
   token: string;
-}
-
-export interface DadosRegistro {
-  empresa_nome: string;
-  empresa_telefone?: string;
-  nome: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  aceite_termos: boolean;
 }
 
 const CHAVE_TOKEN = 'barbearia.token';
@@ -62,12 +63,6 @@ export class AuthService {
   login(email: string, password: string): Observable<Sessao> {
     return this.http
       .post<RespostaLogin>(`${environment.apiUrl}/auth/login`, { email, password })
-      .pipe(map((r) => this.iniciarSessao(r)));
-  }
-
-  registrar(dados: DadosRegistro): Observable<Sessao> {
-    return this.http
-      .post<RespostaLogin>(`${environment.apiUrl}/auth/registrar`, dados)
       .pipe(map((r) => this.iniciarSessao(r)));
   }
 
@@ -125,7 +120,7 @@ export class AuthService {
     } catch {
       // sem armazenamento: a sessão dura até recarregar a página
     }
-    const sessao = { usuario: resposta.usuario, empresa: resposta.empresa };
+    const sessao = { usuario: resposta.usuario, empresa: resposta.empresa, acesso: resposta.acesso ?? null };
     this._sessao.set(sessao);
     return sessao;
   }

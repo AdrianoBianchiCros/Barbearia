@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, Perfil } from '../core/auth.service';
 import { AvisoService } from '../core/aviso.service';
-import { ENDERECO_SITE } from '../core/plataforma';
+import { ENDERECO_SITE, PLATAFORMA } from '../core/plataforma';
 import { TemaService } from '../core/tema.service';
 
 interface ItemMenu {
@@ -143,6 +143,9 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
             <button class="botao-menu" type="button" aria-label="Abrir menu" (click)="menuAberto.set(true)">☰</button>
             <strong>{{ s.empresa.nome }}</strong>
           </header>
+          @if (avisoAcesso(); as a) {
+            <div class="faixa-acesso" [class.faixa-acesso-carencia]="a.carencia" role="status">{{ a.texto }}</div>
+          }
           <main class="conteudo">
             <router-outlet />
           </main>
@@ -173,6 +176,23 @@ export class Shell {
   protected readonly icones = ICONES;
   /** Endereço da página pública da barbearia, por exemplo app.abianchitech.com/saas/barbearia/{slug}. */
   protected readonly enderecoPagina = computed(() => `${ENDERECO_SITE}/${this.sessao()?.empresa.slug ?? ''}`);
+
+  /** Aviso de vencimento do plano para o dono (a API só manda o prazo para ele). */
+  protected readonly avisoAcesso = computed(() => {
+    const acesso = this.sessao()?.acesso;
+    if (!acesso?.vence_em || !['vencendo', 'carencia'].includes(acesso.situacao)) return null;
+
+    const data = (d: string | null) => (d ?? '').split('-').reverse().join('/');
+    const dias = acesso.dias_restantes ?? 0;
+    if (acesso.situacao === 'carencia') {
+      return {
+        carencia: true,
+        texto: `O plano venceu em ${data(acesso.vence_em)}. O sistema será bloqueado depois de ${data(acesso.bloqueia_em)}. Para renovar, fale com a ${PLATAFORMA.nome}.`,
+      };
+    }
+    const quando = dias === 0 ? 'vence hoje' : dias === 1 ? 'vence amanhã' : `vence em ${dias} dias (${data(acesso.vence_em)})`;
+    return { carencia: false, texto: `O plano da barbearia ${quando}. Para renovar, fale com a ${PLATAFORMA.nome}.` };
+  });
 
   protected readonly nomePerfil = computed(() => {
     const perfil = this.sessao()?.usuario.perfil;

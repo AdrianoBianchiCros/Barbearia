@@ -10,7 +10,7 @@ export const exigeLogin: CanActivateFn = () => {
   return auth.carregarSessao().pipe(map((ok) => ok || router.createUrlTree(['/login'])));
 };
 
-/** Login e cadastro: quem já está logado vai direto para o painel. */
+/** Login e telas de senha: quem já está logado vai direto para o painel. */
 export const somenteVisitante: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

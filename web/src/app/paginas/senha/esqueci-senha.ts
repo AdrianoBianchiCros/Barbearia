@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
 import { RodapeLegal } from '../../layout/rodape-legal';
+import { VitrineAcesso } from '../../layout/vitrine-acesso';
 
 /** Pede o link de redefinição de senha: o usuário informa o e-mail cadastrado. */
 @Component({
   selector: 'app-esqueci-senha',
-  imports: [ReactiveFormsModule, RouterLink, RodapeLegal],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VitrineAcesso],
   template: `
-    <main class="tela-acesso">
+    <app-vitrine-acesso>
       <form class="cartao" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
         <h1 class="marca">Esqueci a senha</h1>
         <p class="subtitulo">Digite o e-mail cadastrado. Vamos enviar um link para você criar uma nova senha.</p>
@@ -39,7 +40,7 @@ import { RodapeLegal } from '../../layout/rodape-legal';
         <p class="rodape-cartao"><a routerLink="/login">Voltar para o login</a></p>
         <app-rodape-legal />
       </form>
-    </main>
+    </app-vitrine-acesso>
   `,
 })
 export class EsqueciSenha {

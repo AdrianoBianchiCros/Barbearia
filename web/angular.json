@@ -35,7 +35,8 @@
               "src/logado.scss",
               "src/agenda.scss",
               "src/financeiro.scss",
-              "src/relatorios.scss"
+              "src/relatorios.scss",
+              "src/acesso.scss"
             ]
           },
           "configurations": {

@@ -5,16 +5,17 @@ import { AuthService } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
 import { PLATAFORMA } from '../../core/plataforma';
 import { RodapeLegal } from '../../layout/rodape-legal';
+import { VitrineAcesso } from '../../layout/vitrine-acesso';
 import { VerSenha } from '../../layout/ver-senha';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VerSenha],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VitrineAcesso, VerSenha],
   template: `
-    <main class="tela-acesso">
+    <app-vitrine-acesso>
       <form class="cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
-        <h1 class="marca">Barbearia</h1>
-        <p class="subtitulo">Entre para acessar a agenda da sua barbearia.</p>
+        <h1 class="marca">{{ saudacao }}.<br /><em>Bora abrir a casa?</em></h1>
+        <p class="subtitulo">Entre para abrir a agenda de hoje da sua barbearia.</p>
 
         @if (acessoVencido && !erro()) {
           <div class="alerta" role="alert">O acesso da barbearia está bloqueado porque o plano venceu. Para renovar, fale com a {{ plataforma.nome }}.</div>
@@ -47,13 +48,13 @@ import { VerSenha } from '../../layout/ver-senha';
         </div>
 
         <button class="botao" type="submit" [disabled]="enviando()">
-          {{ enviando() ? 'Entrando…' : 'Entrar' }}
+          {{ enviando() ? 'Abrindo a agenda…' : 'Entrar e abrir a agenda →' }}
         </button>
 
         <p class="rodape-cartao">O acesso é liberado pela {{ plataforma.nome }} na contratação do plano.</p>
         <app-rodape-legal />
       </form>
-    </main>
+    </app-vitrine-acesso>
   `,
 })
 export class Login {
@@ -66,6 +67,10 @@ export class Login {
   /** A sessão foi encerrada porque o prazo do plano acabou (/login?acesso=vencido). */
   protected readonly acessoVencido = this.parametros.get('acesso') === 'vencido';
   protected readonly plataforma = PLATAFORMA;
+  protected readonly saudacao = (() => {
+    const hora = new Date().getHours();
+    return hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  })();
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

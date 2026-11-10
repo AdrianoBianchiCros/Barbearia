@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
 import { RodapeLegal } from '../../layout/rodape-legal';
+import { VitrineAcesso } from '../../layout/vitrine-acesso';
 import { VerSenha } from '../../layout/ver-senha';
 
 const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
@@ -12,9 +13,9 @@ const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
 /** Nova senha, aberta pelo link do e-mail: /redefinir-senha?token=...&email=... */
 @Component({
   selector: 'app-redefinir-senha',
-  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VerSenha],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VitrineAcesso, VerSenha],
   template: `
-    <main class="tela-acesso">
+    <app-vitrine-acesso>
       <form class="cartao" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
         <h1 class="marca">Nova senha</h1>
 
@@ -63,7 +64,7 @@ const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
         }
         <app-rodape-legal />
       </form>
-    </main>
+    </app-vitrine-acesso>
   `,
 })
 export class RedefinirSenha {

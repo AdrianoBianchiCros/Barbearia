@@ -37,6 +37,13 @@ Para acessar:
 
 *Atualizado em 10/11/2026 · sistema publicado na HostGator · 137 testes na API · 6 testes no painel*
 
+- **Nova tela de entrada do painel (10/11/2026):** login, "Esqueci a senha" e "Nova senha" ganharam o visual da
+  página pública (componente `VitrineAcesso`, estilos em `web/src/acesso.scss`): à esquerda, foto de barbearia,
+  frase "Sua cadeira sempre *ocupada.*", prévia animada da agenda do dia e letreiro com os recursos; no meio, um poste
+  de barbeiro girando; à direita, o formulário escuro com dourado e saudação pela hora ("Bom dia. *Bora abrir a casa?*").
+  Sempre escura, independente do modo noturno. No celular, a foto vira o topo e a prévia some. Respeita "reduzir
+  movimento" do sistema. Foto do Unsplash (`web/public/img/acesso/CREDITOS.txt`); fontes Bebas Neue e Playfair itálico
+  servidas pelo painel. O login do administrador continua com o visual simples.
 - **Farol da mensalidade no menu (10/11/2026):** logo abaixo de "Minha página", o dono vê "Vence em dd/mm/aaaa" com
   os dias que faltam e uma luz: **verde** com mais de 15 dias, **amarelo** de 15 a 6 dias e **vermelho** com 5 dias ou
   menos (e depois de vencer). Com o menu recolhido, aparece só a luz. Barbearia sem prazo não mostra o farol.

@@ -46,14 +46,16 @@ A **limpeza automática** desses prazos ainda não existe (etapa 2). Até lá, o
 - ✅ **Política de privacidade** (`/privacidade`) e **Termos de uso** (`/termos`), com versão e data
   (`api/resources/views/legal/`). A versão fica em `config/plataforma.php`; ao mudar o texto, trocar a data.
 - ✅ **Aceite registrado** na tabela `aceites` (documento, versão, data e hora, IP, navegador e origem):
-  - cadastro do dono no painel: checkbox obrigatório dos Termos e da Privacidade;
+  - cadastro do dono no painel: checkbox obrigatório dos Termos e da Privacidade. **Desde 10/11/2026 não há mais
+    autocadastro:** o administrador cadastra a barbearia e o aceite dos Termos e da Privacidade deve constar do
+    **contrato assinado** (anexado na área do administrador). Incluir essa cláusula no modelo de contrato;
   - agendamento online: checkbox obrigatório da Privacidade + **declaração de maioridade ou de responsável legal**
     (dados de criança só com o responsável). Grava de novo só quando a versão do texto muda.
 - ✅ **Nada de terceiros sem consentimento:** as fontes passaram a ser servidas pelo próprio sistema
   (`api/public/fonts`, `vitrine/fontes`); o mapa do Google só carrega depois de "Aceitar" ou "Mostrar mapa".
 - ✅ **Aviso de cookies com botão Recusar** na página da barbearia (reabre pelo link "Cookies" do rodapé).
 - ✅ **Rodapé com CNPJ, endereço, contato e links** na página da barbearia (dados dela + "Agendamento online por
-  ABianchi Tech"), nas telas de login e cadastro do painel, nas páginas legais e na vitrine.
+  ABianchi Tech"), nas telas de login do painel, nas páginas legais e na vitrine.
 - ✅ Nenhum rastreador (analytics, pixel) no sistema. **Regra:** se um dia entrar, só depois do aceite no aviso de cookies.
 - Testes: `api/tests/Feature/LgpdTest.php`.
 

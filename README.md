@@ -35,8 +35,27 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 10/11/2026 · sistema publicado na HostGator · 123 testes na API · 4 testes no painel*
+*Atualizado em 10/11/2026 · sistema publicado na HostGator · 137 testes na API · 6 testes no painel*
 
+- **Venda do SaaS: administrador e prazo de acesso (10/11/2026):** acabou o "Cadastre sua barbearia". Agora quem
+  cadastra é o administrador da plataforma, em **`/painel/admin`** (login próprio, tabela `administradores`):
+  - **Nova barbearia:** dados, dono (nome e e-mail), período (**teste de 7 dias, 1, 3, 6 ou 12 meses**), forma de
+    pagamento, valor e **contrato** (PDF/foto, guardado em `storage/app/private/contratos`, nunca público). O sistema
+    gera uma **senha provisória** do dono, mostrada uma vez, com botão para copiar a mensagem para o WhatsApp.
+  - **Detalhe:** renovar (o novo período começa no dia seguinte ao vencimento atual, ou hoje se já venceu),
+    suspender/reativar na hora, gerar nova senha do dono e histórico das contratações com download do contrato.
+  - **Regra do prazo** (`empresas.acesso_ate` = último dia pago; `config/assinatura.php`): faixa de aviso para o
+    dono a partir de 10 dias antes; **5 dias de carência** com faixa vermelha; depois disso o login e a API recusam
+    (`codigo: acesso_vencido`), a sessão aberta é encerrada e o login explica o motivo. A página pública continua no ar,
+    mas sem agendamento online; o link do cliente confirma e cancela, mas não remarca; lembretes do WhatsApp param.
+    **Nenhum dado é apagado:** renovou, volta tudo.
+  - **E-mail ao dono** 10, 3 e 1 dia antes, no dia e no 1º dia de carência (`assinaturas:avisos`, diário às 9h).
+  - Barbearias que já existiam (o piloto) ficam **sem prazo** até o administrador registrar um plano.
+  - **Decisões tomadas sem confirmação do dono do produto** (fáceis de mudar): 5 dias de carência, página pública
+    no ar sem agendamento, bloqueio para todos os perfis, teste de 7 dias, valor digitado a cada contratação.
+  - **Para usar em produção:** criar o administrador uma vez por SSH:
+    `cd /home4/adri0667/saas/barbearia && /opt/cpanel/ea-php83/root/usr/bin/php artisan admin:criar SEU@EMAIL "Seu Nome"` (a senha é
+    pedida sem aparecer na tela; pelo Terminal do cPanel ou SSH). O mesmo comando troca a senha de um administrador existente.
 - **Login do painel: "olho" e "Esqueci a senha" (10/11/2026, publicado):** botão de olho para ver a senha
   digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" logo abaixo do
   campo de senha → tela `/esqueci-senha` (informa o e-mail cadastrado) → e-mail com link para
@@ -89,9 +108,10 @@ Para acessar:
   colocar `WHATSAPP_APP_SECRET`, trocar para `WHATSAPP_DRIVER=cloud`, rodar `config:clear` e `config:cache` e cadastrar o webhook
   `https://app.abianchitech.com/saas/barbearia/api/webhooks/whatsapp` (campo `messages`) com o `WHATSAPP_VERIFY_TOKEN` do `.env`.
 - **Pendentes da publicação:** a raiz `app.abianchitech.com/saas/barbearia` ainda mostra a página padrão do Laravel
-  (redirecionar ou fazer a landing page de vendas) e o cadastro pelo painel está aberto a qualquer pessoa.
-- **Próximo passo:** (1) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento
-  ou página "em breve"; (2) fechar o cadastro aberto; (3) começar a medir a taxa de faltas da barbearia piloto.
+  (redirecionar ou fazer a landing page de vendas). O cadastro aberto foi fechado em 10/11/2026 (área do administrador).
+- **Próximo passo:** (1) criar o administrador em produção (`admin:criar`, veja acima) e registrar o plano do piloto;
+  (2) trocar a página padrão do Laravel na raiz `/saas/barbearia` por um redirecionamento ou página "em breve";
+  (3) começar a medir a taxa de faltas da barbearia piloto.
   Para subir qualquer mudança, basta dar push na `main` (publicação automática, veja abaixo).
 - **Guia de primeiros passos (publicado):** guia de primeiros passos da agenda com três botões quadrados
   (serviços, barbeiros, clientes). Some quando os três cadastros existem. Em 09/11/2026 o rótulo passou a
@@ -122,6 +142,14 @@ Para acessar:
 - **Visual do painel** no sistema de design "Dub" (`skill-saas`): tokens de cor, raio, sombra e fonte em
   `web/src/styles.scss`; nenhum valor visual solto nas telas. **Modo noturno** opcional pelo botão de lua/sol no menu.
 - Exclusão lógica (soft delete) nos cadastros.
+
+### Venda do SaaS — área do administrador (`/painel/admin`)
+- Administradores da plataforma em tabela própria (`administradores`), criados por `php artisan admin:criar`;
+  token de administrador não entra no painel das barbearias e vice-versa.
+- Cadastro da barbearia com dono (senha provisória), período, pagamento, valor e contrato anexado (disco privado).
+- Prazo de acesso (`empresas.acesso_ate`) e histórico em `assinaturas`; renovar, suspender, reativar, nova senha do dono.
+- Situações: sem prazo, em dia, vencendo (≤ 10 dias), carência (até 5 dias depois) e bloqueada; suspensa pelo administrador.
+- Aviso no painel e por e-mail ao dono; bloqueio do login, da API e do agendamento online após a carência.
 
 ### Cadastros (Configurações)
 - **Serviços:** preço e duração.
@@ -195,11 +223,12 @@ Para acessar:
 
 ### LGPD (detalhes em [`LGPD.md`](LGPD.md))
 - Política de privacidade (`/privacidade`) e Termos de uso (`/termos`), com versão.
-- Aceites guardados na tabela `aceites` (documento, versão, data, IP e navegador): cadastro do dono e agendamento online.
+- Aceites guardados na tabela `aceites` (documento, versão, data, IP e navegador) no agendamento online. O dono aceita
+  os Termos pelo contrato assinado (o autocadastro, que registrava o aceite, saiu em 10/11/2026).
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
-- Rodapé com CNPJ e links legais na página da barbearia, no login/cadastro do painel e na vitrine.
+- Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 123 testes na API (`php artisan test`), todos passando.
+**Testes:** 137 testes na API (`php artisan test`) e 6 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 
@@ -237,8 +266,11 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 - ⬜ 3 a 5 barbearias parceiras
 
 ### Etapa 5 — SaaS comercial
-- ⬜ Landing page de vendas do SaaS, cadastro self-service, planos e cobrança recorrente
+- ✅ **Área do administrador:** cadastro da barbearia com contrato, período pago (teste, 1, 3, 6, 12 meses),
+  renovação, suspensão, avisos de vencimento e bloqueio depois da carência (10/11/2026)
+- ⬜ Landing page de vendas do SaaS e cobrança recorrente automática por gateway (hoje o pagamento é registrado à mão)
   (cumprindo arrependimento de 7 dias, cancelamento pelo mesmo canal, aviso de renovação e preço total: veja `LGPD.md`)
+- ⬜ Tela "Minha senha" no painel (hoje o dono troca a senha provisória só por "Esqueci a senha", que depende do e-mail)
 - ⬜ Cota de mensagens do WhatsApp por plano (a contagem mensal já aparece no painel)
 - ⬜ Multiunidade (filiais), domínio próprio da barbearia, NFS-e, central de ajuda
 - ⬜ Migração para VPS quando o volume exigir (fila com Supervisor, Redis)
@@ -303,6 +335,7 @@ npm install
 - **Painel:** http://localhost:4200
   - dono: `dono@demo.test` / `demo1234`
   - barbeiro: `barbeiro@demo.test` / `demo1234`
+  - administrador da plataforma: http://localhost:4200/admin com `admin@demo.test` / `demo1234`
   - os dados estão em `api/database/seeders/DatabaseSeeder.php`
 - **Página pública da demo:** http://localhost:8000/barbearia-demo
 

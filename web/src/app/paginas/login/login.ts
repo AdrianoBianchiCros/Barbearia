@@ -1,19 +1,23 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
 import { RodapeLegal } from '../../layout/rodape-legal';
+import { VerSenha } from '../../layout/ver-senha';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, RodapeLegal],
+  imports: [ReactiveFormsModule, RouterLink, RodapeLegal, VerSenha],
   template: `
     <main class="tela-acesso">
       <form class="cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
         <h1 class="marca">Barbearia</h1>
         <p class="subtitulo">Entre para acessar a agenda da sua barbearia.</p>
 
+        @if (senhaAlterada && !erro()) {
+          <div class="aviso-sucesso" role="status">Senha alterada. Entre com a nova senha.</div>
+        }
         @if (erro()) {
           <div class="alerta" role="alert">{{ erro() }}</div>
         }
@@ -26,13 +30,19 @@ import { RodapeLegal } from '../../layout/rodape-legal';
           }
         </label>
 
-        <label class="campo">
-          <span>Senha</span>
-          <input type="password" formControlName="password" autocomplete="current-password" />
+        <div class="campo">
+          <div class="rotulo-com-link">
+            <label for="senha">Senha</label>
+            <a routerLink="/esqueci-senha">Esqueci a senha</a>
+          </div>
+          <div class="campo-senha">
+            <input #senha id="senha" type="password" formControlName="password" autocomplete="current-password" />
+            <app-ver-senha [campo]="senha" />
+          </div>
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <small class="erro-campo">Informe sua senha.</small>
           }
-        </label>
+        </div>
 
         <button class="botao" type="submit" [disabled]="enviando()">
           {{ enviando() ? 'Entrando…' : 'Entrar' }}
@@ -47,6 +57,9 @@ import { RodapeLegal } from '../../layout/rodape-legal';
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  /** Veio da tela de nova senha (/login?senha=alterada). */
+  protected readonly senhaAlterada = inject(ActivatedRoute).snapshot.queryParamMap.get('senha') === 'alterada';
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

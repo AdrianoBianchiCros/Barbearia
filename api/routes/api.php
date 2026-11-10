@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('registrar', [AuthController::class, 'registrar'])->middleware('throttle:registro');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('esqueci-senha', [AuthController::class, 'esqueciSenha'])->middleware('throttle:senha');
+    Route::post('redefinir-senha', [AuthController::class, 'redefinirSenha'])->middleware('throttle:senha');
 });
 
 // Agendamento online pela página da barbearia (sem login).

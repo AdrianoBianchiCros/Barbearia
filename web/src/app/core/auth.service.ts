@@ -71,6 +71,16 @@ export class AuthService {
       .pipe(map((r) => this.iniciarSessao(r)));
   }
 
+  /** Pede o link de redefinição de senha por e-mail. */
+  esqueciSenha(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/esqueci-senha`, { email });
+  }
+
+  /** Grava a nova senha a partir do link recebido por e-mail. */
+  redefinirSenha(dados: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/redefinir-senha`, dados);
+  }
+
   /** Recupera a sessão a partir do token salvo (ao recarregar a página). */
   carregarSessao(): Observable<boolean> {
     if (this._sessao()) return of(true);

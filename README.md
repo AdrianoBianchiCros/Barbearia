@@ -35,7 +35,18 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 09/11/2026 · sistema publicado na HostGator · 117 testes na API · 4 testes no painel*
+*Atualizado em 10/11/2026 · sistema publicado na HostGator · 121 testes na API · 4 testes no painel*
+
+- **Login do painel: "olho" e "Esqueci a senha" (10/11/2026, ainda não publicado):** botão de olho para ver a senha
+  digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" → tela
+  `/esqueci-senha` (informa o e-mail cadastrado) → e-mail com link para `/redefinir-senha?token=…&email=…` → nova senha →
+  volta ao login com aviso. A API (`POST /api/auth/esqueci-senha` e `/api/auth/redefinir-senha`) responde igual exista
+  ou não o e-mail, só envia para usuário e barbearia ativos, o link vale 60 min, a troca encerra as sessões abertas e
+  há limite de 10 pedidos por hora por IP. **Para funcionar em produção falta configurar o e-mail no `.env` do servidor**
+  (`MAIL_*` com uma conta SMTP do cPanel e `PAINEL_URL`, veja [Publicação](#publicação-hostgator)); hoje `MAIL_MAILER=log`
+  só grava o e-mail em `storage/logs`.
+- **Página da barbearia, "Sobre a casa" (10/11/2026):** uma foto só, larga e centralizada, com o carimbo giratório
+  no canto inferior esquerdo (antes eram duas fotos sobrepostas).
 
 - **Link "Minha página" no menu (09/11/2026):** logo abaixo de Configurações, com ícone de globo, a descrição
   "Agendamento online dos clientes" e a seta de link externo. Abre em nova aba a página pública da barbearia
@@ -102,6 +113,7 @@ Para acessar:
 ### Base
 - Multiempresa desde o início: todas as tabelas têm `empresa_id`, com filtro automático (veja [Multiempresa](#multiempresa)).
 - Login por token, perfis **dono**, **recepção** e **barbeiro**, com permissões por rota.
+- **Senha:** botão de olho para ver o que foi digitado e "Esqueci a senha" com link por e-mail (vale 60 min).
 - Datas gravadas em UTC e exibidas no fuso da barbearia.
 - **Visual do painel** no sistema de design "Dub" (`skill-saas`): tokens de cor, raio, sombra e fonte em
   `web/src/styles.scss`; nenhum valor visual solto nas telas. **Modo noturno** opcional pelo botão de lua/sol no menu.
@@ -183,7 +195,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login/cadastro do painel e na vitrine.
 
-**Testes:** 117 testes na API (`php artisan test`), todos passando.
+**Testes:** 121 testes na API (`php artisan test`), todos passando.
 
 ---
 
@@ -232,6 +244,7 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
   descadastro e plano de incidentes (ANPD em 3 dias úteis). Lista completa em [`LGPD.md`](LGPD.md).
 
 ### Pequenos pendentes e ideias
+- **E-mail em produção:** configurar `MAIL_*` e `PAINEL_URL` no `.env` do servidor para o "Esqueci a senha" enviar de verdade
 - Visual "Dub": conferir no navegador o painel de agendamento, a comanda e os relatórios com dados; decidir se a fonte
   Satoshi (títulos ≥ 36px) entra no painel (hoje os títulos usam Inter) e se a vitrine e as telas legais seguem o mesmo visual
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")
@@ -352,6 +365,10 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
 - **`.env` de produção** (em `/home4/adri0667/saas/barbearia`):
   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://app.abianchitech.com/saas/barbearia` e `DB_*` do MySQL;
   - `FRONTEND_URL=https://app.abianchitech.com` e `QUEUE_CONNECTION=database`;
+  - `PAINEL_URL=https://app.abianchitech.com/saas/barbearia/painel` (link do e-mail de "Esqueci a senha");
+  - e-mail por uma conta criada no cPanel (ex.: `nao-responda@abianchitech.com`): `MAIL_MAILER=smtp`,
+    `MAIL_HOST=mail.abianchitech.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME` e `MAIL_PASSWORD` (entre aspas)
+    dessa conta, `MAIL_FROM_ADDRESS` igual ao usuário e `MAIL_FROM_NAME="Barbearia"`;
   - `WHATSAPP_*` (veja `.env.example`);
   - `DB_PASSWORD` **entre aspas** (`DB_PASSWORD="..."`). Em 09/11/2026 o banco recusou o acesso
     (`SQLSTATE[HY000] [1045] Access denied`) e o cadastro, o login e as páginas deram erro 500. Só voltou depois de

@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password as SenhaBroker;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -77,6 +78,50 @@ class AuthController extends Controller
         }
 
         return $this->respostaComToken($usuario, $request);
+    }
+
+    /**
+     * Envia o link de redefinição de senha. A resposta é a mesma exista ou não o e-mail,
+     * para não revelar quem tem conta no sistema.
+     */
+    public function esqueciSenha(Request $request): JsonResponse
+    {
+        $dados = $request->validate(['email' => ['required', 'email']], [], ['email' => 'e-mail']);
+
+        $usuario = User::where('email', $dados['email'])->first();
+
+        if ($usuario?->ativo && $usuario->empresa?->ativo) {
+            SenhaBroker::sendResetLink(['email' => $usuario->email]);
+        }
+
+        return response()->json([
+            'message' => 'Se esse e-mail estiver cadastrado, você vai receber em instantes um link para criar uma nova senha.',
+        ]);
+    }
+
+    /**
+     * Grava a nova senha a partir do link recebido por e-mail e encerra as sessões abertas.
+     */
+    public function redefinirSenha(Request $request): JsonResponse
+    {
+        $dados = $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+        ], [], ['email' => 'e-mail', 'password' => 'senha']);
+
+        $status = SenhaBroker::reset($dados, function (User $usuario, string $senha) {
+            $usuario->forceFill(['password' => $senha])->save();
+            $usuario->tokens()->delete();
+        });
+
+        if ($status !== SenhaBroker::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'token' => 'Este link é inválido ou já expirou. Peça um novo em "Esqueci a senha".',
+            ]);
+        }
+
+        return response()->json(['message' => 'Senha alterada. Entre com a nova senha.']);
     }
 
     public function eu(Request $request): JsonResponse

@@ -4,7 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Empresa;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class AutenticacaoTest extends TestCase
@@ -132,5 +136,70 @@ class AutenticacaoTest extends TestCase
         $this->actingAs($dono)->putJson('/api/empresa', ['nome' => 'Novo nome'])
             ->assertOk()
             ->assertJsonPath('nome', 'Novo nome');
+    }
+
+    public function test_esqueci_a_senha_envia_link_para_o_painel(): void
+    {
+        Notification::fake();
+        config(['app.painel_url' => 'https://painel.test/saas/barbearia/painel']);
+        $usuario = User::factory()->create(['email' => 'ze@exemplo.test']);
+
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk();
+
+        Notification::assertSentTo($usuario, ResetPassword::class, function (ResetPassword $n) use ($usuario) {
+            $email = $n->toMail($usuario);
+
+            return str_starts_with($email->actionUrl, 'https://painel.test/saas/barbearia/painel/redefinir-senha?token=')
+                && str_contains($email->actionUrl, 'email=ze%40exemplo.test');
+        });
+    }
+
+    public function test_esqueci_a_senha_nao_revela_se_o_email_existe(): void
+    {
+        Notification::fake();
+        User::factory()->create(['email' => 'inativo@exemplo.test', 'ativo' => false]);
+
+        $existe = $this->postJson('/api/auth/esqueci-senha', ['email' => 'inativo@exemplo.test'])->assertOk()->json('message');
+        $naoExiste = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])->assertOk()->json('message');
+
+        $this->assertSame($existe, $naoExiste);
+        Notification::assertNothingSent();
+    }
+
+    public function test_redefine_a_senha_com_token_valido_e_encerra_sessoes(): void
+    {
+        $usuario = User::factory()->create(['email' => 'ze@exemplo.test']);
+        $usuario->createToken('celular');
+        $token = Password::createToken($usuario);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'token' => $token,
+            'email' => 'ze@exemplo.test',
+            'password' => 'novaSenha123',
+            'password_confirmation' => 'novaSenha123',
+        ])->assertOk();
+
+        $this->assertTrue(Hash::check('novaSenha123', $usuario->fresh()->password));
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => 'novaSenha123'])->assertOk();
+    }
+
+    public function test_redefinir_senha_rejeita_token_invalido_e_senha_fraca(): void
+    {
+        $usuario = User::factory()->create(['email' => 'ze@exemplo.test']);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'token' => 'token-falso',
+            'email' => 'ze@exemplo.test',
+            'password' => 'novaSenha123',
+            'password_confirmation' => 'novaSenha123',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['token']);
+
+        $this->postJson('/api/auth/redefinir-senha', [
+            'token' => Password::createToken($usuario),
+            'email' => 'ze@exemplo.test',
+            'password' => '123',
+            'password_confirmation' => '123',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['password']);
     }
 }

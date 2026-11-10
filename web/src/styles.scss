@@ -276,6 +276,69 @@ textarea {
   }
 }
 
+// Campo de senha com o botão de "olho" dentro, à direita
+.campo-senha {
+  position: relative;
+
+  input {
+    padding-right: 44px;
+  }
+}
+
+.ver-senha {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  color: var(--cor-texto-suave);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-buttons);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--cor-texto);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+// Linha com o rótulo do campo à esquerda e um link à direita (ex.: "Senha" · "Esqueci a senha")
+.campo .rotulo-com-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 14px;
+
+  label {
+    font-weight: 500;
+  }
+}
+
+.aviso-sucesso {
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+  border-radius: var(--radius-buttons);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
 .erro-campo {
   display: block;
   margin-top: 4px;

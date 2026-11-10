@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Endereço do painel (Angular), usado no link de redefinição de senha enviado por e-mail.
+    'painel_url' => env('PAINEL_URL', 'http://localhost:4200'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

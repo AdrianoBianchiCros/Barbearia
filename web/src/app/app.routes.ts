@@ -17,6 +17,18 @@ export const routes: Routes = [
     loadComponent: () => import('./paginas/cadastro/cadastro').then((m) => m.Cadastro),
   },
   {
+    path: 'esqueci-senha',
+    canActivate: [somenteVisitante],
+    title: 'Esqueci a senha | Barbearia',
+    loadComponent: () => import('./paginas/senha/esqueci-senha').then((m) => m.EsqueciSenha),
+  },
+  {
+    // Sem o guard de visitante: o link do e-mail também precisa abrir para quem está logado em outro usuário.
+    path: 'redefinir-senha',
+    title: 'Nova senha | Barbearia',
+    loadComponent: () => import('./paginas/senha/redefinir-senha').then((m) => m.RedefinirSenha),
+  },
+  {
     path: '',
     canActivate: [exigeLogin],
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),

@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 10/11/2026 · sistema publicado na HostGator · 121 testes na API · 4 testes no painel*
+*Atualizado em 10/11/2026 · sistema publicado na HostGator · 122 testes na API · 4 testes no painel*
 
 - **Login do painel: "olho" e "Esqueci a senha" (10/11/2026, ainda não publicado):** botão de olho para ver a senha
   digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" → tela
@@ -195,7 +195,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login/cadastro do painel e na vitrine.
 
-**Testes:** 121 testes na API (`php artisan test`), todos passando.
+**Testes:** 122 testes na API (`php artisan test`), todos passando.
 
 ---
 
@@ -367,7 +367,7 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
   - `FRONTEND_URL=https://app.abianchitech.com` e `QUEUE_CONNECTION=database`;
   - `PAINEL_URL=https://app.abianchitech.com/saas/barbearia/painel` (link do e-mail de "Esqueci a senha");
   - e-mail por uma conta criada no cPanel (ex.: `nao-responda@abianchitech.com`): `MAIL_MAILER=smtp`,
-    `MAIL_HOST=mail.abianchitech.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME` e `MAIL_PASSWORD` (entre aspas)
+    `MAIL_HOST=mail.abianchitech.com`, `MAIL_PORT=465`, `MAIL_SCHEME=smtps`, `MAIL_USERNAME` e `MAIL_PASSWORD` (entre aspas **simples**: nas duplas, um `$` na senha some e o SMTP responde "535 Incorrect authentication data")
     dessa conta, `MAIL_FROM_ADDRESS` igual ao usuário e `MAIL_FROM_NAME="Barbearia"`;
   - `WHATSAPP_*` (veja `.env.example`);
   - `DB_PASSWORD` **entre aspas** (`DB_PASSWORD="..."`). Em 09/11/2026 o banco recusou o acesso

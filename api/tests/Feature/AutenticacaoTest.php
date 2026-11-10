@@ -166,6 +166,17 @@ class AutenticacaoTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_esqueci_a_senha_com_falha_no_envio_responde_igual(): void
+    {
+        User::factory()->create(['email' => 'ze@exemplo.test']);
+        Password::shouldReceive('sendResetLink')->once()->andThrow(new \RuntimeException('535 Incorrect authentication data'));
+
+        $comFalha = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk()->json('message');
+        $naoExiste = $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])->assertOk()->json('message');
+
+        $this->assertSame($comFalha, $naoExiste);
+    }
+
     public function test_redefine_a_senha_com_token_valido_e_encerra_sessoes(): void
     {
         $usuario = User::factory()->create(['email' => 'ze@exemplo.test']);

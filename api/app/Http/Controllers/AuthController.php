@@ -91,7 +91,13 @@ class AuthController extends Controller
         $usuario = User::where('email', $dados['email'])->first();
 
         if ($usuario?->ativo && $usuario->empresa?->ativo) {
-            SenhaBroker::sendResetLink(['email' => $usuario->email]);
+            try {
+                SenhaBroker::sendResetLink(['email' => $usuario->email]);
+            } catch (\Throwable $e) {
+                // Falha no envio (ex.: SMTP recusou a senha) fica no log, mas a resposta não muda:
+                // um erro só para e-mails cadastrados revelaria quem tem conta.
+                report($e);
+            }
         }
 
         return response()->json([

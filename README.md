@@ -83,7 +83,8 @@ Para acessar:
   O Titan só aceitou SMTP depois de ligar a verificação em duas etapas na conta e gerar uma senha de app: com a senha
   normal ele respondia "535 5.7.8 authentication failed", embora o Webmail entrasse. Depois de mudar o `.env`, rodar
   `config:clear && config:cache`. Diagnóstico: `php artisan email:testar SEU@EMAIL` mostra a configuração em uso (sem a
-  senha) e o erro exato. **Pendente:** trocar a senha normal do `nao-responda@` no Titan (apareceu numa conversa).
+  senha) e o erro exato. **"Esqueci a senha" testado de ponta a ponta em produção** (e-mail chegou e a troca
+  funcionou). **Pendente:** trocar a senha normal do `nao-responda@` no Titan (apareceu numa conversa).
 - **Página da barbearia, "Sobre a casa" (10/11/2026):** uma foto só, larga e centralizada, com o carimbo giratório
   no canto inferior esquerdo (antes eram duas fotos sobrepostas).
 

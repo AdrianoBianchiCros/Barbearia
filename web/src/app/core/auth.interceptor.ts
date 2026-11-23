@@ -42,6 +42,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         erro.status === 401 || (erro.status === 403 && erro.error?.message?.startsWith('Acesso desativado'));
       // Prazo do plano vencido: a API já encerrou a sessão; o login explica o motivo.
       const acessoVencido = erro.status === 403 && erro.error?.codigo === 'acesso_vencido';
+      // Entrou com a senha provisória e tentou usar o painel antes de criar a própria.
+      if (paraApi && token && erro.status === 403 && erro.error?.codigo === 'trocar_senha') {
+        router.navigate(['/trocar-senha']);
+      }
       if (paraApi && token && (sessaoInvalida || acessoVencido)) {
         auth.limpar();
         router.navigate(['/login'], acessoVencido ? { queryParams: { acesso: 'vencido' } } : {});

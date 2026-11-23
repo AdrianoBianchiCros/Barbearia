@@ -6,9 +6,11 @@ use App\Models\Administrador;
 use App\Models\Assinatura;
 use App\Models\Empresa;
 use App\Models\User;
+use App\Notifications\SenhaProvisoria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -22,6 +24,7 @@ class AdminBarbeariasTest extends TestCase
         parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-11-10 10:00', 'America/Sao_Paulo'));
         Storage::fake('local');
+        Notification::fake();
     }
 
     private function logarAdmin(): Administrador
@@ -98,6 +101,7 @@ class AdminBarbeariasTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => $senha])
             ->assertOk()
             ->assertJsonPath('usuario.perfil', 'dono')
+            ->assertJsonPath('usuario.trocar_senha', true)
             ->assertJsonPath('acesso.vence_em', '2026-12-09');
     }
 
@@ -174,10 +178,57 @@ class AdminBarbeariasTest extends TestCase
         $dono->createToken('antigo');
 
         $this->logarAdmin();
-        $senha = $this->postJson("/api/admin/barbearias/{$empresa->id}/nova-senha")
-            ->assertOk()->json('acesso.senha_provisoria');
+        $acesso = $this->postJson("/api/admin/barbearias/{$empresa->id}/nova-senha")
+            ->assertOk()
+            ->assertJsonPath('acesso.email_enviado', true)
+            ->json('acesso');
+        $senha = $acesso['senha_provisoria'];
 
         $this->assertSame(0, $dono->tokens()->count());
+
+        // O e-mail leva a senha provisória e o link para criar a nova senha direto.
+        Notification::assertSentTo($dono, SenhaProvisoria::class, function (SenhaProvisoria $n) use ($dono, $senha) {
+            $email = $n->toMail($dono);
+            $texto = implode("\n", $email->introLines).implode("\n", $email->outroLines);
+
+            return str_contains($texto, $senha) && str_contains($email->actionUrl, '/redefinir-senha?token=');
+        });
+
+        // Entra com a provisória, mas o painel fica travado até criar a própria senha.
+        $this->app['auth']->forgetGuards();
+        $token = $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => $senha])
+            ->assertOk()
+            ->assertJsonPath('usuario.trocar_senha', true)
+            ->json('token');
+        $cabecalho = ['Authorization' => "Bearer {$token}"];
+
+        $this->getJson('/api/agenda/dia', $cabecalho)->assertForbidden()->assertJsonPath('codigo', 'trocar_senha');
+        $this->getJson('/api/auth/eu', $cabecalho)->assertOk();
+
+        $this->postJson('/api/auth/trocar-senha', ['password' => $senha, 'password_confirmation' => $senha], $cabecalho)
+            ->assertUnprocessable()->assertJsonValidationErrors(['password']);
+        $this->postJson('/api/auth/trocar-senha', ['password' => 'minhaSenha1', 'password_confirmation' => 'minhaSenha1'], $cabecalho)
+            ->assertOk()
+            ->assertJsonPath('usuario.trocar_senha', false);
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/agenda/dia', $cabecalho)->assertOk();
+        $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => $senha])->assertUnprocessable();
+        $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => 'minhaSenha1'])->assertOk();
+    }
+
+    public function test_nova_senha_continua_valendo_se_o_email_falhar(): void
+    {
+        Notification::shouldReceive('send')->andThrow(new \RuntimeException('SMTP 535'));
+        $empresa = Empresa::factory()->create();
+        User::factory()->for($empresa)->create(['email' => 'ze@exemplo.test']);
+
+        $this->logarAdmin();
+        $senha = $this->postJson("/api/admin/barbearias/{$empresa->id}/nova-senha")
+            ->assertOk()
+            ->assertJsonPath('acesso.email_enviado', false)
+            ->json('acesso.senha_provisoria');
+
         $this->app['auth']->forgetGuards();
         $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => $senha])->assertOk();
     }

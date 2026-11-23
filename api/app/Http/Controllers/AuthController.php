@@ -85,7 +85,7 @@ class AuthController extends Controller
         ], [], ['email' => 'e-mail', 'password' => 'senha']);
 
         $status = SenhaBroker::reset($dados, function (User $usuario, string $senha) {
-            $usuario->forceFill(['password' => $senha])->save();
+            $usuario->forceFill(['password' => $senha, 'trocar_senha' => false])->save();
             $usuario->tokens()->delete();
         });
 
@@ -96,6 +96,27 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Senha alterada. Entre com a nova senha.']);
+    }
+
+    /**
+     * Troca da senha provisória (gerada pelo administrador) pela senha do próprio usuário.
+     * Mantém a sessão atual e encerra as demais.
+     */
+    public function trocarSenha(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+        $dados = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+        ], [], ['password' => 'senha']);
+
+        if (Hash::check($dados['password'], $usuario->password)) {
+            throw ValidationException::withMessages(['password' => 'A nova senha precisa ser diferente da senha provisória.']);
+        }
+
+        $usuario->forceFill(['password' => $dados['password'], 'trocar_senha' => false])->save();
+        $usuario->tokens()->whereKeyNot($usuario->currentAccessToken()->getKey())->delete();
+
+        return response()->json(['message' => 'Senha alterada.'] + $this->dadosSessao($usuario));
     }
 
     public function eu(Request $request): JsonResponse
@@ -123,7 +144,7 @@ class AuthController extends Controller
         $empresa = $usuario->empresa;
 
         return [
-            'usuario' => $usuario->only(['id', 'nome', 'email', 'perfil']),
+            'usuario' => $usuario->only(['id', 'nome', 'email', 'perfil', 'trocar_senha']),
             'empresa' => $empresa->only(['id', 'nome', 'slug', 'telefone', 'fuso_horario']),
             // Prazo do acesso pago: o painel mostra o aviso de vencimento só para o dono.
             'acesso' => $usuario->temPerfil('dono') ? $empresa->resumoAcesso() : null,

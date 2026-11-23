@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Assinatura;
 use App\Models\Empresa;
 use App\Models\User;
+use App\Notifications\SenhaProvisoria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -80,7 +82,7 @@ class BarbeariaController extends Controller
         $contrato = $this->guardarContrato($request->file('contrato'));
 
         try {
-            $empresa = DB::transaction(function () use ($dados, $senha, $contrato, $request) {
+            [$empresa, $dono] = DB::transaction(function () use ($dados, $senha, $contrato, $request) {
                 $empresa = Empresa::create([
                     'nome' => $dados['nome'],
                     'slug' => Empresa::gerarSlug($dados['nome']),
@@ -89,18 +91,19 @@ class BarbeariaController extends Controller
                     'email' => $dados['dono_email'],
                 ])->refresh(); // carrega os valores padrão do banco (ex.: fuso horário)
 
-                User::create([
+                $dono = new User([
                     'empresa_id' => $empresa->id,
                     'nome' => $dados['dono_nome'],
                     'email' => $dados['dono_email'],
                     'password' => $senha,
                     'perfil' => 'dono',
                 ]);
+                $dono->forceFill(['trocar_senha' => true])->save();
 
                 $inicio = isset($dados['inicio']) ? Carbon::parse($dados['inicio']) : $this->hoje();
                 $this->registrarContratacao($empresa, $dados, $inicio, $contrato, $request);
 
-                return $empresa;
+                return [$empresa, $dono];
             });
         } catch (\Throwable $e) {
             $this->removerContrato($contrato);
@@ -109,7 +112,7 @@ class BarbeariaController extends Controller
 
         return response()->json([
             'barbearia' => $this->resumo($empresa->fresh()),
-            'acesso' => $this->dadosAcesso($dados['dono_email'], $senha),
+            'acesso' => $this->dadosAcesso($dono, $senha),
         ], 201);
     }
 
@@ -159,17 +162,20 @@ class BarbeariaController extends Controller
         return $this->show($empresa->fresh());
     }
 
-    /** Gera uma nova senha provisória para o dono (ex.: perdeu a senha e o e-mail não chega). */
+    /**
+     * Gera uma nova senha provisória para o dono: ela vai por e-mail com o link para criar a própria,
+     * e quem entrar com ela é obrigado a trocá-la antes de usar o painel.
+     */
     public function novaSenha(Empresa $empresa): JsonResponse
     {
         $dono = User::where('empresa_id', $empresa->id)->where('perfil', 'dono')->orderBy('id')->first();
         abort_unless($dono, 404, 'Esta barbearia não tem um dono cadastrado.');
 
         $senha = $this->senhaProvisoria();
-        $dono->forceFill(['password' => $senha])->save();
+        $dono->forceFill(['password' => $senha, 'trocar_senha' => true])->save();
         $dono->tokens()->delete();
 
-        return response()->json(['acesso' => $this->dadosAcesso($dono->email, $senha)]);
+        return response()->json(['acesso' => $this->dadosAcesso($dono, $senha)]);
     }
 
     public function contrato(Assinatura $assinatura): StreamedResponse
@@ -250,13 +256,33 @@ class BarbeariaController extends Controller
         return Str::password(10, symbols: false);
     }
 
-    private function dadosAcesso(string $email, string $senha): array
+    /** Envia a senha provisória ao dono por e-mail e devolve os dados para o administrador ver (uma única vez). */
+    private function dadosAcesso(User $dono, string $senha): array
     {
         return [
-            'email' => $email,
+            'email' => $dono->email,
             'senha_provisoria' => $senha,
             'painel_url' => config('app.painel_url'),
+            'email_enviado' => $this->enviarSenhaPorEmail($dono, $senha),
         ];
+    }
+
+    /** Falha no e-mail não desfaz a senha: o administrador ainda pode mandá-la pelo WhatsApp. */
+    private function enviarSenhaPorEmail(User $dono, string $senha): bool
+    {
+        try {
+            $link = rtrim(config('app.painel_url'), '/').'/redefinir-senha?'.http_build_query([
+                'token' => Password::createToken($dono),
+                'email' => $dono->email,
+            ]);
+            $dono->notify(new SenhaProvisoria($senha, $link));
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     private function hoje(): Carbon

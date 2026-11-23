@@ -11,6 +11,8 @@ export interface Usuario {
   nome: string;
   email: string;
   perfil: Perfil;
+  /** Entrou com a senha provisória gerada pelo administrador: precisa criar a própria. */
+  trocar_senha?: boolean;
 }
 
 export interface Empresa {
@@ -74,6 +76,14 @@ export class AuthService {
   /** Grava a nova senha a partir do link recebido por e-mail. */
   redefinirSenha(dados: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/redefinir-senha`, dados);
+  }
+
+  /** Troca a senha provisória pela senha do próprio usuário (a sessão atual continua aberta). */
+  trocarSenha(dados: { password: string; password_confirmation: string }): Observable<Sessao> {
+    return this.http.post<Sessao>(`${environment.apiUrl}/auth/trocar-senha`, dados).pipe(
+      map((s) => ({ usuario: s.usuario, empresa: s.empresa, acesso: s.acesso ?? null })),
+      tap((s) => this._sessao.set(s)),
+    );
   }
 
   /** Recupera a sessão a partir do token salvo (ao recarregar a página). */

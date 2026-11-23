@@ -35,7 +35,15 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 10/11/2026 · sistema publicado na HostGator · 138 testes na API · 6 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 139 testes na API · 8 testes no painel*
+
+- **Senha provisória com troca obrigatória (23/11/2026, ainda não publicado):** quando o administrador cadastra a
+  barbearia ou clica em "Gerar nova senha do dono", o dono recebe **e-mail** (`App\Notifications\SenhaProvisoria`) com
+  a senha provisória e o botão **"Criar minha senha"** (link de redefinição, vale 60 min). Se ele entrar com a
+  provisória, o painel abre direto em **`/trocar-senha`** e a API recusa as demais rotas (`403`,
+  `codigo: trocar_senha`) até a troca (`POST /api/auth/trocar-senha`; mantém a sessão atual e encerra as outras).
+  Campo novo `usuarios.trocar_senha` (migração `2026_11_23`); redefinir pelo link também limpa o campo. Se o e-mail
+  falhar, a senha continua valendo e o cartão do administrador avisa para mandar pelo WhatsApp (`email_enviado`).
 
 - **Nova tela de entrada do painel (10/11/2026):** login, "Esqueci a senha" e "Nova senha" ganharam o visual da
   página pública (componente `VitrineAcesso`, estilos em `web/src/acesso.scss`): à esquerda, foto de barbearia,
@@ -164,6 +172,7 @@ Para acessar:
 - Administradores da plataforma em tabela própria (`administradores`), criados por `php artisan admin:criar`;
   token de administrador não entra no painel das barbearias e vice-versa.
 - Cadastro da barbearia com dono (senha provisória), período, pagamento, valor e contrato anexado (disco privado).
+- Senha provisória enviada por e-mail com link para criar a própria; no primeiro login com ela, troca obrigatória.
 - Prazo de acesso (`empresas.acesso_ate`) e histórico em `assinaturas`; renovar, suspender, reativar, nova senha do dono.
 - Situações: sem prazo, em dia, vencendo (≤ 10 dias), carência (até 5 dias depois) e bloqueada; suspensa pelo administrador.
 - Aviso no painel e por e-mail ao dono; bloqueio do login, da API e do agendamento online após a carência.
@@ -245,7 +254,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 137 testes na API (`php artisan test`) e 6 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 139 testes na API (`php artisan test`) e 8 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 
@@ -287,7 +296,7 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
   renovação, suspensão, avisos de vencimento e bloqueio depois da carência (10/11/2026)
 - ⬜ Landing page de vendas do SaaS e cobrança recorrente automática por gateway (hoje o pagamento é registrado à mão)
   (cumprindo arrependimento de 7 dias, cancelamento pelo mesmo canal, aviso de renovação e preço total: veja `LGPD.md`)
-- ⬜ Tela "Minha senha" no painel (hoje o dono troca a senha provisória só por "Esqueci a senha", que depende do e-mail)
+- ⬜ Tela "Minha senha" no painel para trocar a senha a qualquer momento (a provisória já é trocada no primeiro login)
 - ⬜ Cota de mensagens do WhatsApp por plano (a contagem mensal já aparece no painel)
 - ⬜ Multiunidade (filiais), domínio próprio da barbearia, NFS-e, central de ajuda
 - ⬜ Migração para VPS quando o volume exigir (fila com Supervisor, Redis)

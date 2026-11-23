@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { AuthService } from './core/auth.service';
 import { exigeAdmin, somenteVisitanteAdmin } from './core/admin.guards';
-import { exigeLogin, exigePerfil, somenteVisitante } from './core/auth.guards';
+import { exigeLogin, exigePerfil, exigeTrocaSenha, somenteVisitante } from './core/auth.guards';
 
 export const routes: Routes = [
   {
@@ -57,6 +57,13 @@ export const routes: Routes = [
     path: 'redefinir-senha',
     title: 'Nova senha | Barbearia',
     loadComponent: () => import('./paginas/senha/redefinir-senha').then((m) => m.RedefinirSenha),
+  },
+  {
+    // Primeiro acesso com a senha provisória gerada pelo administrador.
+    path: 'trocar-senha',
+    canActivate: [exigeTrocaSenha],
+    title: 'Crie sua senha | Barbearia',
+    loadComponent: () => import('./paginas/senha/trocar-senha').then((m) => m.TrocarSenha),
   },
   {
     path: '',

@@ -73,6 +73,7 @@ Route::post('webhooks/whatsapp', [WebhookWhatsappController::class, 'receber']);
 Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
     Route::get('auth/eu', [AuthController::class, 'eu']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::post('auth/trocar-senha', [AuthController::class, 'trocarSenha'])->middleware('throttle:senha');
 
     // Agenda do dia: qualquer perfil (barbeiro altera só os próprios atendimentos)
     Route::get('agenda/dia', [AgendaController::class, 'dia']);

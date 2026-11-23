@@ -40,6 +40,14 @@ class DefinirEmpresaAtual
             ], 403);
         }
 
+        // Entrou com a senha provisória: só libera as rotas de sessão até criar a própria senha.
+        if ($usuario->trocar_senha && ! $request->is('api/auth/*')) {
+            return response()->json([
+                'message' => 'Crie a sua senha para continuar.',
+                'codigo' => 'trocar_senha',
+            ], 403);
+        }
+
         $this->empresaAtual->definir($usuario->empresa_id);
 
         return $next($request);

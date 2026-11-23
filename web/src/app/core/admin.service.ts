@@ -61,6 +61,8 @@ export interface DadosAcesso {
   email: string;
   senha_provisoria: string;
   painel_url: string;
+  /** A senha também foi por e-mail ao dono, com o link para criar a nova. */
+  email_enviado: boolean;
 }
 
 const CHAVE_TOKEN = 'barbearia.tokenAdmin';

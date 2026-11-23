@@ -3,11 +3,28 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { AuthService, Perfil } from './auth.service';
 
-/** Área logada: sem sessão válida, vai para o login. */
+/** Área logada: sem sessão válida, vai para o login; com a senha provisória, vai criar a própria. */
 export const exigeLogin: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.carregarSessao().pipe(map((ok) => ok || router.createUrlTree(['/login'])));
+  return auth.carregarSessao().pipe(
+    map((ok) => {
+      if (!ok) return router.createUrlTree(['/login']);
+      return auth.sessao()?.usuario.trocar_senha ? router.createUrlTree(['/trocar-senha']) : true;
+    }),
+  );
+};
+
+/** Tela de troca da senha provisória: só para quem entrou com ela. */
+export const exigeTrocaSenha: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.carregarSessao().pipe(
+    map((ok) => {
+      if (!ok) return router.createUrlTree(['/login']);
+      return auth.sessao()?.usuario.trocar_senha || router.createUrlTree(['/agenda']);
+    }),
+  );
 };
 
 /** Login e telas de senha: quem já está logado vai direto para o painel. */

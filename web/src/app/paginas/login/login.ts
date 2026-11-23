@@ -89,7 +89,7 @@ export class Login {
 
     const { email, password } = this.form.getRawValue();
     this.auth.login(email, password).subscribe({
-      next: () => this.router.navigate(['/agenda']),
+      next: (s) => this.router.navigate([s.usuario.trocar_senha ? '/trocar-senha' : '/agenda']),
       error: (e) => {
         this.erro.set(mensagemDeErro(e));
         this.enviando.set(false);

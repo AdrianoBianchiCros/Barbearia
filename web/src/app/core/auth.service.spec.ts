@@ -78,6 +78,33 @@ describe('AuthService', () => {
     expect(navegar).toHaveBeenCalledWith(['/login'], { queryParams: { acesso: 'vencido' } });
   });
 
+  it('senha provisória (403 trocar_senha) mantém a sessão e leva à tela de criar a senha', () => {
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    localStorage.setItem('barbearia.token', 'abc');
+
+    TestBed.inject(HttpClient).get(`${environment.apiUrl}/agenda/dia`).subscribe({ error: () => undefined });
+    http.expectOne(`${environment.apiUrl}/agenda/dia`).flush(
+      { message: 'Crie a sua senha para continuar.', codigo: 'trocar_senha' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+
+    expect(auth.token).toBe('abc');
+    expect(navegar).toHaveBeenCalledWith(['/trocar-senha']);
+  });
+
+  it('trocar a senha provisória atualiza a sessão', () => {
+    auth.login('ze@exemplo.test', 'provisoria1').subscribe();
+    http.expectOne(`${environment.apiUrl}/auth/login`).flush({ token: 'abc', ...sessao, usuario: { ...sessao.usuario, trocar_senha: true } });
+    expect(auth.sessao()?.usuario.trocar_senha).toBe(true);
+
+    auth.trocarSenha({ password: 'minhaSenha1', password_confirmation: 'minhaSenha1' }).subscribe();
+    http.expectOne(`${environment.apiUrl}/auth/trocar-senha`).flush({ message: 'Senha alterada.', ...sessao, usuario: { ...sessao.usuario, trocar_senha: false } });
+
+    expect(auth.sessao()?.usuario.trocar_senha).toBe(false);
+    expect(auth.token).toBe('abc');
+  });
+
   it('chamadas da área do administrador usam o token do administrador', () => {
     localStorage.setItem('barbearia.token', 'dono');
     localStorage.setItem('barbearia.tokenAdmin', 'admin');

@@ -279,7 +279,17 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         <dl class="detalhes">
           <dt>Horário</dt><dd>{{ hora(sel.ag.inicio) }} – {{ hora(sel.ag.fim) }}</dd>
           <dt>Barbeiro</dt><dd>{{ sel.barbeiro.nome }}</dd>
-          <dt>Valor</dt><dd>{{ +sel.ag.valor_total | currency: 'BRL' }}</dd>
+          @if (sel.ag.comanda?.status === 'paga') {
+            <dt>Pago no caixa</dt>
+            <dd>
+              {{ +sel.ag.comanda!.total | currency: 'BRL' }}
+              @if (+sel.ag.comanda!.total !== +sel.ag.valor_total) {
+                <span class="texto-suave pequeno">(agendado: {{ +sel.ag.valor_total | currency: 'BRL' }})</span>
+              }
+            </dd>
+          } @else {
+            <dt>Valor</dt><dd>{{ +sel.ag.valor_total | currency: 'BRL' }}</dd>
+          }
           <dt>Origem</dt><dd>{{ sel.ag.origem === 'link_publico' ? 'Página da barbearia' : sel.ag.origem === 'whatsapp' ? 'WhatsApp' : 'Recepção' }}</dd>
           @if (sel.ag.cliente?.telefone) {
             <dt>WhatsApp</dt>
@@ -511,7 +521,10 @@ export class Agenda implements OnInit, OnDestroy {
       emAtendimento: todos.filter((a) => a.status === 'em_atendimento').length,
       concluidos: todos.filter((a) => a.status === 'concluido').length,
       faltas: todos.filter((a) => a.status === 'faltou').length,
-      previsto: todos.filter((a) => a.status !== 'faltou').reduce((soma, a) => soma + Number(a.valor_total), 0),
+      // Já pago no caixa: vale o total da comanda (o que o cliente pagou); senão, o valor agendado.
+      previsto: todos
+        .filter((a) => a.status !== 'faltou')
+        .reduce((soma, a) => soma + Number(a.comanda?.status === 'paga' ? a.comanda.total : a.valor_total), 0),
     };
   });
 

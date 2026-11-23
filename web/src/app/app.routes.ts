@@ -148,6 +148,13 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/relatorios/relatorios').then((m) => m.Relatorios),
       },
       {
+        // Mensalidade do sistema: faturas pagas, a próxima e o pagamento por Pix (aberta pelo farol do menu).
+        path: 'assinatura',
+        canActivate: [exigePerfil('dono')],
+        title: 'Minha assinatura | Barbearia',
+        loadComponent: () => import('./paginas/assinatura/assinatura').then((m) => m.MinhaAssinatura),
+      },
+      {
         path: 'configuracoes',
         loadComponent: () => import('./paginas/configuracoes/configuracoes').then((m) => m.Configuracoes),
         children: [

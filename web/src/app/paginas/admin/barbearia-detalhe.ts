@@ -73,6 +73,30 @@ import { CartaoAcesso } from './cartao-acesso';
         </section>
       </div>
 
+      @if (b.proxima_fatura; as f) {
+        <section class="cartao-secao">
+          <h2>Próxima fatura (Pix pelo painel)</h2>
+          <p>
+            <strong>{{ +f.valor | currency: 'BRL' }}</strong> · {{ f.periodo_rotulo }} · vence em
+            {{ f.vencimento + 'T12:00:00' | date: 'dd/MM/yyyy' }} · renova de {{ f.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }}
+            a {{ f.fim + 'T12:00:00' | date: 'dd/MM/yyyy' }}
+          </p>
+          @if (f.status === 'informada') {
+            <div class="alerta">
+              O dono informou o pagamento em {{ f.informada_em | date: 'dd/MM/yyyy HH:mm' }}. Confira no extrato do banco o Pix
+              de {{ +f.valor | currency: 'BRL' }} (identificador <code>{{ f.txid }}</code>) antes de confirmar.
+            </div>
+          } @else {
+            <p class="texto-suave">Em aberto. Identificador do Pix: <code>{{ f.txid }}</code></p>
+          }
+          <div class="rodape-secao">
+            <button class="botao botao-secundario botao-auto" type="button" (click)="confirmarFatura(f.id)" [disabled]="salvando()">
+              Confirmar recebimento e renovar
+            </button>
+          </div>
+        </section>
+      }
+
       <h2>Histórico de contratações</h2>
       @if (b.assinaturas.length === 0) {
         <div class="vazio">Nenhuma contratação registrada.</div>
@@ -208,6 +232,22 @@ export class BarbeariaDetalhe implements OnInit {
         this.erros.set(errosPorCampo(e));
         this.erro.set(mensagemDeErro(e));
         this.salvando.set(false);
+      },
+    });
+  }
+
+  confirmarFatura(id: number): void {
+    if (!confirm('Confirmar que o Pix desta fatura caiu na conta? O acesso será renovado na hora.')) return;
+    this.salvando.set(true);
+    this.api.confirmarFatura(id).subscribe({
+      next: (b) => {
+        this.b.set(b);
+        this.salvando.set(false);
+        this.aviso.sucesso(`Pagamento confirmado. Acesso renovado até ${b.acesso.vence_em?.split('-').reverse().join('/')}.`);
+      },
+      error: (e) => {
+        this.salvando.set(false);
+        this.aviso.erro(mensagemDeErro(e));
       },
     });
   }

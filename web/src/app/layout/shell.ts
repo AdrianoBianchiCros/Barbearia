@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService, Perfil } from '../core/auth.service';
 import { AvisoService } from '../core/aviso.service';
-import { ENDERECO_SITE, PLATAFORMA } from '../core/plataforma';
+import { ENDERECO_SITE } from '../core/plataforma';
 import { TemaService } from '../core/tema.service';
 
 interface ItemMenu {
@@ -71,7 +72,7 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
 /** Estrutura da área logada: menu lateral e conteúdo. */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgClass],
   template: `
     @if (sessao(); as s) {
       <div class="shell" [class.menu-aberto]="menuAberto()" [class.menu-recolhido]="recolhido()">
@@ -121,14 +122,16 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
           </nav>
 
           @if (farol(); as f) {
-            <div class="farol-plano" [class]="'farol-' + f.cor" role="status"
-              [title]="f.titulo + ' · ' + f.detalhe" [attr.aria-label]="f.titulo + '. ' + f.detalhe">
+            <a class="farol-plano" [ngClass]="'farol-' + f.cor" routerLink="/assinatura" routerLinkActive="ativo"
+              (click)="menuAberto.set(false)" [title]="f.titulo + ' · ' + f.detalhe + ' · ver faturas'"
+              [attr.aria-label]="f.titulo + '. ' + f.detalhe + '. Ver faturas e pagar'">
               <span class="farol-luz" aria-hidden="true"></span>
               <span class="menu-rotulo menu-textos">
                 <span>{{ f.titulo }}</span>
-                <small class="menu-descricao">{{ f.detalhe }}</small>
+                <small class="menu-descricao">{{ f.detalhe }} · ver faturas</small>
               </span>
-            </div>
+              <svg class="farol-seta menu-rotulo" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+            </a>
           }
 
           <div class="menu-usuario">
@@ -155,7 +158,9 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recepç�
             <strong>{{ s.empresa.nome }}</strong>
           </header>
           @if (avisoAcesso(); as a) {
-            <div class="faixa-acesso" [class.faixa-acesso-carencia]="a.carencia" role="status">{{ a.texto }}</div>
+            <div class="faixa-acesso" [class.faixa-acesso-carencia]="a.carencia" role="status">
+              {{ a.texto }} <a routerLink="/assinatura">Ver fatura e pagar por Pix</a>
+            </div>
           }
           <main class="conteudo">
             <router-outlet />
@@ -198,11 +203,11 @@ export class Shell {
     if (acesso.situacao === 'carencia') {
       return {
         carencia: true,
-        texto: `O plano venceu em ${data(acesso.vence_em)}. O sistema será bloqueado depois de ${data(acesso.bloqueia_em)}. Para renovar, fale com a ${PLATAFORMA.nome}.`,
+        texto: `O plano venceu em ${data(acesso.vence_em)}. O sistema será bloqueado depois de ${data(acesso.bloqueia_em)}.`,
       };
     }
     const quando = dias === 0 ? 'vence hoje' : dias === 1 ? 'vence amanhã' : `vence em ${dias} dias (${data(acesso.vence_em)})`;
-    return { carencia: false, texto: `O plano da barbearia ${quando}. Para renovar, fale com a ${PLATAFORMA.nome}.` };
+    return { carencia: false, texto: `O plano da barbearia ${quando}.` };
   });
 
   /**

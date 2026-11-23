@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Fatura } from './assinatura.service';
 import { ResumoAcesso } from './auth.service';
 
 export interface Administrador {
@@ -49,11 +50,15 @@ export interface BarbeariaAdmin {
   dono: { id: number; nome: string; email: string } | null;
   ultima_assinatura: Pick<Assinatura, 'periodo' | 'forma_pagamento' | 'valor' | 'inicio' | 'fim'> | null;
   pagina_url: string;
+  /** O dono avisou pelo painel que pagou a fatura por Pix (só na lista). */
+  pagamento_informado?: boolean;
 }
 
 export interface DetalheBarbearia extends BarbeariaAdmin {
   assinaturas: Assinatura[];
   total_usuarios: number;
+  /** Fatura em aberto que o dono paga pelo painel (null sem prazo, no teste ou na cortesia). */
+  proxima_fatura: Fatura | null;
 }
 
 /** Login do dono gerado pelo administrador (a senha provisória aparece uma única vez). */
@@ -177,6 +182,11 @@ export class AdminService {
 
   novaSenha(id: number): Observable<{ acesso: DadosAcesso }> {
     return this.http.post<{ acesso: DadosAcesso }>(`${API}/barbearias/${id}/nova-senha`, {});
+  }
+
+  /** Pix conferido no banco: renova o acesso com o período e o valor da fatura. */
+  confirmarFatura(faturaId: number): Observable<DetalheBarbearia> {
+    return this.http.post<DetalheBarbearia>(`${API}/faturas/${faturaId}/confirmar`, {});
   }
 
   /** Baixa o contrato com o token (um link direto não levaria a autenticação). */

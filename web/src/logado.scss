@@ -1018,6 +1018,12 @@ fieldset {
     color: var(--cor-erro);
     background: var(--cor-erro-fundo);
   }
+
+  a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1183,6 +1189,26 @@ fieldset {
   font-size: 14px;
   font-weight: 500;
   color: var(--cor-texto);
+  text-decoration: none;
+  transition: background-color 0.15s;
+
+  // Leva para "Minha assinatura" (faturas e pagamento por Pix).
+  &:hover,
+  &.ativo {
+    background: var(--cor-superficie-2);
+  }
+
+  .farol-seta {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-left: auto;
+    fill: none;
+    stroke: var(--cor-texto-suave);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 
   .farol-luz {
     flex: none;

@@ -24,6 +24,7 @@ class AvisoVencimentoAcesso extends Notification
         $vence = $this->empresa->acesso_ate->format('d/m/Y');
         $bloqueia = $this->empresa->bloqueiaEm()->format('d/m/Y');
         $contato = config('plataforma.nome');
+        $faturas = rtrim(config('app.painel_url'), '/').'/assinatura';
 
         $mensagem = (new MailMessage)->greeting("Olá, {$notifiable->nome}!");
 
@@ -31,13 +32,15 @@ class AvisoVencimentoAcesso extends Notification
             return $mensagem
                 ->subject("O acesso da {$this->empresa->nome} vence em {$dias} dia(s)")
                 ->line("O plano da {$this->empresa->nome} no sistema da barbearia vai até {$vence}.")
-                ->line("Para não ter a agenda interrompida, fale com a {$contato} e renove antes do vencimento.");
+                ->line('Para não ter a agenda interrompida, pague a próxima fatura por Pix pelo painel antes do vencimento.')
+                ->action('Ver minhas faturas', $faturas);
         }
 
         return $mensagem
             ->subject($dias === 0 ? "O acesso da {$this->empresa->nome} vence hoje" : "O acesso da {$this->empresa->nome} venceu")
             ->line("O plano da {$this->empresa->nome} vence em {$vence}.")
             ->line("O sistema continua funcionando até {$bloqueia}. Depois disso, o painel e o agendamento online ficam bloqueados até a renovação.")
-            ->line("Para renovar, fale com a {$contato}. Nenhum dado é apagado.");
+            ->line("Para renovar, pague a fatura por Pix pelo painel ou fale com a {$contato}. Nenhum dado é apagado.")
+            ->action('Ver minhas faturas', $faturas);
     }
 }

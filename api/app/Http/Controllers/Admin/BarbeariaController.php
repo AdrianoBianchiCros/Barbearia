@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Assinatura;
 use App\Models\Empresa;
+use App\Models\Fatura;
 use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
+use App\Services\Faturas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -44,7 +46,12 @@ class BarbeariaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return response()->json(['barbearias' => $empresas->map(fn (Empresa $e) => $this->resumo($e))->values()]);
+        // Barbearias cujo dono avisou que pagou e aguardam a confirmação.
+        $informadas = Fatura::where('status', 'informada')->pluck('empresa_id')->flip();
+
+        return response()->json(['barbearias' => $empresas->map(fn (Empresa $e) => $this->resumo($e) + [
+            'pagamento_informado' => $informadas->has($e->id),
+        ])->values()]);
     }
 
     public function show(Empresa $empresa): JsonResponse
@@ -57,7 +64,18 @@ class BarbeariaController extends Controller
         return response()->json($this->resumo($empresa) + [
             'assinaturas' => $empresa->assinaturas,
             'total_usuarios' => User::where('empresa_id', $empresa->id)->count(),
+            'proxima_fatura' => app(Faturas::class)->proxima($empresa),
         ]);
+    }
+
+    /** Pix conferido no banco: a fatura vira uma contratação e o acesso é estendido. */
+    public function confirmarFatura(Request $request, Fatura $fatura, Faturas $faturas): JsonResponse
+    {
+        abort_unless(in_array($fatura->status, Fatura::EM_ABERTO, true), 422, 'Esta fatura não está mais em aberto.');
+
+        $faturas->confirmar($fatura, $request->user());
+
+        return $this->show(Empresa::findOrFail($fatura->empresa_id));
     }
 
     /**

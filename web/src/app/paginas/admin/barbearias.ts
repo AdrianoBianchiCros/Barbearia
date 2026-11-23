@@ -10,6 +10,9 @@ import { mensagemDeErro } from '../../core/erros';
 @Component({
   selector: 'app-admin-barbearias',
   imports: [FormsModule, RouterLink, DatePipe, CurrencyPipe],
+  styles: `
+    .pix-informado { color: var(--color-tangerine); font-weight: 600; }
+  `,
   template: `
     <div class="cabecalho-pagina">
       <div>
@@ -43,7 +46,10 @@ import { mensagemDeErro } from '../../core/erros';
               <tr>
                 <td><strong>{{ b.nome }}</strong><br /><small class="texto-suave">/{{ b.slug }}</small></td>
                 <td>{{ b.dono?.nome ?? '—' }}<br /><small class="texto-suave">{{ b.dono?.email }}</small></td>
-                <td><span class="etiqueta" [class]="situacoes[b.acesso.situacao].classe">{{ situacoes[b.acesso.situacao].rotulo }}</span></td>
+                <td>
+                  <span class="etiqueta" [class]="situacoes[b.acesso.situacao].classe">{{ situacoes[b.acesso.situacao].rotulo }}</span>
+                  @if (b.pagamento_informado) {<br /><small class="pix-informado">Pix informado: confirmar</small>}
+                </td>
                 <td>
                   @if (b.acesso.vence_em) {
                     {{ b.acesso.vence_em + 'T12:00:00' | date: 'dd/MM/yyyy' }}

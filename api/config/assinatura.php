@@ -23,6 +23,17 @@ return [
         '12m' => ['rotulo' => '12 meses', 'meses' => 12],
     ],
 
+    /*
+     * Pix para o dono pagar a mensalidade pelo painel (QR Code gerado pelo sistema, sem API do banco).
+     * Chave como está cadastrada no banco: celular com +55 (ex.: +5511999990000), e-mail, CPF/CNPJ só
+     * com números ou chave aleatória. Sem chave, a tela de faturas mostra só o histórico.
+     */
+    'pix' => [
+        'chave' => env('PIX_CHAVE'),
+        'recebedor' => env('PIX_RECEBEDOR', env('PLATAFORMA_NOME', 'ABianchi Tech')),
+        'cidade' => env('PIX_CIDADE', 'SAO PAULO'),
+    ],
+
     'formas_pagamento' => [
         'pix' => 'Pix',
         'boleto' => 'Boleto',

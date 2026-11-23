@@ -35,7 +35,32 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 150 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 159 testes na API · 9 testes no painel*
+
+- **Faturas e pagamento por Pix no painel do dono (23/11/2026, ainda não publicado):** o farol "Vence em…" do menu
+  (e a faixa de aviso de vencimento) virou botão para **`/assinatura` ("Minha assinatura")**, só do dono: a
+  **próxima fatura** (repete período e valor da última contratação; vence em `acesso_ate` e renova a partir do dia
+  seguinte) com o botão **"Pagar"**, que mostra o **QR Code Pix** e o "copia e cola", e a lista das **faturas pagas**
+  (as contratações). Decisão do dono do produto: **Pix pela chave do Nubank, sem gateway** (o Nubank não tem API de
+  cobrança), então **não há boleto** e a baixa é manual: o dono clica **"Já paguei"** (fatura fica "informada" e os
+  administradores recebem e-mail `PagamentoInformado`), o administrador confere o extrato e clica **"Confirmar
+  recebimento e renovar"** no detalhe da barbearia (a lista mostra "Pix informado: confirmar"); isso grava a
+  contratação (forma Pix) e estende o acesso. Sem fatura para teste de 7 dias, cortesia (valor zero), sem prazo ou
+  suspensa. Se o administrador renovar por fora, a fatura antiga é cancelada e outra é gerada.
+  - Código Pix gerado pelo próprio sistema (`App\Services\PixCopiaECola`, BR Code estático com valor e
+    identificador `FAT…`, CRC16 conferido com o exemplo do manual do Banco Central); QR Code desenhado no painel
+    (biblioteca `qrcode` do npm). Tabela nova `faturas` (migração `2026_11_23_000003`), `App\Services\Faturas`.
+    API: `GET /api/assinatura`, `POST /api/assinatura/faturas/{id}/pix` e `/informar-pagamento`;
+    `POST /api/admin/faturas/{id}/confirmar`.
+  - **Para usar em produção:** no `.env` do servidor, `PIX_CHAVE` (chave do Nubank como está no banco: celular com
+    `+55`, e-mail, CNPJ só números ou chave aleatória), `PIX_RECEBEDOR` e `PIX_CIDADE`, depois
+    `config:clear && config:cache`. Sem `PIX_CHAVE` a tela mostra só o histórico. **Testar um Pix de verdade** lendo o
+    QR Code no app do banco antes de avisar os clientes.
+  - O e-mail de vencimento ao dono ganhou o botão "Ver minhas faturas".
+  - **Limitação:** depois da carência o login é bloqueado, então o dono só paga pelo painel até o fim da carência;
+    depois disso, a renovação volta a ser pelo administrador. Para boleto e baixa automática, falta um gateway
+    (ex.: Asaas repassando ao Nubank).
+
 
 - **Excluir barbearia na administração (23/11/2026, ainda não publicado):** seção "Excluir barbearia" no fim do
   detalhe, com confirmação ("Tem certeza…?"). `DELETE /api/admin/barbearias/{id}` **tira do ar** (decisão do dono do
@@ -204,6 +229,8 @@ Para acessar:
 - Exclusão lógica (soft delete) nos cadastros.
 
 ### Venda do SaaS — área do administrador (`/painel/admin`)
+- **Faturas no painel do dono** (`/assinatura`, aberta pelo farol do vencimento): próxima fatura com Pix (QR Code e
+  copia e cola pela chave Nubank), "Já paguei", faturas pagas; o administrador confirma o recebimento e o acesso renova.
 - Administradores da plataforma em tabela própria (`administradores`), criados por `php artisan admin:criar`;
   token de administrador não entra no painel das barbearias e vice-versa.
 - Cadastro da barbearia com dono (senha provisória), período, pagamento, valor e contrato anexado (disco privado).
@@ -332,7 +359,8 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 ### Etapa 5 — SaaS comercial
 - ✅ **Área do administrador:** cadastro da barbearia com contrato, período pago (teste, 1, 3, 6, 12 meses),
   renovação, suspensão, avisos de vencimento e bloqueio depois da carência (10/11/2026)
-- ⬜ Landing page de vendas do SaaS e cobrança recorrente automática por gateway (hoje o pagamento é registrado à mão)
+- ✅ Faturas no painel do dono com pagamento por Pix (QR Code pela chave Nubank) e confirmação pelo administrador
+- ⬜ Landing page de vendas do SaaS e cobrança automática por gateway (boleto e baixa automática do Pix; hoje o administrador confirma o Pix à mão)
   (cumprindo arrependimento de 7 dias, cancelamento pelo mesmo canal, aviso de renovação e preço total: veja `LGPD.md`)
 - ⬜ Tela "Minha senha" no painel para trocar a senha a qualquer momento (a provisória já é trocada no primeiro login)
 - ⬜ Cota de mensagens do WhatsApp por plano (a contagem mensal já aparece no painel)

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AgendamentoController;
+use App\Http\Controllers\AssinaturaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarbeiroController;
 use App\Http\Controllers\BloqueioAgendaController;
@@ -66,6 +67,7 @@ Route::prefix('admin')->group(function () {
         Route::post('barbearias/{empresa}/nova-senha', [Admin\BarbeariaController::class, 'novaSenha']);
         Route::delete('barbearias/{empresa}', [Admin\BarbeariaController::class, 'excluir']);
         Route::get('assinaturas/{assinatura}/contrato', [Admin\BarbeariaController::class, 'contrato']);
+        Route::post('faturas/{fatura}/confirmar', [Admin\BarbeariaController::class, 'confirmarFatura']);
     });
 });
 
@@ -110,6 +112,12 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         // Dono: configurações da barbearia, preços, equipe e comissões
         Route::middleware('perfil:dono')->group(function () {
             Route::put('empresa', [EmpresaController::class, 'update']);
+
+            // Mensalidade: faturas pagas, a próxima e o Pix
+            Route::get('assinatura', [AssinaturaController::class, 'show']);
+            Route::post('assinatura/faturas/{fatura}/pix', [AssinaturaController::class, 'pix']);
+            Route::post('assinatura/faturas/{fatura}/informar-pagamento', [AssinaturaController::class, 'informarPagamento']);
+
             Route::post('empresa/imagens/{tipo}', [EmpresaController::class, 'enviarImagem']);
             Route::delete('empresa/imagens/{tipo}', [EmpresaController::class, 'removerImagem']);
             Route::get('whatsapp', [WhatsappController::class, 'show']);

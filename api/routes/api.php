@@ -96,6 +96,8 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
         Route::get('agenda/horarios', [AgendamentoController::class, 'horarios']);
         Route::post('agendamentos', [AgendamentoController::class, 'store']);
         Route::put('agendamentos/{agendamento}', [AgendamentoController::class, 'update']);
+        Route::post('agendamentos/{agendamento}/enviar-confirmacao', [AgendamentoController::class, 'enviarConfirmacao'])
+            ->middleware('throttle:20,1');
 
         // Leitura: dono e recepção
         Route::get('empresa', [EmpresaController::class, 'show']);

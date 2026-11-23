@@ -295,6 +295,9 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
             <dt>WhatsApp</dt>
             <dd><a [href]="'https://wa.me/55' + sel.ag.cliente!.telefone" target="_blank" rel="noopener">{{ sel.ag.cliente!.telefone | telefone }}</a></dd>
           }
+          @if (sel.ag.cliente?.email) {
+            <dt>E-mail</dt><dd>{{ sel.ag.cliente!.email }}</dd>
+          }
           @if (sel.ag.cliente?.observacoes) {
             <dt>Preferências</dt><dd>{{ sel.ag.cliente!.observacoes }}</dd>
           }
@@ -306,6 +309,14 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         @if (podeAlterar(sel.barbeiro)) {
           <div class="acoes-agendamento">
             @if (sel.ag.status === 'agendado' || sel.ag.status === 'confirmado') {
+              @if (pedindoEmail()) {
+                <label class="campo"><span>E-mail do cliente</span>
+                  <input type="email" [(ngModel)]="emailConfirmacao" name="emailConfirmacao" placeholder="cliente@exemplo.com" (keyup.enter)="enviarConfirmacao(sel.ag)" />
+                </label>
+              }
+              <button type="button" class="botao" [disabled]="enviandoEmail()" (click)="enviarConfirmacao(sel.ag)">
+                {{ enviandoEmail() ? 'Enviando…' : 'Enviar confirmação por e-mail' }}
+              </button>
               <button type="button" class="botao botao-secundario" (click)="remarcar(sel.ag, sel.barbeiro)">Remarcar</button>
             }
             @if (sel.ag.status === 'em_atendimento' && podeReceber) {
@@ -380,6 +391,9 @@ export class Agenda implements OnInit, OnDestroy {
   private abrirAoCarregar: number | null = null;
   protected readonly selecionado = signal<{ ag: AgendamentoDoDia; barbeiro: ColunaBarbeiro } | null>(null);
   protected readonly alterando = signal(false);
+  protected readonly enviandoEmail = signal(false);
+  protected readonly pedindoEmail = signal(false);
+  protected emailConfirmacao = '';
   protected readonly formulario = signal<InicioFormulario | null>(null);
   /** Valor previsto começa oculto (tela da recepção fica à vista dos clientes). */
   protected readonly mostrarPrevisto = signal(false);
@@ -600,7 +614,33 @@ export class Agenda implements OnInit, OnDestroy {
   }
 
   abrir(ag: AgendamentoDoDia, barbeiro: ColunaBarbeiro): void {
+    this.pedindoEmail.set(false);
+    this.emailConfirmacao = '';
     this.selecionado.set({ ag, barbeiro });
+  }
+
+  /** Sem e-mail no cadastro, primeiro mostra o campo; o e-mail digitado fica gravado no cliente. */
+  enviarConfirmacao(ag: AgendamentoDoDia): void {
+    const email = this.emailConfirmacao.trim();
+    if (!ag.cliente?.email && !email) {
+      if (this.pedindoEmail()) this.aviso.erro('Informe o e-mail do cliente.');
+      this.pedindoEmail.set(true);
+      return;
+    }
+    this.enviandoEmail.set(true);
+    this.api.enviarConfirmacao(ag.id, email || null).subscribe({
+      next: (r) => {
+        this.enviandoEmail.set(false);
+        this.pedindoEmail.set(false);
+        this.emailConfirmacao = '';
+        if (ag.cliente) ag.cliente.email = r.email;
+        this.aviso.sucesso(`Confirmação enviada para ${r.email}.`);
+      },
+      error: (e) => {
+        this.enviandoEmail.set(false);
+        this.aviso.erro(mensagemDeErro(e));
+      },
+    });
   }
 
   digitarBusca(valor: string): void {
@@ -637,7 +677,7 @@ export class Agenda implements OnInit, OnDestroy {
       const ag = b.agendamentos.find((x) => x.id === this.abrirAoCarregar);
       if (ag) {
         this.abrirAoCarregar = null;
-        this.selecionado.set({ ag, barbeiro: b });
+        this.abrir(ag, b);
         setTimeout(() => this.rolarPara(ag));
         return;
       }

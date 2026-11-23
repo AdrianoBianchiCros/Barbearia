@@ -13,7 +13,7 @@ export interface AgendamentoDoDia {
   origem: 'recepcao' | 'link_publico' | 'whatsapp';
   valor_total: string;
   observacoes: string | null;
-  cliente: { id: number; nome: string; telefone: string; observacoes: string | null } | null;
+  cliente: { id: number; nome: string; telefone: string; email?: string | null; observacoes: string | null } | null;
   servicos: string[];
   servico_ids: number[];
   comanda: { id: number; status: 'aberta' | 'paga' | 'cancelada'; total: string } | null;
@@ -133,6 +133,11 @@ export class AgendaService {
 
   remarcar(id: number, dados: DadosAgendamento): Observable<{ id: number }> {
     return this.http.put<{ id: number }>(`${environment.apiUrl}/agendamentos/${id}`, dados);
+  }
+
+  /** Manda ao cliente o e-mail com os dados do horário; o e-mail informado fica no cadastro. */
+  enviarConfirmacao(id: number, email: string | null): Observable<{ email: string }> {
+    return this.http.post<{ email: string }>(`${environment.apiUrl}/agendamentos/${id}/enviar-confirmacao`, { email });
   }
 
   alterarStatus(id: number, status: StatusAgendamento): Observable<{ id: number; status: StatusAgendamento }> {

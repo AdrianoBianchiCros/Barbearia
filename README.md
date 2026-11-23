@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 163 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 165 testes na API · 9 testes no painel*
 
 - **Confirmação do horário por e-mail para o cliente (23/11/2026, ainda não publicado):** enquanto o WhatsApp oficial
   não fica pronto, o cliente que informa e-mail recebe a confirmação ao marcar e ao remarcar (página da barbearia,
@@ -48,6 +48,10 @@ Para acessar:
   linha e passou para a **versão 23/11/2026**. Testes em `EmailClienteTest`. **Depende do cron do `schedule:run`**
   em produção (é ele que processa a fila). Decidido após comparar WhatsApp oficial (Meta/parceiros), SMS e e-mail:
   e-mail não tem custo por mensagem.
+  **Botão "Enviar confirmação por e-mail"** no detalhe do agendamento na agenda (dono e recepção, horários agendados
+  ou confirmados que ainda vão acontecer): manda o mesmo e-mail na hora; se o cliente não tem e-mail, o botão abre o
+  campo para digitar e o e-mail fica gravado no cadastro (`POST /api/agendamentos/{id}/enviar-confirmacao`). O
+  detalhe também mostra o e-mail do cliente.
 
 - **Faturas e pagamento por Pix no painel do dono (23/11/2026, ainda não publicado):** o farol "Vence em…" do menu
   (e a faixa de aviso de vencimento) virou botão para **`/assinatura` ("Minha assinatura")**, só do dono: a
@@ -326,6 +330,7 @@ Para acessar:
 ### E-mail ao cliente
 - **Confirmação** ao marcar ou remarcar (página, painel e link do cliente), quando o cliente tem e-mail; sai pela fila,
   com o nome da barbearia no remetente e o botão para o link `/a/{token}`.
+- **Botão "Enviar confirmação por e-mail"** no detalhe do agendamento na agenda (pede o e-mail se o cliente não tiver).
 
 ### LGPD (detalhes em [`LGPD.md`](LGPD.md))
 - Política de privacidade (`/privacidade`) e Termos de uso (`/termos`), com versão.
@@ -334,7 +339,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 163 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 165 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

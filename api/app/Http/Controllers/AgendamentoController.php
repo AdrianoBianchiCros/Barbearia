@@ -164,6 +164,32 @@ class AgendamentoController extends Controller
         return response()->json($this->resposta($agendamento));
     }
 
+    /**
+     * Botão "Enviar confirmação por e-mail" no detalhe do agendamento. O e-mail informado
+     * aqui fica gravado no cadastro do cliente.
+     */
+    public function enviarConfirmacao(Request $request, Agendamento $agendamento, AvisoAgendamentoEmail $avisoEmail): JsonResponse
+    {
+        if (! in_array($agendamento->status, ['agendado', 'confirmado'], true) || ! $agendamento->inicio->isFuture()) {
+            return response()->json(['message' => 'Só é possível enviar a confirmação de horários que ainda vão acontecer.'], 422);
+        }
+
+        $dados = $request->validate(['email' => ['nullable', 'email', 'max:180']], [], ['email' => 'e-mail do cliente']);
+        $cliente = $agendamento->cliente()->withTrashed()->firstOrFail();
+        if (! empty($dados['email']) && $cliente->email !== $dados['email']) {
+            $cliente->update(['email' => $dados['email']]);
+        }
+        if (! $cliente->email) {
+            throw ValidationException::withMessages(['email' => 'Informe o e-mail do cliente.']);
+        }
+
+        if (! $avisoEmail->enviar($agendamento, 'confirmacao')) {
+            return response()->json(['message' => 'Não foi possível enviar: o cadastro deste cliente foi excluído.'], 422);
+        }
+
+        return response()->json(['email' => $cliente->email]);
+    }
+
     private function validar(Request $request, bool $novo): array
     {
         if ($request->has('novo_cliente.telefone')) {

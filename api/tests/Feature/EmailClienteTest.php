@@ -163,4 +163,40 @@ class EmailClienteTest extends TestCase
         $tipos = array_map(fn ($n) => $n->dados['tipo'], $this->enviadosPara('pedro@exemplo.com'));
         $this->assertSame(['confirmacao', 'remarcacao'], $tipos);
     }
+
+    public function test_botao_da_agenda_envia_a_confirmacao_e_grava_o_email_informado(): void
+    {
+        $this->agendar()->assertCreated(); // cliente sem e-mail
+        $id = $this->agendamento()->id;
+        $this->logarComo('recepcao', $this->empresa);
+
+        $this->postJson("/api/agendamentos/{$id}/enviar-confirmacao")
+            ->assertUnprocessable()->assertJsonValidationErrors(['email' => 'Informe o e-mail do cliente.']);
+        Notification::assertNothingSent();
+
+        $this->postJson("/api/agendamentos/{$id}/enviar-confirmacao", ['email' => 'joao@exemplo.com'])
+            ->assertOk()->assertJsonPath('email', 'joao@exemplo.com');
+        $this->assertSame('joao@exemplo.com', $this->naEmpresa($this->empresa, fn () => Cliente::firstOrFail()->email));
+
+        // Com o e-mail já no cadastro, basta clicar de novo.
+        $this->postJson("/api/agendamentos/{$id}/enviar-confirmacao")->assertOk();
+        $this->assertCount(2, $this->enviadosPara('joao@exemplo.com'));
+
+        $this->getJson('/api/agenda/dia?data='.self::DIA)->assertOk()
+            ->assertJsonFragment(['email' => 'joao@exemplo.com']);
+    }
+
+    public function test_botao_da_agenda_recusa_horario_cancelado_e_barbeiro(): void
+    {
+        $this->agendar(['email' => 'joao@exemplo.com'])->assertCreated();
+        $agendamento = $this->agendamento();
+
+        $this->logarComo('barbeiro', $this->empresa);
+        $this->postJson("/api/agendamentos/{$agendamento->id}/enviar-confirmacao")->assertForbidden();
+
+        $this->naEmpresa($this->empresa, fn () => $agendamento->update(['status' => 'cancelado']));
+        $this->logarComo('recepcao', $this->empresa);
+        $this->postJson("/api/agendamentos/{$agendamento->id}/enviar-confirmacao")->assertUnprocessable();
+        $this->assertCount(1, $this->enviadosPara('joao@exemplo.com')); // só a do agendamento
+    }
 }

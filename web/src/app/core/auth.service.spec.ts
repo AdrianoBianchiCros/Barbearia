@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { AuthService } from './auth.service';
+import { AuthService, telaInicial } from './auth.service';
 import { authInterceptor } from './auth.interceptor';
 
 const sessao = {
@@ -103,6 +103,13 @@ describe('AuthService', () => {
 
     expect(auth.sessao()?.usuario.trocar_senha).toBe(false);
     expect(auth.token).toBe('abc');
+  });
+
+  it('cada perfil tem a sua tela inicial', () => {
+    expect(telaInicial(sessao.usuario)).toBe('/agenda');
+    expect(telaInicial({ ...sessao.usuario, perfil: 'recepcao' })).toBe('/agenda');
+    expect(telaInicial({ ...sessao.usuario, perfil: 'barbeiro' })).toBe('/barbeiro');
+    expect(telaInicial({ ...sessao.usuario, perfil: 'barbeiro', trocar_senha: true })).toBe('/trocar-senha');
   });
 
   it('chamadas da área do administrador usam o token do administrador', () => {

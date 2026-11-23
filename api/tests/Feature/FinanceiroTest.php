@@ -10,6 +10,7 @@ use App\Models\Servico;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -61,7 +62,7 @@ class FinanceiroTest extends TestCase
         $this->postJson('/api/caixa/abrir', ['valor_inicial' => $inicial])->assertCreated();
     }
 
-    private function fecharComanda(int $comandaId, array $extra = []): \Illuminate\Testing\TestResponse
+    private function fecharComanda(int $comandaId, array $extra = []): TestResponse
     {
         return $this->postJson("/api/comandas/{$comandaId}/fechar", $extra + [
             'itens' => [
@@ -238,7 +239,8 @@ class FinanceiroTest extends TestCase
         $this->naEmpresa($empresa, fn () => Funcionario::create(['nome' => 'Outro']));
         Sanctum::actingAs($barbeiro);
         $this->getJson('/api/caixa/atual')->assertForbidden();
-        $this->getJson('/api/comissoes')->assertOk()->assertJsonCount(1, 'barbeiros')->assertJsonPath('barbeiros.0.nome', 'Carlos');
+        $this->getJson('/api/comissoes')->assertForbidden();
+        $this->getJson('/api/barbeiro/comissoes')->assertOk()->assertJsonCount(1, 'barbeiros')->assertJsonPath('barbeiros.0.nome', 'Carlos');
 
         Sanctum::actingAs(User::factory()->for($empresa)->perfil('recepcao')->create());
         $this->getJson('/api/caixa/atual')->assertOk();

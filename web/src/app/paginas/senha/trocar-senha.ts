@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
+import { AuthService, telaInicial } from '../../core/auth.service';
 import { AvisoService } from '../../core/aviso.service';
 import { mensagemDeErro } from '../../core/erros';
 import { RodapeLegal } from '../../layout/rodape-legal';
@@ -48,7 +48,7 @@ const senhasIguais = (grupo: AbstractControl): ValidationErrors | null =>
         </div>
 
         <button class="botao" type="submit" [disabled]="salvando()">
-          {{ salvando() ? 'Salvando…' : 'Salvar e abrir a agenda →' }}
+          {{ salvando() ? 'Salvando…' : 'Salvar e continuar →' }}
         </button>
 
         <p class="rodape-cartao"><a href="" (click)="$event.preventDefault(); sair()">Sair</a></p>
@@ -81,9 +81,9 @@ export class TrocarSenha {
     this.erro.set('');
 
     this.auth.trocarSenha(this.form.getRawValue()).subscribe({
-      next: () => {
+      next: (s) => {
         this.aviso.sucesso('Senha criada. Use-a nos próximos acessos.');
-        this.router.navigate(['/agenda']);
+        this.router.navigate([telaInicial(s.usuario)]);
       },
       error: (e) => {
         this.erro.set(mensagemDeErro(e));

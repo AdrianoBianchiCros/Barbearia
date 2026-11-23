@@ -8,7 +8,7 @@ import { podeEditar } from '../../../core/auth.guards';
 import { AvisoService } from '../../../core/aviso.service';
 import { CadastrosService } from '../../../core/cadastros.service';
 import { errosPorCampo, mensagemDeErro } from '../../../core/erros';
-import { BloqueioAgenda, DIAS_SEMANA, FaixaHorario, Funcionario, Servico, VINCULOS } from '../../../core/modelos';
+import { AcessoBarbeiro, BloqueioAgenda, DIAS_SEMANA, FaixaHorario, Funcionario, Servico, VINCULOS } from '../../../core/modelos';
 
 type Aba = 'dados' | 'servicos' | 'expediente' | 'folgas';
 
@@ -99,6 +99,45 @@ interface DiaExpediente {
             <label class="campo-check"><input type="checkbox" formControlName="atende_clientes" /> Atende clientes (aparece na agenda e na página)</label>
             <label class="campo-check"><input type="checkbox" formControlName="ativo" /> Ativo</label>
           </fieldset>
+
+          @if (editavel) {
+            <div class="acesso-barbeiro">
+              <strong>Painel do barbeiro</strong>
+              @if (funcionario(); as f) {
+                <p class="texto-suave pequeno">Pelo painel, {{ f.nome }} vê só a própria agenda e a comissão a receber.</p>
+                <div class="link-painel">
+                  <a [href]="f.painel_barbeiro_url" target="_blank" rel="noopener">{{ f.painel_barbeiro_url }}</a>
+                  <button class="botao-link" type="button" (click)="copiar(f.painel_barbeiro_url, 'Link copiado.')">Copiar link</button>
+                </div>
+                @if (f.usuario_id) {
+                  <p class="pequeno">Acesso liberado para <strong>{{ f.email }}</strong>.</p>
+                  <button class="botao botao-secundario botao-auto" type="button" (click)="liberarAcesso()" [disabled]="salvando()">Gerar nova senha e reenviar</button>
+                } @else if (f.email) {
+                  <button class="botao botao-secundario botao-auto" type="button" (click)="liberarAcesso()" [disabled]="salvando()">Liberar acesso e enviar por e-mail</button>
+                } @else {
+                  <p class="texto-suave pequeno">Preencha o e-mail e salve para liberar o acesso.</p>
+                }
+              } @else {
+                <p class="texto-suave pequeno">Com o e-mail preenchido, o barbeiro recebe por e-mail o link do painel dele (agenda e comissão) e uma senha provisória.</p>
+              }
+
+              @if (acesso(); as a) {
+                <div class="cartao-senha">
+                  @if (a.email_enviado) {
+                    <p class="pequeno">Enviamos o link e a senha provisória para <strong>{{ a.email }}</strong>. No primeiro acesso, o barbeiro cria a própria senha.</p>
+                  } @else {
+                    <p class="alerta" role="alert">Não foi possível enviar o e-mail agora. Mande a senha pelo WhatsApp: ela não aparece de novo.</p>
+                  }
+                  <dl>
+                    <dt>Endereço</dt><dd>{{ a.painel_url }}</dd>
+                    <dt>E-mail</dt><dd>{{ a.email }}</dd>
+                    <dt>Senha provisória</dt><dd><code>{{ a.senha_provisoria }}</code></dd>
+                  </dl>
+                  <button class="botao botao-secundario botao-auto" type="button" (click)="copiar(mensagemAcesso(a), 'Mensagem copiada.')">Copiar mensagem para o WhatsApp</button>
+                </div>
+              }
+            </div>
+          }
 
           @if (editavel) {
             <div class="rodape-secao">
@@ -235,6 +274,8 @@ export class Barbeiro implements OnInit {
   protected readonly linhasServico = signal<LinhaServico[]>([]);
   protected readonly expediente = signal<DiaExpediente[]>([]);
   protected readonly bloqueios = signal<BloqueioAgenda[]>([]);
+  /** Senha provisória do barbeiro recém-gerada (aparece uma única vez). */
+  protected readonly acesso = signal<AcessoBarbeiro | null>(null);
 
   protected readonly form = this.fb.group({
     nome: ['', [Validators.required, Validators.maxLength(120)]],
@@ -255,8 +296,11 @@ export class Barbeiro implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.novo()) return;
-    const id = Number(this.id());
+    if (!this.novo()) this.carregar(Number(this.id()));
+  }
+
+  /** A mesma tela é reaproveitada de "novo" para o barbeiro recém-cadastrado: por isso carrega pelo id. */
+  private carregar(id: number): void {
     forkJoin({
       funcionario: this.api.buscarFuncionario(id),
       servicos: this.api.listarServicos(),
@@ -329,7 +373,9 @@ export class Barbeiro implements OnInit {
         this.aviso.sucesso('Dados salvos.');
         if (!atual) {
           this.aviso.sucesso('Barbeiro cadastrado. Agora defina os serviços e o expediente.');
-          this.router.navigate(['/configuracoes/barbeiros', f.id]);
+          this.acesso.set(f.acesso ?? null);
+          if (f.acesso_erro) this.aviso.erro(`Acesso ao painel não liberado: ${f.acesso_erro}`);
+          this.router.navigate(['/configuracoes/barbeiros', f.id]).then(() => this.carregar(f.id));
         } else {
           this.aplicar(f);
         }
@@ -422,6 +468,40 @@ export class Barbeiro implements OnInit {
       next: () => this.bloqueios.update((lista) => lista.filter((x) => x.id !== b.id)),
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
     });
+  }
+
+  liberarAcesso(): void {
+    const f = this.funcionario();
+    if (!f) return;
+    if (f.usuario_id && !confirm(`Gerar uma nova senha para ${f.nome}? A senha atual deixa de valer e o acesso aberto é encerrado.`)) return;
+    this.iniciarEnvio();
+    this.api.liberarAcessoBarbeiro(f.id).subscribe({
+      next: (r) => {
+        this.salvando.set(false);
+        this.aplicar(r);
+        this.acesso.set(r.acesso ?? null);
+      },
+      error: (e) => this.falhou(e),
+    });
+  }
+
+  /** Texto pronto para o dono mandar ao barbeiro pelo WhatsApp. */
+  mensagemAcesso(a: AcessoBarbeiro): string {
+    const nome = this.funcionario()?.nome ?? '';
+    return `Olá, ${nome}! Seu acesso ao painel do barbeiro está liberado: lá você vê a sua agenda e a comissão a receber.
+
+Endereço: ${a.painel_url}
+E-mail: ${a.email}
+Senha provisória: ${a.senha_provisoria}
+
+No primeiro acesso, o sistema pede para você criar a sua própria senha.`;
+  }
+
+  copiar(texto: string, sucesso: string): void {
+    navigator.clipboard?.writeText(texto).then(
+      () => this.aviso.sucesso(sucesso),
+      () => this.aviso.erro('Não foi possível copiar. Selecione o texto manualmente.'),
+    ) ?? this.aviso.erro('Não foi possível copiar. Selecione o texto manualmente.');
   }
 
   enviarFoto(evento: Event): void {

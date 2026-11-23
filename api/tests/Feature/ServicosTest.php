@@ -40,13 +40,14 @@ class ServicosTest extends TestCase
             ->assertJsonValidationErrors(['nome', 'duracao_minutos', 'preco']);
     }
 
-    public function test_recepcao_e_barbeiro_so_consultam(): void
+    public function test_recepcao_so_consulta_e_barbeiro_nem_consulta(): void
     {
-        foreach (['recepcao', 'barbeiro'] as $perfil) {
-            $this->logarComo($perfil);
-            $this->getJson('/api/servicos')->assertOk();
-            $this->postJson('/api/servicos', ['nome' => 'X', 'duracao_minutos' => 30, 'preco' => 10])->assertForbidden();
-        }
+        $this->logarComo('recepcao');
+        $this->getJson('/api/servicos')->assertOk();
+        $this->postJson('/api/servicos', ['nome' => 'X', 'duracao_minutos' => 30, 'preco' => 10])->assertForbidden();
+
+        $this->logarComo('barbeiro');
+        $this->getJson('/api/servicos')->assertForbidden();
     }
 
     public function test_nao_acessa_servico_de_outra_barbearia(): void

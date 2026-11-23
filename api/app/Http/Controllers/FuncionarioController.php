@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Funcionario;
+use App\Services\AcessoBarbeiro;
 use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Barbeiros e demais funcionários: dados, serviços que realizam, expediente e foto.
+ * Barbeiros e demais funcionários: dados, serviços que realizam, expediente, foto
+ * e o acesso do barbeiro ao painel dele (agenda e comissão).
  */
 class FuncionarioController extends Controller
 {
@@ -28,11 +30,27 @@ class FuncionarioController extends Controller
         return response()->json($funcionarios->map(fn ($f) => $this->formatar($f)));
     }
 
-    public function store(Request $request): JsonResponse
+    /**
+     * Cadastra o barbeiro. Com e-mail, já libera o acesso ao painel dele e envia a senha provisória;
+     * se o e-mail já for de outro acesso, o cadastro continua e o dono vê o aviso.
+     */
+    public function store(Request $request, AcessoBarbeiro $acessos): JsonResponse
     {
-        $funcionario = Funcionario::create($this->validar($request));
+        $funcionario = Funcionario::create($this->validar($request))->refresh(); // carrega os padrões do banco (ex.: ativo)
 
-        return response()->json($this->formatar($funcionario->load(self::RELACOES)), 201);
+        [$acesso, $acessoErro] = [null, null];
+        if ($funcionario->email) {
+            try {
+                $acesso = $acessos->liberar($funcionario);
+            } catch (ValidationException $e) {
+                $acessoErro = collect($e->errors())->flatten()->first();
+            }
+        }
+
+        return response()->json($this->formatar($funcionario->fresh()->load(self::RELACOES)) + [
+            'acesso' => $acesso,
+            'acesso_erro' => $acessoErro,
+        ], 201);
     }
 
     public function show(Funcionario $funcionario): JsonResponse
@@ -40,18 +58,34 @@ class FuncionarioController extends Controller
         return response()->json($this->formatar($funcionario->load(self::RELACOES)));
     }
 
-    public function update(Request $request, Funcionario $funcionario): JsonResponse
+    public function update(Request $request, Funcionario $funcionario, AcessoBarbeiro $acessos): JsonResponse
     {
-        $funcionario->update($this->validar($request));
+        $dados = $this->validar($request);
+        DB::transaction(function () use ($funcionario, $dados, $acessos) {
+            $funcionario->update($dados);
+            $acessos->sincronizar($funcionario);
+        });
 
         return response()->json($this->formatar($funcionario->load(self::RELACOES)));
     }
 
-    public function destroy(Funcionario $funcionario): JsonResponse
+    public function destroy(Funcionario $funcionario, AcessoBarbeiro $acessos): JsonResponse
     {
         $funcionario->delete();
+        $acessos->sincronizar($funcionario); // barbeiro excluído não entra mais no painel dele
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Libera o acesso do barbeiro ao painel dele ou gera uma nova senha provisória.
+     * A senha vai por e-mail e aparece uma única vez para o dono.
+     */
+    public function acesso(Funcionario $funcionario, AcessoBarbeiro $acessos): JsonResponse
+    {
+        $acesso = $acessos->liberar($funcionario);
+
+        return response()->json($this->formatar($funcionario->fresh()->load(self::RELACOES)) + ['acesso' => $acesso]);
     }
 
     /**
@@ -153,6 +187,7 @@ class FuncionarioController extends Controller
         $funcionario->append('foto_url');
 
         return array_merge($funcionario->toArray(), [
+            'painel_barbeiro_url' => AcessoBarbeiro::link(),
             'servicos' => $funcionario->servicos->sortBy('nome')->map(fn ($s) => [
                 'id' => $s->id,
                 'nome' => $s->nome,

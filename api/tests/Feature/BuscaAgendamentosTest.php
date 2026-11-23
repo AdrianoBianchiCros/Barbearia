@@ -6,6 +6,7 @@ use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Funcionario;
+use App\Models\Servico;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -48,7 +49,7 @@ class BuscaAgendamentosTest extends TestCase
     private function cenario(User $usuario): array
     {
         return $this->naEmpresa($usuario->empresa_id, function () {
-            \App\Models\Servico::create(['nome' => 'Corte', 'duracao_minutos' => 30, 'preco' => 45]);
+            Servico::create(['nome' => 'Corte', 'duracao_minutos' => 30, 'preco' => 45]);
             $carlos = Funcionario::create(['nome' => 'Carlos']);
             $joao = Cliente::create(['nome' => 'João Pereira', 'telefone' => '11988887777']);
             $ana = Cliente::create(['nome' => 'Ana Souza', 'telefone' => '11911112222']);
@@ -96,7 +97,7 @@ class BuscaAgendamentosTest extends TestCase
         $outro = User::factory()->for(Empresa::factory())->create();
         $this->cenario($outro);
 
-        $this->logarComo('barbeiro');
+        $this->logarComo('recepcao');
 
         $this->getJson('/api/agenda/busca?q=j')->assertUnprocessable();
         $this->getJson('/api/agenda/busca?q=joão')->assertOk()

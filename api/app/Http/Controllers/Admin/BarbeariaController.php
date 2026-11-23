@@ -78,7 +78,7 @@ class BarbeariaController extends Controller
             'documento' => 'CNPJ/CPF',
         ]);
 
-        $senha = $this->senhaProvisoria();
+        $senha = User::gerarSenhaProvisoria();
         $contrato = $this->guardarContrato($request->file('contrato'));
 
         try {
@@ -171,7 +171,7 @@ class BarbeariaController extends Controller
         $dono = User::where('empresa_id', $empresa->id)->where('perfil', 'dono')->orderBy('id')->first();
         abort_unless($dono, 404, 'Esta barbearia não tem um dono cadastrado.');
 
-        $senha = $this->senhaProvisoria();
+        $senha = User::gerarSenhaProvisoria();
         $dono->forceFill(['password' => $senha, 'trocar_senha' => true])->save();
         $dono->tokens()->delete();
 
@@ -248,12 +248,6 @@ class BarbeariaController extends Controller
         if ($contrato) {
             Storage::disk('local')->delete($contrato['path']);
         }
-    }
-
-    /** Letras e números, sem símbolos, para ditar ou mandar por WhatsApp sem confusão. */
-    private function senhaProvisoria(): string
-    {
-        return Str::password(10, symbols: false);
     }
 
     /** Envia a senha provisória ao dono por e-mail e devolve os dados para o administrador ver (uma única vez). */

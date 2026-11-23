@@ -101,16 +101,16 @@ class AgendaDiaTest extends TestCase
             ->assertJsonPath('primeiros_passos', ['servicos' => true, 'barbeiros' => true, 'clientes' => true]);
     }
 
-    public function test_informa_o_barbeiro_do_usuario_logado(): void
+    public function test_barbeiro_nao_ve_a_agenda_geral(): void
     {
+        // O barbeiro usa o painel dele (BarbeiroPainelTest), só com os próprios atendimentos.
         $usuario = $this->logarComo('barbeiro');
-        $d = $this->montarBarbearia($usuario);
+        $this->montarBarbearia($usuario);
 
-        $this->getJson('/api/agenda/dia?data=2030-01-15')->assertOk()
-            ->assertJsonPath('meu_funcionario_id', $d['carlos']->id);
+        $this->getJson('/api/agenda/dia?data=2030-01-15')->assertForbidden();
     }
 
-    public function test_altera_status_e_barbeiro_so_altera_os_proprios(): void
+    public function test_altera_status_e_barbeiro_nao_altera(): void
     {
         $barbeiro = $this->logarComo('barbeiro');
         $d = $this->montarBarbearia($barbeiro);
@@ -121,14 +121,15 @@ class AgendaDiaTest extends TestCase
             'fim' => '2030-01-15 15:30:00',
         ]));
 
-        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'em_atendimento'])
-            ->assertOk()->assertJsonPath('status', 'em_atendimento');
-        $this->patchJson("/api/agendamentos/{$deOutro->id}/status", ['status' => 'concluido'])->assertForbidden();
-        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'inventado'])
-            ->assertUnprocessable();
+        // Nem o próprio atendimento: o painel do barbeiro é só consulta.
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'em_atendimento'])->assertForbidden();
 
         // Recepção altera qualquer um, e cancelar registra a data
         Sanctum::actingAs(User::factory()->for($barbeiro->empresa)->perfil('recepcao')->create());
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'em_atendimento'])
+            ->assertOk()->assertJsonPath('status', 'em_atendimento');
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'inventado'])
+            ->assertUnprocessable();
         $this->patchJson("/api/agendamentos/{$deOutro->id}/status", ['status' => 'cancelado'])->assertOk();
         $this->assertNotNull($deOutro->fresh()->cancelado_em);
     }

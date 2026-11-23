@@ -37,7 +37,22 @@ export interface Funcionario {
   foto_url: string | null;
   servicos: ServicoDoBarbeiro[];
   horarios_trabalho: FaixaHorario[];
+  /** Login do barbeiro no painel dele (nulo enquanto o acesso não foi liberado). */
+  usuario_id: number | null;
+  /** Endereço do painel do barbeiro, para o dono enviar junto com a senha provisória. */
+  painel_barbeiro_url: string;
 }
+
+/** Acesso do barbeiro gerado pelo dono (a senha provisória aparece uma única vez). */
+export interface AcessoBarbeiro {
+  email: string;
+  senha_provisoria: string;
+  painel_url: string;
+  email_enviado: boolean;
+}
+
+/** Resposta do cadastro/liberação: o barbeiro e, quando gerado, o acesso dele. */
+export type FuncionarioComAcesso = Funcionario & { acesso?: AcessoBarbeiro | null; acesso_erro?: string | null };
 
 export interface BloqueioAgenda {
   id: number;

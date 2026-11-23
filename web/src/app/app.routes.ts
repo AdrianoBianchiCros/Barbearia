@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { AuthService } from './core/auth.service';
 import { exigeAdmin, somenteVisitanteAdmin } from './core/admin.guards';
-import { exigeLogin, exigePerfil, exigeTrocaSenha, somenteVisitante } from './core/auth.guards';
+import { exigeBarbeiro, exigeLogin, exigePerfil, exigeTrocaSenha, somenteVisitante } from './core/auth.guards';
 
 export const routes: Routes = [
   {
@@ -71,7 +71,27 @@ export const routes: Routes = [
     loadComponent: () => import('./paginas/senha/redefinir-senha').then((m) => m.RedefinirSenha),
   },
   {
-    // Primeiro acesso com a senha provisória gerada pelo administrador.
+    // Painel do barbeiro: o dono envia este endereço com a senha provisória.
+    path: 'barbeiro',
+    children: [
+      {
+        path: 'login',
+        canActivate: [somenteVisitante],
+        data: { area: 'barbeiro' },
+        title: 'Entrar | Painel do barbeiro',
+        loadComponent: () => import('./paginas/login/login').then((m) => m.Login),
+      },
+      {
+        path: '',
+        pathMatch: 'full',
+        canActivate: [exigeBarbeiro],
+        title: 'Minha agenda | Painel do barbeiro',
+        loadComponent: () => import('./paginas/barbeiro/painel-barbeiro').then((m) => m.PainelBarbeiro),
+      },
+    ],
+  },
+  {
+    // Primeiro acesso com a senha provisória (gerada pelo administrador ou pelo dono).
     path: 'trocar-senha',
     canActivate: [exigeTrocaSenha],
     title: 'Crie sua senha | Barbearia',

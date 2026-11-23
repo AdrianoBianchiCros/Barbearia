@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
+import { AuthService, telaInicial } from '../../core/auth.service';
 import { mensagemDeErro } from '../../core/erros';
 import { PLATAFORMA } from '../../core/plataforma';
 import { RodapeLegal } from '../../layout/rodape-legal';
@@ -14,8 +14,13 @@ import { VerSenha } from '../../layout/ver-senha';
   template: `
     <app-vitrine-acesso>
       <form class="cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
-        <h1 class="marca">{{ saudacao }}.<br /><em>Bora abrir a casa?</em></h1>
-        <p class="subtitulo">Entre para abrir a agenda de hoje da sua barbearia.</p>
+        @if (areaBarbeiro) {
+          <h1 class="marca">{{ saudacao }}.<br /><em>Sua agenda te espera.</em></h1>
+          <p class="subtitulo">Painel do barbeiro: veja os seus horários e a comissão a receber. Entre com o e-mail e a senha que a barbearia enviou.</p>
+        } @else {
+          <h1 class="marca">{{ saudacao }}.<br /><em>Bora abrir a casa?</em></h1>
+          <p class="subtitulo">Entre para abrir a agenda de hoje da sua barbearia.</p>
+        }
 
         @if (acessoVencido && !erro()) {
           <div class="alerta" role="alert">O acesso da barbearia está bloqueado porque o plano venceu. Para renovar, fale com a {{ plataforma.nome }}.</div>
@@ -48,10 +53,12 @@ import { VerSenha } from '../../layout/ver-senha';
         </div>
 
         <button class="botao" type="submit" [disabled]="enviando()">
-          {{ enviando() ? 'Abrindo a agenda…' : 'Entrar e abrir a agenda →' }}
+          {{ enviando() ? 'Abrindo a agenda…' : areaBarbeiro ? 'Entrar e ver minha agenda →' : 'Entrar e abrir a agenda →' }}
         </button>
 
-        <p class="rodape-cartao">O acesso é liberado pela {{ plataforma.nome }} na contratação do plano.</p>
+        <p class="rodape-cartao">
+          {{ areaBarbeiro ? 'O acesso é liberado pelo dono da barbearia.' : 'O acesso é liberado pela ' + plataforma.nome + ' na contratação do plano.' }}
+        </p>
         <app-rodape-legal />
       </form>
     </app-vitrine-acesso>
@@ -61,7 +68,10 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  private readonly parametros = inject(ActivatedRoute).snapshot.queryParamMap;
+  private readonly rota = inject(ActivatedRoute).snapshot;
+  private readonly parametros = this.rota.queryParamMap;
+  /** Entrada do painel do barbeiro (/barbeiro/login): mesmo login, textos do barbeiro. */
+  protected readonly areaBarbeiro = this.rota.data['area'] === 'barbeiro';
   /** Veio da tela de nova senha (/login?senha=alterada). */
   protected readonly senhaAlterada = this.parametros.get('senha') === 'alterada';
   /** A sessão foi encerrada porque o prazo do plano acabou (/login?acesso=vencido). */
@@ -89,7 +99,7 @@ export class Login {
 
     const { email, password } = this.form.getRawValue();
     this.auth.login(email, password).subscribe({
-      next: (s) => this.router.navigate([s.usuario.trocar_senha ? '/trocar-senha' : '/agenda']),
+      next: (s) => this.router.navigate([telaInicial(s.usuario)]),
       error: (e) => {
         this.erro.set(mensagemDeErro(e));
         this.enviando.set(false);

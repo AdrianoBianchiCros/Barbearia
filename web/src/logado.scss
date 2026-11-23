@@ -1091,7 +1091,44 @@ fieldset {
   }
 }
 
-.cartao-acesso {
+// Painel do barbeiro, na ficha do barbeiro (logo abaixo de "Ativo")
+.acesso-barbeiro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-cards);
+  background: var(--cor-superficie-2);
+
+  p {
+    margin: 0;
+  }
+}
+
+.link-painel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
+
+  a {
+    word-break: break-all;
+  }
+}
+
+.cartao-senha {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.cartao-acesso,
+.cartao-senha {
   dl {
     display: grid;
     grid-template-columns: max-content 1fr;

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -42,6 +43,12 @@ class User extends Authenticatable
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    /** Letras e números, sem símbolos, para ditar ou mandar por WhatsApp sem confusão. */
+    public static function gerarSenhaProvisoria(): string
+    {
+        return Str::password(10, symbols: false);
     }
 
     public function temPerfil(string ...$perfis): bool

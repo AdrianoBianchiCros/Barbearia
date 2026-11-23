@@ -10,6 +10,7 @@ use App\Models\Servico;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -62,7 +63,7 @@ class AgendamentosTest extends TestCase
         parent::tearDown();
     }
 
-    private function agendar(array $dados = []): \Illuminate\Testing\TestResponse
+    private function agendar(array $dados = []): TestResponse
     {
         return $this->postJson('/api/agendamentos', $dados + [
             'cliente_id' => $this->cliente->id,
@@ -245,15 +246,12 @@ class AgendamentosTest extends TestCase
         $this->agendar()->assertCreated();
     }
 
-    public function test_barbeiro_so_agenda_na_propria_coluna(): void
+    public function test_barbeiro_nao_agenda_pelo_painel(): void
     {
         $barbeiro = User::factory()->for($this->usuario->empresa)->perfil('barbeiro')->create();
         $this->carlos->update(['usuario_id' => $barbeiro->id]);
         Sanctum::actingAs($barbeiro);
 
-        $this->agendar()->assertCreated();
-        $this->agendar(['funcionario_id' => $this->rafael->id])->assertForbidden();
-        // Barbeiro não faz encaixe fora do expediente
-        $this->agendar(['hora' => '12:15', 'encaixe' => true])->assertUnprocessable();
+        $this->agendar()->assertForbidden();
     }
 }

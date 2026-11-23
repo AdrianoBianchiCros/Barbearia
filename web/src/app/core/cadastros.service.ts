@@ -9,6 +9,7 @@ import {
   FaixaHorario,
   FotoGaleria,
   Funcionario,
+  FuncionarioComAcesso,
   Pagina,
   Servico,
 } from './modelos';
@@ -40,10 +41,14 @@ export class CadastrosService {
   buscarFuncionario(id: number): Observable<Funcionario> {
     return this.http.get<Funcionario>(`${API}/funcionarios/${id}`);
   }
-  salvarFuncionario(dados: object, id?: number): Observable<Funcionario> {
+  salvarFuncionario(dados: object, id?: number): Observable<FuncionarioComAcesso> {
     return id
-      ? this.http.put<Funcionario>(`${API}/funcionarios/${id}`, dados)
-      : this.http.post<Funcionario>(`${API}/funcionarios`, dados);
+      ? this.http.put<FuncionarioComAcesso>(`${API}/funcionarios/${id}`, dados)
+      : this.http.post<FuncionarioComAcesso>(`${API}/funcionarios`, dados);
+  }
+  /** Libera o painel do barbeiro ou gera uma nova senha provisória (enviada por e-mail). */
+  liberarAcessoBarbeiro(id: number): Observable<FuncionarioComAcesso> {
+    return this.http.post<FuncionarioComAcesso>(`${API}/funcionarios/${id}/acesso`, {});
   }
   excluirFuncionario(id: number): Observable<void> {
     return this.http.delete<void>(`${API}/funcionarios/${id}`);

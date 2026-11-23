@@ -45,6 +45,12 @@ interface RespostaLogin extends Sessao {
 
 const CHAVE_TOKEN = 'barbearia.token';
 
+/** Tela inicial de cada perfil: o barbeiro tem um painel só dele (agenda e comissão). */
+export function telaInicial(usuario: Usuario | undefined): string {
+  if (usuario?.trocar_senha) return '/trocar-senha';
+  return usuario?.perfil === 'barbeiro' ? '/barbeiro' : '/agenda';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -101,10 +107,10 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(destino = '/login'): void {
     const sair = () => {
       this.limpar();
-      this.router.navigate(['/login']);
+      this.router.navigate([destino]);
     };
     this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({ next: sair, error: sair });
   }

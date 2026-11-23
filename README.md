@@ -35,7 +35,24 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 143 testes na API · 8 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 149 testes na API · 9 testes no painel*
+
+- **Painel do barbeiro (23/11/2026, ainda não publicado):** área própria em **`/painel/barbeiro`** (entrada em
+  `/barbeiro/login`, mesmo login com textos do barbeiro), pensada para o celular, **só consulta**: "Minha agenda"
+  (dia a dia, só os atendimentos dele, sem telefone do cliente, com expediente e bloqueios) e "Minha comissão" (este
+  mês, mês passado ou outro período: comissão, vales, repasses e **a receber**). API: `GET /api/barbeiro/agenda` e
+  `/api/barbeiro/comissoes` (`BarbeiroController` e o `ComissaoController` de antes).
+  - **Acesso pelo e-mail do cadastro** (`AppServicesAcessoBarbeiro`): ao cadastrar o barbeiro com e-mail, o dono
+    já libera o login (perfil `barbeiro`, ligado por `funcionarios.usuario_id`) e o barbeiro recebe e-mail
+    (`AppNotificationsAcessoBarbeiro`) com o link do painel, a senha provisória e o botão "Criar minha senha";
+    no primeiro login com a provisória, troca obrigatória. Na ficha do barbeiro, logo abaixo de "Ativo", fica o
+    **link do painel** (copiar), o botão "Liberar acesso e enviar por e-mail" (barbeiros já cadastrados) ou "Gerar
+    nova senha e reenviar", e a senha provisória uma única vez com "Copiar mensagem para o WhatsApp".
+  - Nome, e-mail e "Ativo" do cadastro valem para o login; inativo ou excluído não entra. E-mail já usado por outro
+    acesso (ex.: o dono que também corta) não cria login: o cadastro continua e o dono vê o aviso.
+  - **Mudança de regra:** o perfil barbeiro **não acessa mais o painel da barbearia** (a API responde 403 em todas as
+    rotas de lá; antes ele via a agenda de todos, clientes e cadastros e alterava os próprios atendimentos). Quem
+    entra com perfil barbeiro pelo `/login` vai direto para o painel dele. "Esqueci a senha" é o mesmo do painel.
 
 - **"Esqueci a senha" da administração (23/11/2026, ainda não publicado):** link no login de `/painel/admin` →
   `/admin/esqueci-senha` → e-mail (`App\Notifications\RedefinirSenhaAdmin`) com link para
@@ -169,7 +186,8 @@ Para acessar:
 
 ### Base
 - Multiempresa desde o início: todas as tabelas têm `empresa_id`, com filtro automático (veja [Multiempresa](#multiempresa)).
-- Login por token, perfis **dono**, **recepção** e **barbeiro**, com permissões por rota.
+- Login por token, perfis **dono**, **recepção** e **barbeiro**, com permissões por rota; o barbeiro usa um painel
+  só dele (agenda e comissão), com acesso liberado pelo dono a partir do e-mail do cadastro.
 - **Senha:** botão de olho para ver o que foi digitado e "Esqueci a senha" com link por e-mail (vale 60 min).
 - Datas gravadas em UTC e exibidas no fuso da barbearia.
 - **Visual do painel** no sistema de design "Dub" (`skill-saas`): tokens de cor, raio, sombra e fonte em
@@ -263,7 +281,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 143 testes na API (`php artisan test`) e 8 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 149 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 
@@ -293,7 +311,8 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 - ⬜ Clube de assinatura do cliente (planos, cobrança recorrente, controle de uso)
 - ⬜ Preferências do cliente (tipo de corte, máquina, alergias), em parte já existe no campo de observações
 - ⬜ LGPD: exportar e excluir os dados do cliente quando ele pedir
-- ⬜ Visão do barbeiro no celular: agenda do dia, comissões e histórico do cliente que vai atender
+- ✅ Painel do barbeiro no celular: agenda do dia e comissão a receber (23/11/2026)
+- ⬜ Histórico do cliente que o barbeiro vai atender, no painel do barbeiro
 
 ### Etapa 4 — Validação externa (beta)
 - ⬜ Importação de clientes por planilha (Excel/CSV)
@@ -369,7 +388,7 @@ npm install
 
 - **Painel:** http://localhost:4200
   - dono: `dono@demo.test` / `demo1234`
-  - barbeiro: `barbeiro@demo.test` / `demo1234`
+  - barbeiro: http://localhost:4200/barbeiro com `barbeiro@demo.test` / `demo1234` (painel só do barbeiro)
   - administrador da plataforma: http://localhost:4200/admin com `admin@demo.test` / `demo1234`
   - os dados estão em `api/database/seeders/DatabaseSeeder.php`
 - **Página pública da demo:** http://localhost:8000/barbearia-demo

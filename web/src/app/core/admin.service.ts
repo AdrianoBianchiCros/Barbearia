@@ -100,6 +100,16 @@ export class AdminService {
     );
   }
 
+  /** Pede o link de redefinição de senha do administrador por e-mail. */
+  esqueciSenha(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${API}/auth/esqueci-senha`, { email });
+  }
+
+  /** Grava a nova senha a partir do link recebido por e-mail. */
+  redefinirSenha(dados: { token: string; email: string; password: string; password_confirmation: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${API}/auth/redefinir-senha`, dados);
+  }
+
   carregarSessao(): Observable<boolean> {
     if (this._admin()) return of(true);
     if (!this.token) return of(false);

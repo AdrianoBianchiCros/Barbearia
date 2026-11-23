@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminService } from '../../core/admin.service';
 import { mensagemDeErro } from '../../core/erros';
 import { PLATAFORMA } from '../../core/plataforma';
@@ -9,13 +9,16 @@ import { VerSenha } from '../../layout/ver-senha';
 /** Login do administrador da plataforma (quem cadastra as barbearias e controla o prazo). */
 @Component({
   selector: 'app-admin-login',
-  imports: [ReactiveFormsModule, VerSenha],
+  imports: [ReactiveFormsModule, RouterLink, VerSenha],
   template: `
     <main class="tela-acesso">
       <form class="cartao" [formGroup]="form" (ngSubmit)="entrar()" novalidate>
         <h1 class="marca">Administração</h1>
         <p class="subtitulo">Área da {{ plataforma.nome }} para cadastrar barbearias e controlar o acesso.</p>
 
+        @if (senhaAlterada && !erro()) {
+          <div class="aviso-sucesso" role="status">Senha alterada. Entre com a nova senha.</div>
+        }
         @if (erro()) {
           <div class="alerta" role="alert">{{ erro() }}</div>
         }
@@ -37,6 +40,7 @@ import { VerSenha } from '../../layout/ver-senha';
           @if (form.controls.password.touched && form.controls.password.invalid) {
             <small class="erro-campo">Informe sua senha.</small>
           }
+          <a class="link-abaixo-campo" routerLink="/admin/esqueci-senha">Esqueci a senha</a>
         </div>
 
         <button class="botao" type="submit" [disabled]="enviando()">
@@ -50,6 +54,8 @@ export class AdminLogin {
   private readonly admin = inject(AdminService);
   private readonly router = inject(Router);
   protected readonly plataforma = PLATAFORMA;
+  /** Veio da tela de nova senha (/admin/login?senha=alterada). */
+  protected readonly senhaAlterada = inject(ActivatedRoute).snapshot.queryParamMap.get('senha') === 'alterada';
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

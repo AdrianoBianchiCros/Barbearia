@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Administrador;
 use App\Models\User;
 
 return [
@@ -67,6 +68,12 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
+        // Administradores da plataforma (área /admin), usados no "Esqueci a senha" deles.
+        'administradores' => [
+            'driver' => 'eloquent',
+            'model' => Administrador::class,
+        ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
@@ -96,6 +103,13 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'administradores' => [
+            'provider' => 'administradores',
+            'table' => 'admin_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

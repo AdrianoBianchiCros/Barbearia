@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Notifications\RedefinirSenhaAdmin;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -16,9 +18,15 @@ use Laravel\Sanctum\HasApiTokens;
 #[Hidden(['password'])]
 class Administrador extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     protected $table = 'administradores';
+
+    /** Link de "Esqueci a senha" apontando para a área do administrador (não para o painel da barbearia). */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new RedefinirSenhaAdmin($token));
+    }
 
     protected function casts(): array
     {

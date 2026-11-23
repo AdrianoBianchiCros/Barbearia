@@ -48,6 +48,8 @@ Route::prefix('a/{token}')->middleware('agendamento.token')->group(function () {
 // Área do administrador da plataforma: cadastro das barbearias, contrato e prazo de acesso.
 Route::prefix('admin')->group(function () {
     Route::post('auth/login', [Admin\AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('auth/esqueci-senha', [Admin\AuthController::class, 'esqueciSenha'])->middleware('throttle:senha');
+    Route::post('auth/redefinir-senha', [Admin\AuthController::class, 'redefinirSenha'])->middleware('throttle:senha');
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::get('auth/eu', [Admin\AuthController::class, 'eu']);

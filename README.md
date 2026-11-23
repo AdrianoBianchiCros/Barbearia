@@ -35,7 +35,15 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 139 testes na API · 8 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 143 testes na API · 8 testes no painel*
+
+- **"Esqueci a senha" da administração (23/11/2026, ainda não publicado):** link no login de `/painel/admin` →
+  `/admin/esqueci-senha` → e-mail (`App\Notifications\RedefinirSenhaAdmin`) com link para
+  `/admin/redefinir-senha?token=…&email=…` → nova senha → volta ao login do admin com aviso. API:
+  `POST /api/admin/auth/esqueci-senha` e `/api/admin/auth/redefinir-senha`, com broker próprio (`administradores` em
+  `config/auth.php`) e tabela própria `admin_password_reset_tokens`, para o link de um dono nunca valer na
+  administração. **Diferente do painel**, a resposta é a mesma exista ou não o e-mail (não revela quem é
+  administrador); administrador inativo não recebe link. Vale 60 min, 1 pedido por minuto, e a troca encerra as sessões.
 
 - **Senha provisória com troca obrigatória (23/11/2026, ainda não publicado):** quando o administrador cadastra a
   barbearia ou clica em "Gerar nova senha do dono", o dono recebe **e-mail** (`App\Notifications\SenhaProvisoria`) com
@@ -173,6 +181,7 @@ Para acessar:
   token de administrador não entra no painel das barbearias e vice-versa.
 - Cadastro da barbearia com dono (senha provisória), período, pagamento, valor e contrato anexado (disco privado).
 - Senha provisória enviada por e-mail com link para criar a própria; no primeiro login com ela, troca obrigatória.
+- "Esqueci a senha" do administrador por e-mail (tokens separados dos usuários das barbearias).
 - Prazo de acesso (`empresas.acesso_ate`) e histórico em `assinaturas`; renovar, suspender, reativar, nova senha do dono.
 - Situações: sem prazo, em dia, vencendo (≤ 10 dias), carência (até 5 dias depois) e bloqueada; suspensa pelo administrador.
 - Aviso no painel e por e-mail ao dono; bloqueio do login, da API e do agendamento online após a carência.
@@ -254,7 +263,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 139 testes na API (`php artisan test`) e 8 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 143 testes na API (`php artisan test`) e 8 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

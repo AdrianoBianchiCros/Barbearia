@@ -22,6 +22,18 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/admin/admin-login').then((m) => m.AdminLogin),
       },
       {
+        path: 'esqueci-senha',
+        canActivate: [somenteVisitanteAdmin],
+        title: 'Administração | Esqueci a senha',
+        loadComponent: () => import('./paginas/admin/admin-esqueci-senha').then((m) => m.AdminEsqueciSenha),
+      },
+      {
+        // Sem o guard de visitante: o link do e-mail abre mesmo com uma sessão de administrador aberta.
+        path: 'redefinir-senha',
+        title: 'Administração | Nova senha',
+        loadComponent: () => import('./paginas/admin/admin-redefinir-senha').then((m) => m.AdminRedefinirSenha),
+      },
+      {
         path: '',
         canActivate: [exigeAdmin],
         loadComponent: () => import('./paginas/admin/admin-shell').then((m) => m.AdminShell),

@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 170 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 172 testes na API · 9 testes no painel*
 
 - **Sino de alterações na agenda (23/11/2026, ainda não publicado):** sino entre "Hoje" e a busca da agenda (e ao lado
   do dia no painel do barbeiro) com os **cancelamentos e remarcações**, venham do painel ou do cliente pelo link
@@ -49,11 +49,12 @@ Para acessar:
   painel e link `/a/{token}`), com data, hora, barbeiro, serviços, valor, endereço e o botão "Confirmar, remarcar ou
   cancelar". O e-mail é **opcional** nos dois formulários (página: "E-mail (opcional)"; painel, cliente novo na agenda:
   "E-mail (opcional, recebe a confirmação)"); clientes já cadastrados recebem se tiverem e-mail no cadastro.
-  Sai pela fila (`App\Services\AvisoAgendamentoEmail` → `App\Notifications\ConfirmacaoAgendamento`), pelo SMTP do
+  Sai **logo depois de a tela receber a resposta** (não espera o cron; se o SMTP falhar nessa hora, vai para a fila,
+  que tenta de novo) (`App\Services\AvisoAgendamentoEmail` → `App\Notifications\ConfirmacaoAgendamento`), pelo SMTP do
   Titan, com o **nome da barbearia como remetente** e resposta para o e-mail da barbearia. Não depende do
   consentimento do WhatsApp (é aviso do agendamento, execução de contrato): a Política de privacidade ganhou essa
-  linha e passou para a **versão 23/11/2026**. Testes em `EmailClienteTest`. **Depende do cron do `schedule:run`**
-  em produção (é ele que processa a fila). Decidido após comparar WhatsApp oficial (Meta/parceiros), SMS e e-mail:
+  linha e passou para a **versão 23/11/2026**. Testes em `EmailClienteTest`. O cron do `schedule:run` só é
+  necessário para os reenvios da fila. Decidido após comparar WhatsApp oficial (Meta/parceiros), SMS e e-mail:
   e-mail não tem custo por mensagem.
   **Botão "Enviar confirmação por e-mail"** no detalhe do agendamento na agenda (dono e recepção, horários agendados
   ou confirmados que ainda vão acontecer): manda o mesmo e-mail na hora; se o cliente não tem e-mail, o botão abre o
@@ -341,8 +342,8 @@ Para acessar:
   - modelos para aprovar e histórico das mensagens.
 
 ### E-mail ao cliente
-- **Confirmação** ao marcar ou remarcar (página, painel e link do cliente), quando o cliente tem e-mail; sai pela fila,
-  com o nome da barbearia no remetente e o botão para o link `/a/{token}`.
+- **Confirmação** ao marcar ou remarcar (página, painel e link do cliente), quando o cliente tem e-mail; sai logo após
+  a resposta (fila só se o SMTP falhar), com o nome da barbearia no remetente e o botão para o link `/a/{token}`.
 - **Botão "Enviar confirmação por e-mail"** no detalhe do agendamento na agenda (pede o e-mail se o cliente não tiver).
 - **Sino de alterações:** cancelamentos e remarcações (painel ou cliente) marcados até o usuário ver; também no painel do barbeiro.
 - **Número do WhatsApp do cliente** no detalhe abre a conversa com a confirmação já escrita (envio manual, sem custo).
@@ -354,7 +355,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 170 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 172 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

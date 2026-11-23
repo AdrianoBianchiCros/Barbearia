@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\AvisoAgendamentoEmail;
 use App\Services\WhatsApp\Enviador;
 use App\Services\WhatsApp\EnviadorCloudApi;
 use App\Services\WhatsApp\EnviadorTeste;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Uma instância por requisição (ou por job da fila).
         $this->app->scoped(EmpresaAtual::class);
+        // Junta os e-mails de confirmação da requisição e envia depois da resposta.
+        $this->app->scoped(AvisoAgendamentoEmail::class);
 
         // Modo de teste (só registra) ou envio real pela Cloud API da Meta.
         $this->app->bind(Enviador::class, fn () => config('whatsapp.driver') === 'cloud'

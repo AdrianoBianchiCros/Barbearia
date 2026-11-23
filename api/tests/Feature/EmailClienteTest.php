@@ -10,9 +10,16 @@ use App\Models\Servico;
 use App\Notifications\ConfirmacaoAgendamento;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Notifications\ChannelManager;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
+use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\AbstractTransport;
 use Tests\TestCase;
 
 /** E-mail de confirmação do horário para o cliente que informa e-mail. */
@@ -219,5 +226,42 @@ class EmailClienteTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2030-01-15 10:00', 'America/Sao_Paulo'));
         $this->getJson('/api/agenda/dia?data='.self::DIA)->assertOk()
             ->assertJsonPath('barbeiros.0.agendamentos.0.mensagem_whatsapp', null);
+    }
+
+    public function test_email_sai_logo_apos_a_resposta_sem_passar_pela_fila(): void
+    {
+        Notification::swap(new ChannelManager($this->app)); // envio de verdade, sem o fake
+        Queue::fake();
+        config(['mail.default' => 'array']);
+
+        $this->agendar(['email' => 'joao@exemplo.com'])->assertCreated();
+
+        $enviados = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages();
+        $this->assertCount(1, $enviados);
+        $this->assertSame('joao@exemplo.com', $enviados->first()->getEnvelope()->getRecipients()[0]->getAddress());
+        Queue::assertNotPushed(SendQueuedNotifications::class);
+    }
+
+    public function test_se_o_servidor_de_email_falhar_o_envio_vai_para_a_fila(): void
+    {
+        Notification::swap(new ChannelManager($this->app));
+        Queue::fake();
+        Mail::extend('falha', fn () => new class extends AbstractTransport
+        {
+            protected function doSend(SentMessage $message): void
+            {
+                throw new TransportException('Servidor de e-mail fora do ar');
+            }
+
+            public function __toString(): string
+            {
+                return 'falha';
+            }
+        });
+        config(['mail.default' => 'falha', 'mail.mailers.falha' => ['transport' => 'falha']]);
+
+        $this->agendar(['email' => 'joao@exemplo.com'])->assertCreated();
+
+        Queue::assertPushed(SendQueuedNotifications::class, 1);
     }
 }

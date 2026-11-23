@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { AgendaBarbeiro, BarbeiroService } from '../../core/barbeiro.service';
 import { mensagemDeErro } from '../../core/erros';
 import { ComissaoBarbeiro } from '../../core/financeiro.service';
+import { SinoAvisos } from '../../layout/sino-avisos';
 
 type Aba = 'agenda' | 'comissao';
 type Periodo = 'mes' | 'mes_passado' | 'outro';
@@ -26,7 +27,7 @@ function somarDias(data: string, dias: number): string {
  */
 @Component({
   selector: 'app-painel-barbeiro',
-  imports: [FormsModule, CurrencyPipe, DatePipe, PercentPipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe, PercentPipe, SinoAvisos],
   template: `
     <div class="painel">
       <header class="topo">
@@ -59,6 +60,7 @@ function somarDias(data: string, dias: number): string {
           @if (data() !== hoje) {
             <button class="botao-link" type="button" (click)="irPara(hoje)">Hoje</button>
           }
+          <app-sino-avisos (abrir)="irPara($event.inicio.slice(0, 10))" />
         </div>
 
         @if (agenda(); as a) {

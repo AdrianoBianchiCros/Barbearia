@@ -35,8 +35,15 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 166 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 170 testes na API · 9 testes no painel*
 
+- **Sino de alterações na agenda (23/11/2026, ainda não publicado):** sino entre "Hoje" e a busca da agenda (e ao lado
+  do dia no painel do barbeiro) com os **cancelamentos e remarcações**, venham do painel ou do cliente pelo link
+  `/a/{token}`. Fica vermelho com o número de novidades **até o usuário abrir a lista**; cada usuário tem o seu "visto"
+  (`usuarios.avisos_vistos_ate`). Dono e recepção veem todos os barbeiros; o barbeiro só a própria agenda (na troca de
+  barbeiro, os dois); ninguém é avisado do que ele mesmo fez. Clicar num aviso leva ao dia (remarcação abre o
+  agendamento). Tabela `avisos_agenda` (migração nova), `App\Services\AvisosAgenda`, `GET /api/avisos`,
+  `POST /api/avisos/vistos`; atualiza a cada 1 min. Testes em `AvisosAgendaTest`.
 - **Confirmação do horário por e-mail para o cliente (23/11/2026, ainda não publicado):** enquanto o WhatsApp oficial
   não fica pronto, o cliente que informa e-mail recebe a confirmação ao marcar e ao remarcar (página da barbearia,
   painel e link `/a/{token}`), com data, hora, barbeiro, serviços, valor, endereço e o botão "Confirmar, remarcar ou
@@ -337,6 +344,7 @@ Para acessar:
 - **Confirmação** ao marcar ou remarcar (página, painel e link do cliente), quando o cliente tem e-mail; sai pela fila,
   com o nome da barbearia no remetente e o botão para o link `/a/{token}`.
 - **Botão "Enviar confirmação por e-mail"** no detalhe do agendamento na agenda (pede o e-mail se o cliente não tiver).
+- **Sino de alterações:** cancelamentos e remarcações (painel ou cliente) marcados até o usuário ver; também no painel do barbeiro.
 - **Número do WhatsApp do cliente** no detalhe abre a conversa com a confirmação já escrita (envio manual, sem custo).
 
 ### LGPD (detalhes em [`LGPD.md`](LGPD.md))
@@ -346,7 +354,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 166 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 170 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 
@@ -408,7 +416,6 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 - E-mail ao cliente: lembrete 24 h antes por e-mail (hoje só confirmação e remarcação) e aviso de cancelamento
 - WhatsApp sem parceiro pago: virar Provedor de Tecnologia da Meta (cadastro incorporado, "Conectar meu WhatsApp"),
   para cada barbearia ligar o próprio número (coexistência com o app) pagando só as mensagens da Meta
-- Avisar a recepção quando o cliente cancelar ou remarcar pelo link
 - Laravel Boost: `api/CLAUDE.md` pede para instalar, mas não foi instalado (seria uma dependência nova)
 
 ---

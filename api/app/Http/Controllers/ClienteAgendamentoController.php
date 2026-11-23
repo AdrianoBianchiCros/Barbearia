@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use App\Models\Funcionario;
 use App\Services\AvisoAgendamentoEmail;
+use App\Services\AvisosAgenda;
 use App\Services\Disponibilidade;
 use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
@@ -57,12 +58,13 @@ class ClienteAgendamentoController extends Controller
         return response()->json(['status' => $agendamento->status]);
     }
 
-    public function cancelar(Request $request): JsonResponse
+    public function cancelar(Request $request, AvisosAgenda $avisos): JsonResponse
     {
         $agendamento = $this->agendamento($request);
         $this->exigirAntecedencia($agendamento);
 
         $agendamento->update(['status' => 'cancelado', 'cancelado_em' => now()]);
+        $avisos->cancelamento($agendamento, null);
 
         return response()->json(['status' => 'cancelado']);
     }
@@ -81,7 +83,7 @@ class ClienteAgendamentoController extends Controller
         ));
     }
 
-    public function remarcar(Request $request, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
+    public function remarcar(Request $request, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail, AvisosAgenda $avisos): JsonResponse
     {
         $agendamento = $this->agendamento($request);
         $this->exigirAntecedencia($agendamento);
@@ -102,6 +104,8 @@ class ClienteAgendamentoController extends Controller
         if ($limite) {
             throw ValidationException::withMessages(['data' => $limite]);
         }
+
+        $inicioAnterior = $agendamento->inicio->copy();
 
         DB::transaction(function () use ($agendamento, $dados) {
             // Trava a agenda do barbeiro para que dois clientes não peguem o mesmo horário.
@@ -127,6 +131,7 @@ class ClienteAgendamentoController extends Controller
 
         $mensageiro->agendamento($agendamento, 'remarcacao');
         $avisoEmail->enviar($agendamento, 'remarcacao');
+        $avisos->remarcacao($agendamento, $inicioAnterior, $agendamento->funcionario_id, null);
         $inicio = $agendamento->inicio->copy()->setTimezone($agendamento->empresa->fuso_horario);
 
         return response()->json([

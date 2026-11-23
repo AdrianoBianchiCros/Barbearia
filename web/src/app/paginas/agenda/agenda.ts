@@ -18,12 +18,14 @@ import {
 } from '../../core/agenda.service';
 import { AuthService } from '../../core/auth.service';
 import { AvisoService } from '../../core/aviso.service';
+import { AvisoAgenda } from '../../core/avisos.service';
 import { mensagemDeErro } from '../../core/erros';
 import { TelefonePipe } from '../../core/telefone.pipe';
 import { BoasVindas, PassoInicial } from './boas-vindas';
 import { FormularioAgendamento, InicioFormulario } from './formulario-agendamento';
 import { AbrirComanda, PainelComanda } from '../financeiro/painel-comanda';
 import { podeEditar } from '../../core/auth.guards';
+import { SinoAvisos } from '../../layout/sino-avisos';
 
 const PX_POR_HORA = 76;
 const PX_POR_MINUTO = PX_POR_HORA / 60;
@@ -75,7 +77,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento, PainelComanda, BoasVindas],
+  imports: [FormsModule, RouterLink, CurrencyPipe, DatePipe, TelefonePipe, FormularioAgendamento, PainelComanda, BoasVindas, SinoAvisos],
   template: `
     <div class="agenda-barra">
       <div class="agenda-navegacao">
@@ -88,6 +90,7 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
         @if (!ehHoje()) {
           <button class="botao botao-secundario botao-auto" type="button" (click)="irPara(hoje())">Hoje</button>
         }
+        <app-sino-avisos (abrir)="abrirAviso($event)" />
       </div>
 
       <div class="agenda-busca" (keydown.escape)="limparBusca()">
@@ -677,6 +680,18 @@ export class Agenda implements OnInit, OnDestroy {
       this.abrirPendente(this.agenda());
     } else {
       this.irPara(item.data);
+    }
+  }
+
+  /** Aviso do sino: vai para o dia do horário; remarcado, já abre o agendamento (cancelado não aparece na agenda). */
+  abrirAviso(aviso: AvisoAgenda): void {
+    const data = aviso.inicio.slice(0, 10);
+    this.filtro.set('todos');
+    this.abrirAoCarregar = aviso.tipo === 'remarcacao' ? aviso.agendamento_id : null;
+    if (data === this.data()) {
+      this.abrirPendente(this.agenda());
+    } else {
+      this.irPara(data);
     }
   }
 

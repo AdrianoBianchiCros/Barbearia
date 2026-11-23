@@ -5,6 +5,7 @@ use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\AssinaturaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvisoAgendaController;
 use App\Http\Controllers\BarbeiroController;
 use App\Http\Controllers\BloqueioAgendaController;
 use App\Http\Controllers\CaixaController;
@@ -80,6 +81,10 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
     Route::get('auth/eu', [AuthController::class, 'eu']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::post('auth/trocar-senha', [AuthController::class, 'trocarSenha'])->middleware('throttle:senha');
+
+    // Sino da agenda (todos os perfis; o barbeiro vê só a própria agenda).
+    Route::get('avisos', [AvisoAgendaController::class, 'index']);
+    Route::post('avisos/vistos', [AvisoAgendaController::class, 'vistos']);
 
     // Painel do barbeiro: só a própria agenda e a própria comissão.
     Route::middleware('perfil:barbeiro')->prefix('barbeiro')->group(function () {

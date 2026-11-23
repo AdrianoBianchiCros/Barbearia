@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\Funcionario;
 use App\Models\Servico;
+use App\Services\AvisosAgenda;
 use App\Services\Comandas;
 use App\Services\ResumoAgendamento;
 use Carbon\CarbonInterface;
@@ -167,7 +168,7 @@ class AgendaController extends Controller
      * Atualiza a situação do agendamento (confirmar, iniciar, concluir, faltou, cancelar).
      * Barbeiros só alteram os próprios agendamentos.
      */
-    public function status(Request $request, Agendamento $agendamento, Comandas $comandas): JsonResponse
+    public function status(Request $request, Agendamento $agendamento, Comandas $comandas, AvisosAgenda $avisos): JsonResponse
     {
         $dados = $request->validate([
             'status' => ['required', 'in:'.implode(',', Agendamento::STATUS)],
@@ -178,7 +179,9 @@ class AgendaController extends Controller
             return response()->json(['message' => 'Você só pode alterar os seus próprios atendimentos.'], 403);
         }
 
-        DB::transaction(function () use ($agendamento, $dados, $comandas) {
+        $cancelando = $dados['status'] === 'cancelado' && $agendamento->status !== 'cancelado';
+
+        DB::transaction(function () use ($agendamento, $dados, $comandas, $cancelando, $avisos, $usuario) {
             // Concluído gera a comanda para receber; saindo de concluído, a comanda não paga é descartada
             if ($agendamento->status === 'concluido' && $dados['status'] !== 'concluido') {
                 $comandas->descartarAberta($agendamento);
@@ -190,6 +193,9 @@ class AgendaController extends Controller
 
             if ($dados['status'] === 'concluido') {
                 $comandas->abrirDoAgendamento($agendamento);
+            }
+            if ($cancelando) {
+                $avisos->cancelamento($agendamento, $usuario);
             }
         });
 

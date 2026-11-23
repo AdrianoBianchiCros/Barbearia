@@ -6,6 +6,7 @@ use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Funcionario;
 use App\Services\AvisoAgendamentoEmail;
+use App\Services\AvisosAgenda;
 use App\Services\Disponibilidade;
 use App\Services\WhatsApp\Mensageiro;
 use App\Support\Telefone;
@@ -138,7 +139,7 @@ class AgendamentoController extends Controller
     }
 
     /** Remarcar: muda horário, barbeiro e/ou serviços de um agendamento ainda não atendido. */
-    public function update(Request $request, Agendamento $agendamento, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
+    public function update(Request $request, Agendamento $agendamento, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail, AvisosAgenda $avisos): JsonResponse
     {
         if (! in_array($agendamento->status, ['agendado', 'confirmado'], true)) {
             return response()->json(['message' => 'Só é possível remarcar agendamentos que ainda não foram atendidos.'], 422);
@@ -148,6 +149,7 @@ class AgendamentoController extends Controller
         $dados = $this->validar($request, novo: false);
         $barbeiro = $this->barbeiroPermitido($request, (int) $dados['funcionario_id']);
         $inicioAnterior = $agendamento->inicio->copy();
+        $funcionarioAnterior = $agendamento->funcionario_id;
 
         $agendamento = DB::transaction(function () use ($request, $agendamento, $dados, $barbeiro) {
             $itens = $this->itensOuErro($barbeiro, $dados['servico_ids']);
@@ -159,6 +161,9 @@ class AgendamentoController extends Controller
         if (! $agendamento->inicio->equalTo($inicioAnterior)) {
             $mensageiro->agendamento($agendamento, 'remarcacao');
             $avisoEmail->enviar($agendamento, 'remarcacao');
+        }
+        if (! $agendamento->inicio->equalTo($inicioAnterior) || $agendamento->funcionario_id !== $funcionarioAnterior) {
+            $avisos->remarcacao($agendamento, $inicioAnterior, $funcionarioAnterior, $request->user());
         }
 
         return response()->json($this->resposta($agendamento));

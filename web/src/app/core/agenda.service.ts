@@ -17,6 +17,8 @@ export interface AgendamentoDoDia {
   servicos: string[];
   servico_ids: number[];
   comanda: { id: number; status: 'aberta' | 'paga' | 'cancelada'; total: string } | null;
+  /** Confirmação já escrita para o link do WhatsApp (só em horários que ainda vão acontecer). */
+  mensagem_whatsapp?: string | null;
 }
 
 export interface ColunaBarbeiro {

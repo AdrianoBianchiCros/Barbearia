@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Agendamento;
-use App\Models\Cliente;
-use App\Models\Empresa;
 use App\Notifications\ConfirmacaoAgendamento;
 use Illuminate\Support\Facades\Notification;
 
@@ -15,7 +13,7 @@ use Illuminate\Support\Facades\Notification;
  */
 class AvisoAgendamentoEmail
 {
-    private const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    public function __construct(private ResumoAgendamento $resumo) {}
 
     /** @param  string  $tipo  confirmacao | remarcacao */
     public function enviar(Agendamento $agendamento, string $tipo): bool
@@ -32,38 +30,8 @@ class AvisoAgendamentoEmail
         }
 
         Notification::route('mail', $cliente->email)
-            ->notify(new ConfirmacaoAgendamento($this->dados($agendamento, $cliente, $tipo)));
+            ->notify(new ConfirmacaoAgendamento(['tipo' => $tipo] + $this->resumo->dados($agendamento, $cliente)));
 
         return true;
-    }
-
-    private function dados(Agendamento $agendamento, Cliente $cliente, string $tipo): array
-    {
-        $empresa = $agendamento->empresa;
-        $inicio = $agendamento->inicio->copy()->setTimezone($empresa->fuso_horario);
-        $nome = trim($cliente->nome);
-
-        return [
-            'tipo' => $tipo,
-            'barbearia' => $empresa->nome,
-            'email_barbearia' => $empresa->email ?: null,
-            'nome' => strtok($nome, ' ') ?: $nome,
-            'data' => self::DIAS[$inicio->dayOfWeek].', '.$inicio->format('d/m/Y'),
-            'hora' => $inicio->format('H:i'),
-            'barbeiro' => $agendamento->funcionario->nome,
-            'servicos' => $agendamento->itens->pluck('nome')->join(' + '),
-            'valor' => number_format((float) $agendamento->valor_total, 2, ',', '.'),
-            'endereco' => $this->endereco($empresa),
-            'link' => route('agendamento.cliente', $agendamento->token),
-        ];
-    }
-
-    private function endereco(Empresa $empresa): ?string
-    {
-        $rua = trim(implode(', ', array_filter([$empresa->logradouro, $empresa->numero, $empresa->complemento])));
-        $cidade = trim(implode(' - ', array_filter([$empresa->cidade, $empresa->uf])));
-        $partes = array_filter([$rua, $empresa->bairro, $cidade]);
-
-        return $partes ? implode(' · ', $partes) : null;
     }
 }

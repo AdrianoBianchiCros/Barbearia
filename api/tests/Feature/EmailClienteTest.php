@@ -199,4 +199,25 @@ class EmailClienteTest extends TestCase
         $this->postJson("/api/agendamentos/{$agendamento->id}/enviar-confirmacao")->assertUnprocessable();
         $this->assertCount(1, $this->enviadosPara('joao@exemplo.com')); // só a do agendamento
     }
+
+    public function test_agenda_traz_a_mensagem_de_whatsapp_pronta_para_enviar(): void
+    {
+        $this->agendar()->assertCreated();
+        $token = $this->agendamento()->token;
+        $this->logarComo('recepcao', $this->empresa);
+
+        $mensagem = $this->getJson('/api/agenda/dia?data='.self::DIA)->assertOk()
+            ->json('barbeiros.0.agendamentos.0.mensagem_whatsapp');
+
+        $this->assertStringStartsWith('Olá, João! Seu horário na *Barbearia do Zé* está marcado:', $mensagem);
+        $this->assertStringContainsString('*terça, 15/01/2030 às 09:00*, com Carlos', $mensagem);
+        $this->assertStringContainsString('Serviço: Corte · R$ 50,00', $mensagem);
+        $this->assertStringContainsString('Endereço: Rua das Flores, 10 · Centro · São Paulo - SP', $mensagem);
+        $this->assertStringContainsString("/a/{$token}", $mensagem);
+
+        // Horário que já passou: o número abre o WhatsApp sem texto.
+        Carbon::setTestNow(Carbon::parse('2030-01-15 10:00', 'America/Sao_Paulo'));
+        $this->getJson('/api/agenda/dia?data='.self::DIA)->assertOk()
+            ->assertJsonPath('barbeiros.0.agendamentos.0.mensagem_whatsapp', null);
+    }
 }

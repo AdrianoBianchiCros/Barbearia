@@ -293,7 +293,10 @@ const ACOES: Partial<Record<StatusAgendamento, Acao[]>> = {
           <dt>Origem</dt><dd>{{ sel.ag.origem === 'link_publico' ? 'Página da barbearia' : sel.ag.origem === 'whatsapp' ? 'WhatsApp' : 'Recepção' }}</dd>
           @if (sel.ag.cliente?.telefone) {
             <dt>WhatsApp</dt>
-            <dd><a [href]="'https://wa.me/55' + sel.ag.cliente!.telefone" target="_blank" rel="noopener">{{ sel.ag.cliente!.telefone | telefone }}</a></dd>
+            <dd>
+              <a [href]="linkWhatsapp(sel.ag)" target="_blank" rel="noopener">{{ sel.ag.cliente!.telefone | telefone }}</a>
+              @if (sel.ag.mensagem_whatsapp) {<div class="texto-suave pequeno">Abre com a confirmação do horário escrita; é só enviar.</div>}
+            </dd>
           }
           @if (sel.ag.cliente?.email) {
             <dt>E-mail</dt><dd>{{ sel.ag.cliente!.email }}</dd>
@@ -617,6 +620,12 @@ export class Agenda implements OnInit, OnDestroy {
     this.pedindoEmail.set(false);
     this.emailConfirmacao = '';
     this.selecionado.set({ ag, barbeiro });
+  }
+
+  /** WhatsApp do cliente; em horários que ainda vão acontecer, já abre com a confirmação escrita. */
+  linkWhatsapp(ag: AgendamentoDoDia): string {
+    const link = `https://wa.me/55${ag.cliente?.telefone ?? ''}`;
+    return ag.mensagem_whatsapp ? `${link}?text=${encodeURIComponent(ag.mensagem_whatsapp)}` : link;
   }
 
   /** Sem e-mail no cadastro, primeiro mostra o campo; o e-mail digitado fica gravado no cliente. */

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use App\Models\BloqueioAgenda;
 use App\Models\Cliente;
+use App\Models\Empresa;
 use App\Models\Funcionario;
 use App\Models\Servico;
 use App\Services\Comandas;
+use App\Services\ResumoAgendamento;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  */
 class AgendaController extends Controller
 {
-    public function dia(Request $request): JsonResponse
+    public function dia(Request $request, ResumoAgendamento $resumo): JsonResponse
     {
         $request->validate(['data' => ['nullable', 'date_format:Y-m-d']]);
 
@@ -97,9 +99,20 @@ class AgendaController extends Controller
                         'servicos' => $a->itens->pluck('nome')->values(),
                         'servico_ids' => $a->itens->pluck('servico_id')->values(),
                         'comanda' => $a->comanda?->only(['id', 'status', 'total']),
+                        // Texto que já vem escrito ao abrir o WhatsApp do cliente pelo número na agenda.
+                        'mensagem_whatsapp' => $this->mensagemWhatsapp($a, $f, $usuario->empresa, $resumo),
                     ])->values(),
             ])->values(),
         ]);
+    }
+
+    private function mensagemWhatsapp(Agendamento $a, Funcionario $f, Empresa $empresa, ResumoAgendamento $resumo): ?string
+    {
+        if (! $a->cliente || ! in_array($a->status, ['agendado', 'confirmado'], true) || ! $a->inicio->isFuture()) {
+            return null;
+        }
+
+        return $resumo->textoWhatsapp($a->setRelation('empresa', $empresa)->setRelation('funcionario', $f), $a->cliente);
     }
 
     /**

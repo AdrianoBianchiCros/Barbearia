@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminService, Assinatura, DadosAcesso, DetalheBarbearia, OpcoesAdmin, SITUACOES_ACESSO } from '../../core/admin.service';
 import { AvisoService } from '../../core/aviso.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
@@ -110,6 +110,18 @@ import { CartaoAcesso } from './cartao-acesso';
         </div>
       }
 
+      <section class="cartao-secao zona-perigo">
+        <h2>Excluir barbearia</h2>
+        <p class="texto-suave">
+          Tira a barbearia do ar na hora: a página, o agendamento online, o painel do dono e dos barbeiros e os links
+          enviados aos clientes param de funcionar, e as sessões abertas são encerradas. Os dados ficam guardados pelos
+          prazos da Política de privacidade, mas não aparecem mais aqui.
+        </p>
+        <div class="rodape-secao">
+          <button class="botao-link perigo" type="button" (click)="excluir()" [disabled]="salvando()">Excluir barbearia</button>
+        </div>
+      </section>
+
       @if (renovando()) {
         <div class="fundo-modal" (click)="renovando.set(false)"></div>
         <form class="painel-lateral" #f="ngForm" (ngSubmit)="renovar(f)" novalidate>
@@ -130,6 +142,7 @@ import { CartaoAcesso } from './cartao-acesso';
 export class BarbeariaDetalhe implements OnInit {
   private readonly api = inject(AdminService);
   private readonly aviso = inject(AvisoService);
+  private readonly router = inject(Router);
   private readonly id = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
   protected readonly situacoes = SITUACOES_ACESSO;
 
@@ -217,6 +230,29 @@ export class BarbeariaDetalhe implements OnInit {
         this.aviso.sucesso('Acesso reativado.');
       },
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
+    });
+  }
+
+  excluir(): void {
+    const b = this.b();
+    if (!b) return;
+    const certeza = confirm(
+      `Tem certeza que deseja excluir a ${b.nome}?\n\n` +
+        'A página, o agendamento online, o painel do dono e dos barbeiros e os links dos clientes param de funcionar agora. ' +
+        'Não dá para desfazer por aqui.',
+    );
+    if (!certeza) return;
+
+    this.salvando.set(true);
+    this.api.excluir(this.id).subscribe({
+      next: (r) => {
+        this.aviso.sucesso(r.message);
+        this.router.navigate(['/admin/barbearias']);
+      },
+      error: (e) => {
+        this.salvando.set(false);
+        this.aviso.erro(mensagemDeErro(e));
+      },
     });
   }
 

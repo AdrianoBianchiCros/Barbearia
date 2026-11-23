@@ -35,7 +35,16 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 149 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 150 testes na API · 9 testes no painel*
+
+- **Excluir barbearia na administração (23/11/2026, ainda não publicado):** seção "Excluir barbearia" no fim do
+  detalhe, com confirmação ("Tem certeza…?"). `DELETE /api/admin/barbearias/{id}` **tira do ar** (decisão do dono do
+  produto: não apagar os dados, por causa da guarda de 5 anos da Política de privacidade): `empresas.deleted_at`
+  (soft delete), página pública, agendamento online, links `/a/{token}` dos clientes, painéis e login param; usuários
+  desativados e sessões encerradas; mensagens de WhatsApp pendentes viram "ignorado"; lembretes e avisos de vencimento
+  deixam de considerar a barbearia. O endereço (slug) vira `{slug}--excluida-{id}` e fica livre para outra barbearia.
+  **Limitação:** os e-mails do dono e da equipe continuam reservados (não dá para cadastrar outra barbearia com o
+  mesmo e-mail de dono). Para desfazer, só pelo banco (`deleted_at = null`, slug e `ativo` de volta).
 
 - **Painel do barbeiro (23/11/2026, ainda não publicado):** área própria em **`/painel/barbeiro`** (entrada em
   `/barbeiro/login`, mesmo login com textos do barbeiro), pensada para o celular, **só consulta**: "Minha agenda"
@@ -200,7 +209,8 @@ Para acessar:
 - Cadastro da barbearia com dono (senha provisória), período, pagamento, valor e contrato anexado (disco privado).
 - Senha provisória enviada por e-mail com link para criar a própria; no primeiro login com ela, troca obrigatória.
 - "Esqueci a senha" do administrador por e-mail (tokens separados dos usuários das barbearias).
-- Prazo de acesso (`empresas.acesso_ate`) e histórico em `assinaturas`; renovar, suspender, reativar, nova senha do dono.
+- Prazo de acesso (`empresas.acesso_ate`) e histórico em `assinaturas`; renovar, suspender, reativar, nova senha do dono
+  e excluir (tira do ar e guarda os dados).
 - Situações: sem prazo, em dia, vencendo (≤ 10 dias), carência (até 5 dias depois) e bloqueada; suspensa pelo administrador.
 - Aviso no painel e por e-mail ao dono; bloqueio do login, da API e do agendamento online após a carência.
 
@@ -281,7 +291,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 149 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 150 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

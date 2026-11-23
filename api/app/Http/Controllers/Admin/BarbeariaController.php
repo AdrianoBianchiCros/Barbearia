@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Assinatura;
 use App\Models\Empresa;
+use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
 use Illuminate\Http\JsonResponse;
@@ -153,6 +154,33 @@ class BarbeariaController extends Controller
             ->delete();
 
         return $this->show($empresa->fresh());
+    }
+
+    /**
+     * Exclui a barbearia: tira do ar a página, o agendamento online, os painéis e os links dos clientes,
+     * encerra as sessões e cancela as mensagens pendentes. Os dados ficam guardados (sem acesso)
+     * pelos prazos da Política de privacidade, e o endereço da página fica livre para outra barbearia.
+     */
+    public function excluir(Empresa $empresa): JsonResponse
+    {
+        DB::transaction(function () use ($empresa) {
+            $usuarios = User::where('empresa_id', $empresa->id)->pluck('id');
+            User::whereKey($usuarios)->update(['ativo' => false]);
+            DB::table('personal_access_tokens')
+                ->where('tokenable_type', (new User)->getMorphClass())
+                ->whereIn('tokenable_id', $usuarios)
+                ->delete();
+
+            MensagemWhatsapp::withoutGlobalScopes()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', 'pendente')
+                ->update(['status' => 'ignorado', 'erro' => 'Barbearia excluída.']);
+
+            $empresa->update(['ativo' => false, 'slug' => "{$empresa->slug}--excluida-{$empresa->id}"]);
+            $empresa->delete();
+        });
+
+        return response()->json(['message' => "Barbearia {$empresa->nome} excluída."]);
     }
 
     public function reativar(Empresa $empresa): JsonResponse

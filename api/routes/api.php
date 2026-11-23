@@ -64,6 +64,7 @@ Route::prefix('admin')->group(function () {
         Route::post('barbearias/{empresa}/suspender', [Admin\BarbeariaController::class, 'suspender']);
         Route::post('barbearias/{empresa}/reativar', [Admin\BarbeariaController::class, 'reativar']);
         Route::post('barbearias/{empresa}/nova-senha', [Admin\BarbeariaController::class, 'novaSenha']);
+        Route::delete('barbearias/{empresa}', [Admin\BarbeariaController::class, 'excluir']);
         Route::get('assinaturas/{assinatura}/contrato', [Admin\BarbeariaController::class, 'contrato']);
     });
 });

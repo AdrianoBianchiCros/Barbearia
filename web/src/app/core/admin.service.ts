@@ -170,6 +170,11 @@ export class AdminService {
     return this.http.post<DetalheBarbearia>(`${API}/barbearias/${id}/reativar`, {});
   }
 
+  /** Tira a barbearia do ar (página, painéis e links); os dados ficam guardados. */
+  excluir(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${API}/barbearias/${id}`);
+  }
+
   novaSenha(id: number): Observable<{ acesso: DadosAcesso }> {
     return this.http.post<{ acesso: DadosAcesso }>(`${API}/barbearias/${id}/nova-senha`, {});
   }

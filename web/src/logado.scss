@@ -1091,6 +1091,17 @@ fieldset {
   }
 }
 
+// Ação que não dá para desfazer pela tela (ex.: excluir a barbearia, na administração)
+.zona-perigo {
+  margin-top: 32px;
+  border-color: var(--cor-erro);
+
+  h2 {
+    margin-top: 0;
+    color: var(--cor-erro);
+  }
+}
+
 // Painel do barbeiro, na ficha do barbeiro (logo abaixo de "Ativo")
 .acesso-barbeiro {
   display: flex;

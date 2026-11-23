@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Administrador;
+use App\Models\Agendamento;
 use App\Models\Assinatura;
+use App\Models\Cliente;
 use App\Models\Empresa;
+use App\Models\Funcionario;
+use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -231,6 +235,56 @@ class AdminBarbeariasTest extends TestCase
 
         $this->app['auth']->forgetGuards();
         $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => $senha])->assertOk();
+    }
+
+    public function test_excluir_tira_a_barbearia_do_ar_e_guarda_os_dados(): void
+    {
+        $empresa = Empresa::factory()->create(['nome' => 'Barbearia do Zé', 'slug' => 'barbearia-do-ze']);
+        $dono = User::factory()->for($empresa)->create(['email' => 'ze@exemplo.test', 'password' => 'segredo123']);
+        $tokenDono = $dono->createToken('painel')->plainTextToken;
+        [$agendamento, $mensagem] = $this->naEmpresa($empresa, function () {
+            $cliente = Cliente::create(['nome' => 'João', 'telefone' => '11988887777']);
+            $barbeiro = Funcionario::create(['nome' => 'Carlos']);
+            $agendamento = Agendamento::create([
+                'cliente_id' => $cliente->id,
+                'funcionario_id' => $barbeiro->id,
+                'inicio' => now()->addDay(),
+                'fim' => now()->addDay()->addMinutes(30),
+            ]);
+            $mensagem = MensagemWhatsapp::create([
+                'cliente_id' => $cliente->id,
+                'agendamento_id' => $agendamento->id,
+                'tipo' => 'lembrete_24h',
+                'telefone' => '11988887777',
+                'template' => 'lembrete',
+                'parametros' => [],
+                'status' => 'pendente',
+            ]);
+
+            return [$agendamento, $mensagem];
+        });
+
+        $this->logarAdmin();
+        $this->deleteJson("/api/admin/barbearias/{$empresa->id}")->assertOk();
+
+        // Some da administração.
+        $this->getJson('/api/admin/barbearias')->assertJsonCount(0, 'barbearias');
+        $this->getJson("/api/admin/barbearias/{$empresa->id}")->assertNotFound();
+
+        // Todos os links param: página, agendamento online, link do cliente, painel e login.
+        $this->app['auth']->forgetGuards();
+        $this->get('/barbearia-do-ze')->assertNotFound();
+        $this->getJson('/api/publico/barbearia-do-ze/horarios?data=2030-01-15')->assertNotFound();
+        $this->get("/a/{$agendamento->token}")->assertNotFound();
+        $this->withToken($tokenDono)->getJson('/api/auth/eu')->assertUnauthorized();
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/auth/login', ['email' => 'ze@exemplo.test', 'password' => 'segredo123'])->assertUnprocessable();
+        $this->assertSame('ignorado', $mensagem->fresh()->status);
+
+        // Os dados ficam guardados, e o endereço fica livre para outra barbearia.
+        $this->assertSoftDeleted('empresas', ['id' => $empresa->id]);
+        $this->assertDatabaseHas('agendamentos', ['id' => $agendamento->id]);
+        $this->assertSame('barbearia-do-ze', Empresa::gerarSlug('Barbearia do Zé'));
     }
 
     public function test_lista_detalhe_e_download_do_contrato(): void

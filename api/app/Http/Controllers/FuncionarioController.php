@@ -36,7 +36,7 @@ class FuncionarioController extends Controller
      */
     public function store(Request $request, AcessoBarbeiro $acessos): JsonResponse
     {
-        $funcionario = Funcionario::create($this->validar($request))->refresh(); // carrega os padrões do banco (ex.: ativo)
+        $funcionario = Funcionario::create($this->validar($request, novo: true))->refresh(); // carrega os padrões do banco (ex.: ativo)
 
         [$acesso, $acessoErro] = [null, null];
         if ($funcionario->email) {
@@ -161,14 +161,15 @@ class FuncionarioController extends Controller
         return response()->json($this->formatar($funcionario->load(self::RELACOES)));
     }
 
-    private function validar(Request $request): array
+    /** No cadastro novo o e-mail é obrigatório: é por ele que o barbeiro recebe o acesso ao painel. */
+    private function validar(Request $request, bool $novo = false): array
     {
         $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
 
         return $request->validate([
             'nome' => ['required', 'string', 'max:120'],
             'telefone' => ['nullable', Telefone::REGRA],
-            'email' => ['nullable', 'email', 'max:180'],
+            'email' => [$novo ? 'required' : 'nullable', 'email', 'max:180'],
             'especialidades' => ['nullable', 'string', 'max:160'],
             'tipo_vinculo' => ['nullable', 'in:clt,parceiro,autonomo'],
             'comissao_percentual' => ['sometimes', 'numeric', 'min:0', 'max:100'],
@@ -179,6 +180,7 @@ class FuncionarioController extends Controller
         ], [
             'tipo_vinculo' => 'tipo de vínculo',
             'comissao_percentual' => 'comissão',
+            'email' => 'e-mail',
         ]);
     }
 

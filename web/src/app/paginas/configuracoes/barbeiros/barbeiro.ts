@@ -75,8 +75,9 @@ interface DiaExpediente {
                 @if (erroCampo('telefone')) {<small class="erro-campo">{{ erroCampo('telefone') }}</small>}
               </label>
               <label class="campo">
-                <span>E-mail <em>(opcional)</em></span>
+                <span>E-mail</span>
                 <input type="email" formControlName="email" />
+                @if (novo() && !erroCampo('email')) {<small class="texto-suave">O barbeiro recebe neste e-mail o acesso ao painel dele.</small>}
                 @if (erroCampo('email')) {<small class="erro-campo">{{ erroCampo('email') }}</small>}
               </label>
               <label class="campo">
@@ -118,7 +119,7 @@ interface DiaExpediente {
                   <p class="texto-suave pequeno">Preencha o e-mail e salve para liberar o acesso.</p>
                 }
               } @else {
-                <p class="texto-suave pequeno">Com o e-mail preenchido, o barbeiro recebe por e-mail o link do painel dele (agenda e comissão) e uma senha provisória.</p>
+                <p class="texto-suave pequeno">Ao salvar, o barbeiro recebe por e-mail o link do painel dele (agenda e comissão) e uma senha provisória.</p>
               }
 
               @if (acesso(); as a) {
@@ -296,7 +297,13 @@ export class Barbeiro implements OnInit {
   });
 
   ngOnInit(): void {
-    if (!this.novo()) this.carregar(Number(this.id()));
+    if (this.novo()) {
+      // Obrigatório no cadastro: é por ele que o barbeiro recebe o acesso ao painel.
+      this.form.controls.email.addValidators(Validators.required);
+      this.form.controls.email.updateValueAndValidity();
+      return;
+    }
+    this.carregar(Number(this.id()));
   }
 
   /** A mesma tela é reaproveitada de "novo" para o barbeiro recém-cadastrado: por isso carrega pelo id. */

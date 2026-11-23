@@ -76,9 +76,9 @@ class BarbeiroPainelTest extends TestCase
             ->assertJsonPath('usuario.trocar_senha', true);
     }
 
-    public function test_cadastro_sem_email_ou_com_email_de_outro_acesso_nao_cria_login(): void
+    public function test_email_e_obrigatorio_e_email_de_outro_acesso_nao_cria_login(): void
     {
-        $this->cadastrar(['email' => null])->assertCreated()->assertJsonPath('acesso', null);
+        $this->cadastrar(['email' => null])->assertUnprocessable()->assertJsonValidationErrors(['email']);
 
         // O dono que também corta cabelo: o cadastro continua, com o aviso.
         $this->cadastrar(['nome' => 'Dono', 'email' => $this->dono->email])
@@ -92,7 +92,8 @@ class BarbeiroPainelTest extends TestCase
 
     public function test_dono_libera_acesso_depois_e_gera_nova_senha(): void
     {
-        $id = $this->cadastrar(['email' => null])->json('id');
+        // Barbeiro cadastrado antes do e-mail ser obrigatório.
+        $id = $this->naEmpresa($this->dono->empresa, fn () => Funcionario::create(['nome' => 'Carlos']))->id;
 
         $this->postJson("/api/funcionarios/{$id}/acesso")->assertUnprocessable()->assertJsonValidationErrors(['email']);
 

@@ -42,7 +42,7 @@ Para acessar:
   (dia a dia, só os atendimentos dele, sem telefone do cliente, com expediente e bloqueios) e "Minha comissão" (este
   mês, mês passado ou outro período: comissão, vales, repasses e **a receber**). API: `GET /api/barbeiro/agenda` e
   `/api/barbeiro/comissoes` (`BarbeiroController` e o `ComissaoController` de antes).
-  - **Acesso pelo e-mail do cadastro** (`AppServicesAcessoBarbeiro`): ao cadastrar o barbeiro com e-mail, o dono
+  - **Acesso pelo e-mail do cadastro** (`AppServicesAcessoBarbeiro`; o e-mail é **obrigatório** no cadastro novo): ao cadastrar o barbeiro, o dono
     já libera o login (perfil `barbeiro`, ligado por `funcionarios.usuario_id`) e o barbeiro recebe e-mail
     (`AppNotificationsAcessoBarbeiro`) com o link do painel, a senha provisória e o botão "Criar minha senha";
     no primeiro login com a provisória, troca obrigatória. Na ficha do barbeiro, logo abaixo de "Ativo", fica o

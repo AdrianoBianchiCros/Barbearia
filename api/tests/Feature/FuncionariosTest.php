@@ -20,6 +20,7 @@ class FuncionariosTest extends TestCase
 
         $this->postJson('/api/funcionarios', [
             'nome' => 'Carlos',
+            'email' => 'carlos@exemplo.test',
             'telefone' => '+55 (11) 98888-7777',
             'tipo_vinculo' => 'parceiro',
             'comissao_percentual' => 50,

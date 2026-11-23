@@ -9,6 +9,7 @@ use App\Models\Empresa;
 use App\Models\Funcionario;
 use App\Models\GaleriaFoto;
 use App\Models\Servico;
+use App\Services\AvisoAgendamentoEmail;
 use App\Services\Disponibilidade;
 use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
@@ -124,7 +125,7 @@ class PaginaPublicaController extends Controller
      * fica com o primeiro que estiver livre no horário.
      * POST /api/publico/{slug}/agendamentos
      */
-    public function agendar(Request $request, Mensageiro $mensageiro): JsonResponse
+    public function agendar(Request $request, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
     {
         $empresa = $this->empresa($request);
         $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
@@ -132,6 +133,7 @@ class PaginaPublicaController extends Controller
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
             'telefone' => ['required', Telefone::REGRA],
+            'email' => ['nullable', 'email', 'max:180'],
             'aceita_whatsapp' => ['sometimes', 'boolean'],
             'funcionario_id' => ['nullable', 'integer', $this->existeNaEmpresa('funcionarios')],
             'servico_ids' => ['required', 'array', 'min:1', 'max:10'],
@@ -143,6 +145,7 @@ class PaginaPublicaController extends Controller
             'maioridade' => ['accepted'],
         ], [
             'telefone.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'email.email' => 'Informe um e-mail válido ou deixe o campo em branco.',
             'aceite_privacidade.accepted' => 'Para agendar, aceite a Política de privacidade.',
             'maioridade.accepted' => 'Confirme que você tem 18 anos ou mais, ou que é o responsável legal por quem será atendido.',
         ], [
@@ -209,6 +212,7 @@ class PaginaPublicaController extends Controller
         $this->registrarAceites($empresa, $agendamento->cliente_id, $request);
         $agendamento->load('itens');
         $mensageiro->agendamento($agendamento, 'confirmacao');
+        $avisoEmail->enviar($agendamento, 'confirmacao');
         $inicio = $agendamento->inicio->copy()->setTimezone($empresa->fuso_horario);
 
         return response()->json([
@@ -255,7 +259,6 @@ class PaginaPublicaController extends Controller
         return $data >= $hoje && $data <= $limite;
     }
 
-    /** Cliente pelo WhatsApp: reaproveita o cadastro existente (inclusive excluído). */
     /** Guarda o aceite da privacidade e a declaração de maioridade; repete só quando a versão do texto muda. */
     private function registrarAceites(Empresa $empresa, int $clienteId, Request $request): void
     {
@@ -267,6 +270,7 @@ class PaginaPublicaController extends Controller
         Aceite::registrar($pendentes, ['empresa_id' => $empresa->id, 'cliente_id' => $clienteId], 'link_publico', $request);
     }
 
+    /** Cliente pelo WhatsApp: reaproveita o cadastro existente (inclusive excluído) e guarda o e-mail informado. */
     private function cliente(array $dados): Cliente
     {
         $cliente = Cliente::withTrashed()->firstOrNew(['telefone' => $dados['telefone']]);
@@ -274,6 +278,9 @@ class PaginaPublicaController extends Controller
             $cliente->nome = $dados['nome'];
             $cliente->deleted_at = null;
             $cliente->save();
+        }
+        if (! empty($dados['email']) && $cliente->email !== $dados['email']) {
+            $cliente->update(['email' => $dados['email']]);
         }
 
         if (! empty($dados['aceita_whatsapp']) && ! $cliente->consentimentoWhatsapp?->aceito) {

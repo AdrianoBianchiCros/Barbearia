@@ -64,8 +64,9 @@ A **limpeza automática** desses prazos ainda não existe (etapa 2). Até lá, o
   de lembretes, que é do agendamento.
 - ⬜ **"Meus dados":** o titular pede acesso ou exclusão; no painel, o dono exporta ou exclui um cliente e a própria conta.
 - ⬜ **Limpeza automática** pelos prazos de guarda (comando agendado que apaga ou anonimiza).
-- ⬜ **Página de descadastro** (`/descadastro`) e link de descadastro em todo e-mail (o sistema ainda não envia e-mail;
-  no WhatsApp a resposta PARAR já funciona).
+- ⬜ **Página de descadastro** (`/descadastro`) e link de descadastro em todo e-mail de marketing (hoje o cliente só
+  recebe o e-mail de confirmação do horário, que é aviso do agendamento, base execução de contrato, e só quando
+  informa o e-mail; no WhatsApp a resposta PARAR já funciona).
 - ⬜ **Plano de resposta a incidentes:** o que fazer, quem avisa e o modelo de comunicação à ANPD e aos titulares
   em até **3 dias úteis** (Resolução CD/ANPD nº 15/2024), mais um registro de incidentes.
 - ⬜ Pedir novo aceite no painel quando a versão dos Termos ou da Privacidade mudar.

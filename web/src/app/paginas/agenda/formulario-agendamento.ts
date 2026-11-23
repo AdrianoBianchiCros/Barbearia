@@ -45,8 +45,9 @@ export interface InicioFormulario {
             <label class="campo"><span>Nome</span><input [(ngModel)]="novoNome" name="novoNome" /></label>
             <label class="campo"><span>WhatsApp</span><input type="tel" [(ngModel)]="novoTelefone" name="novoTelefone" placeholder="(11) 99999-0000" /></label>
           </div>
-          @if (errosApi()['novo_cliente.nome'] || errosApi()['novo_cliente.telefone']) {
-            <small class="erro-campo">{{ errosApi()['novo_cliente.nome'] || errosApi()['novo_cliente.telefone'] }}</small>
+          <label class="campo"><span>E-mail (opcional, recebe a confirmação)</span><input type="email" [(ngModel)]="novoEmail" name="novoEmail" /></label>
+          @if (errosApi()['novo_cliente.nome'] || errosApi()['novo_cliente.telefone'] || errosApi()['novo_cliente.email']) {
+            <small class="erro-campo">{{ errosApi()['novo_cliente.nome'] || errosApi()['novo_cliente.telefone'] || errosApi()['novo_cliente.email'] }}</small>
           }
           <label class="campo-check"><input type="checkbox" [(ngModel)]="novoAceita" name="novoAceita" /> Autorizou receber lembretes pelo WhatsApp</label>
           <button class="botao-link" type="button" (click)="novoCliente.set(false)">← Buscar cliente cadastrado</button>
@@ -200,6 +201,7 @@ export class FormularioAgendamento implements OnInit {
   protected readonly novoCliente = signal(false);
   protected novoNome = '';
   protected novoTelefone = '';
+  protected novoEmail = '';
   protected novoAceita = true;
 
   // Serviços, dia e horário
@@ -382,7 +384,7 @@ export class FormularioAgendamento implements OnInit {
     };
     if (!this.remarcando()) {
       if (this.novoCliente()) {
-        dados.novo_cliente = { nome: this.novoNome, telefone: this.novoTelefone, aceita_whatsapp: this.novoAceita };
+        dados.novo_cliente = { nome: this.novoNome, telefone: this.novoTelefone, email: this.novoEmail.trim() || null, aceita_whatsapp: this.novoAceita };
       } else {
         dados.cliente_id = this.cliente()?.id ?? null;
       }

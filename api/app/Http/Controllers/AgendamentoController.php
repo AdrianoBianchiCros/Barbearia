@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use App\Models\Cliente;
 use App\Models\Funcionario;
+use App\Services\AvisoAgendamentoEmail;
 use App\Services\Disponibilidade;
 use App\Services\WhatsApp\Mensageiro;
 use App\Support\Telefone;
@@ -114,7 +115,7 @@ class AgendamentoController extends Controller
         return response()->json($opcoes->first());
     }
 
-    public function store(Request $request, Mensageiro $mensageiro): JsonResponse
+    public function store(Request $request, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
     {
         $dados = $this->validar($request, novo: true);
         $barbeiro = $this->barbeiroPermitido($request, (int) $dados['funcionario_id']);
@@ -131,12 +132,13 @@ class AgendamentoController extends Controller
         });
 
         $mensageiro->agendamento($agendamento, 'confirmacao');
+        $avisoEmail->enviar($agendamento, 'confirmacao');
 
         return response()->json($this->resposta($agendamento), 201);
     }
 
     /** Remarcar: muda horário, barbeiro e/ou serviços de um agendamento ainda não atendido. */
-    public function update(Request $request, Agendamento $agendamento, Mensageiro $mensageiro): JsonResponse
+    public function update(Request $request, Agendamento $agendamento, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
     {
         if (! in_array($agendamento->status, ['agendado', 'confirmado'], true)) {
             return response()->json(['message' => 'Só é possível remarcar agendamentos que ainda não foram atendidos.'], 422);
@@ -156,6 +158,7 @@ class AgendamentoController extends Controller
 
         if (! $agendamento->inicio->equalTo($inicioAnterior)) {
             $mensageiro->agendamento($agendamento, 'remarcacao');
+            $avisoEmail->enviar($agendamento, 'remarcacao');
         }
 
         return response()->json($this->resposta($agendamento));
@@ -177,6 +180,7 @@ class AgendamentoController extends Controller
             'novo_cliente' => $novo ? ['required_without:cliente_id', 'nullable', 'array'] : ['prohibited'],
             'novo_cliente.nome' => ['required_with:novo_cliente', 'string', 'max:120'],
             'novo_cliente.telefone' => ['required_with:novo_cliente', Telefone::REGRA],
+            'novo_cliente.email' => ['nullable', 'email', 'max:180'],
             'novo_cliente.aceita_whatsapp' => ['sometimes', 'boolean'],
             'funcionario_id' => ['required', 'integer', $this->existeNaEmpresa('funcionarios')],
             'servico_ids' => ['required', 'array', 'min:1'],
@@ -193,6 +197,7 @@ class AgendamentoController extends Controller
             'servico_ids' => 'serviços',
             'novo_cliente.nome' => 'nome do cliente',
             'novo_cliente.telefone' => 'WhatsApp do cliente',
+            'novo_cliente.email' => 'e-mail do cliente',
         ]);
     }
 
@@ -223,6 +228,9 @@ class AgendamentoController extends Controller
             $cliente->nome = $novo['nome'];
             $cliente->deleted_at = null;
             $cliente->save();
+        }
+        if (! empty($novo['email']) && $cliente->email !== $novo['email']) {
+            $cliente->update(['email' => $novo['email']]);
         }
 
         if (! empty($novo['aceita_whatsapp']) && ! $cliente->consentimentoWhatsapp()->exists()) {

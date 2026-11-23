@@ -231,6 +231,7 @@
         .aviso { padding: 22px; border-radius: var(--raio); background: var(--creme); color: var(--suave); text-align: center; }
         .campo { display: block; margin-bottom: 16px; }
         .campo span { display: block; font-weight: 600; margin-bottom: 6px; }
+        .campo small { display: block; margin-top: 6px; font-size: .85em; opacity: .75; }
         .campo input, .campo textarea { width: 100%; padding: 14px; border: 1.5px solid var(--borda); border-radius: 12px; font: inherit; background: #fff; color: inherit; transition: border-color .2s, box-shadow .2s; }
         .campo input:focus, .campo textarea:focus { outline: 0; border-color: var(--acento); box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento) 18%, transparent); }
         .check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; cursor: pointer; }
@@ -515,6 +516,7 @@
                             <div class="erro" id="erro" hidden></div>
                             <label class="campo"><span>Seu nome</span><input name="nome" autocomplete="name" maxlength="120" required></label>
                             <label class="campo"><span>WhatsApp com DDD</span><input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 99999-0000" required></label>
+                            <label class="campo"><span>E-mail (opcional)</span><input name="email" type="email" inputmode="email" autocomplete="email" maxlength="180" placeholder="voce@exemplo.com"><small>Enviamos a confirmação do horário, com o link para remarcar ou cancelar.</small></label>
                             <label class="check"><input type="checkbox" name="aceita_whatsapp" value="1"><span>Quero receber a confirmação e lembretes do horário pelo WhatsApp. <small>(opcional)</small></span></label>
                             <label class="campo"><span>Observação (opcional)</span><textarea name="observacoes" rows="2" maxlength="300" placeholder="Ex.: quero manter o comprimento em cima"></textarea></label>
                             <label class="check"><input type="checkbox" name="maioridade" value="1" required><span>Tenho 18 anos ou mais, ou sou o responsável legal por quem será atendido e autorizo o uso dos dados para este agendamento.</span></label>

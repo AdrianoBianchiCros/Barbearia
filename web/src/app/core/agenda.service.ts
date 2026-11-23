@@ -66,7 +66,7 @@ export interface SugestaoEncaixe {
 
 export interface DadosAgendamento {
   cliente_id?: number | null;
-  novo_cliente?: { nome: string; telefone: string; aceita_whatsapp: boolean } | null;
+  novo_cliente?: { nome: string; telefone: string; email?: string | null; aceita_whatsapp: boolean } | null;
   funcionario_id: number;
   servico_ids: number[];
   data: string;

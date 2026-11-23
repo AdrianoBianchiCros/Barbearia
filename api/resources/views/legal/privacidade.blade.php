@@ -27,8 +27,9 @@
         <table>
             <thead><tr><th>Dado</th><th>Para quê</th><th>Base legal (LGPD, art. 7º)</th></tr></thead>
             <tbody>
-                <tr><td>Nome e WhatsApp do cliente</td><td>Registrar o agendamento, identificar quem será atendido e falar sobre o horário</td><td>Execução de contrato / procedimentos preliminares (inciso V)</td></tr>
+                <tr><td>Nome, WhatsApp e e-mail (opcional) do cliente</td><td>Registrar o agendamento, identificar quem será atendido e falar sobre o horário</td><td>Execução de contrato / procedimentos preliminares (inciso V)</td></tr>
                 <tr><td>Serviços, data, horário e observação do agendamento</td><td>Organizar a agenda da barbearia</td><td>Execução de contrato (inciso V)</td></tr>
+                <tr><td>E-mail de confirmação do horário (quando você informa o e-mail)</td><td>Enviar os dados do horário e o link para confirmar, remarcar ou cancelar</td><td>Execução de contrato (inciso V)</td></tr>
                 <tr><td>Mensagens de confirmação e lembrete pelo WhatsApp</td><td>Avisar sobre o horário marcado</td><td>Consentimento (inciso I), que pode ser retirado a qualquer momento</td></tr>
                 <tr><td>Atendimentos, pagamentos e comissões</td><td>Controle financeiro da barbearia e obrigações fiscais</td><td>Obrigação legal (inciso II) e execução de contrato (inciso V)</td></tr>
                 <tr><td>Nome, e-mail e senha (criptografada) da equipe</td><td>Acesso ao painel</td><td>Execução de contrato (inciso V)</td></tr>

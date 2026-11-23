@@ -35,7 +35,19 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 159 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 163 testes na API · 9 testes no painel*
+
+- **Confirmação do horário por e-mail para o cliente (23/11/2026, ainda não publicado):** enquanto o WhatsApp oficial
+  não fica pronto, o cliente que informa e-mail recebe a confirmação ao marcar e ao remarcar (página da barbearia,
+  painel e link `/a/{token}`), com data, hora, barbeiro, serviços, valor, endereço e o botão "Confirmar, remarcar ou
+  cancelar". O e-mail é **opcional** nos dois formulários (página: "E-mail (opcional)"; painel, cliente novo na agenda:
+  "E-mail (opcional, recebe a confirmação)"); clientes já cadastrados recebem se tiverem e-mail no cadastro.
+  Sai pela fila (`App\Services\AvisoAgendamentoEmail` → `App\Notifications\ConfirmacaoAgendamento`), pelo SMTP do
+  Titan, com o **nome da barbearia como remetente** e resposta para o e-mail da barbearia. Não depende do
+  consentimento do WhatsApp (é aviso do agendamento, execução de contrato): a Política de privacidade ganhou essa
+  linha e passou para a **versão 23/11/2026**. Testes em `EmailClienteTest`. **Depende do cron do `schedule:run`**
+  em produção (é ele que processa a fila). Decidido após comparar WhatsApp oficial (Meta/parceiros), SMS e e-mail:
+  e-mail não tem custo por mensagem.
 
 - **Faturas e pagamento por Pix no painel do dono (23/11/2026, ainda não publicado):** o farol "Vence em…" do menu
   (e a faixa de aviso de vencimento) virou botão para **`/assinatura` ("Minha assinatura")**, só do dono: a
@@ -311,6 +323,10 @@ Para acessar:
   - conexão com a Meta (o token fica criptografado e nunca volta para o painel);
   - modelos para aprovar e histórico das mensagens.
 
+### E-mail ao cliente
+- **Confirmação** ao marcar ou remarcar (página, painel e link do cliente), quando o cliente tem e-mail; sai pela fila,
+  com o nome da barbearia no remetente e o botão para o link `/a/{token}`.
+
 ### LGPD (detalhes em [`LGPD.md`](LGPD.md))
 - Política de privacidade (`/privacidade`) e Termos de uso (`/termos`), com versão.
 - Aceites guardados na tabela `aceites` (documento, versão, data, IP e navegador) no agendamento online. O dono aceita
@@ -318,7 +334,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 150 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 163 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 
@@ -378,6 +394,9 @@ Na ordem das etapas do documento v4 (seção 7). ✅ = feito · ⏳ = em andamen
 - Textos de chamada da página editáveis pelo painel ("Mais que um corte…", "Mãos de mestre")
 - Limites do agendamento online (1 por semana e 4 por mês) configuráveis pelo painel; hoje são constantes em `LimiteAgendamentoCliente`
 - Antes de a conta da Meta ficar pronta: botão na agenda para enviar a confirmação manualmente por `wa.me`
+- E-mail ao cliente: lembrete 24 h antes por e-mail (hoje só confirmação e remarcação) e aviso de cancelamento
+- WhatsApp sem parceiro pago: virar Provedor de Tecnologia da Meta (cadastro incorporado, "Conectar meu WhatsApp"),
+  para cada barbearia ligar o próprio número (coexistência com o app) pagando só as mensagens da Meta
 - Avisar a recepção quando o cliente cancelar ou remarcar pelo link
 - Laravel Boost: `api/CLAUDE.md` pede para instalar, mas não foi instalado (seria uma dependência nova)
 

@@ -161,7 +161,7 @@
         function lembrarDados() {
             try {
                 const salvo = JSON.parse(localStorage.getItem(CHAVE) || 'null');
-                if (salvo && !form.nome.value) { form.nome.value = salvo.nome || ''; form.telefone.value = salvo.telefone || ''; }
+                if (salvo && !form.nome.value) { form.nome.value = salvo.nome || ''; form.telefone.value = salvo.telefone || ''; form.email.value = salvo.email || ''; }
             } catch (e) { /* sem armazenamento local */ }
         }
 
@@ -189,6 +189,7 @@
                     body: JSON.stringify({
                         nome: form.nome.value.trim(),
                         telefone: form.telefone.value,
+                        email: form.email.value.trim() || null,
                         aceita_whatsapp: form.aceita_whatsapp.checked,
                         maioridade: form.maioridade.checked,
                         aceite_privacidade: form.aceite_privacidade.checked,
@@ -207,7 +208,7 @@
                     if (dados.errors && dados.errors.hora) escolherDia(estado.data); // horário foi ocupado: atualiza a lista
                     return;
                 }
-                try { localStorage.setItem(CHAVE, JSON.stringify({ nome: form.nome.value.trim(), telefone: form.telefone.value })); } catch (e) { /* ok */ }
+                try { localStorage.setItem(CHAVE, JSON.stringify({ nome: form.nome.value.trim(), telefone: form.telefone.value, email: form.email.value.trim() })); } catch (e) { /* ok */ }
                 preencher($('#resumo-final'), {
                     servicos: dados.servicos.join(' + '), barbeiro: dados.barbeiro, data: dados.data,
                     hora: dados.hora, duracao: dados.duracao_minutos, valor: dados.valor_total,

@@ -18,5 +18,5 @@ return [
 
     // Versão vigente de cada documento. Ao mudar o texto, trocar a data: os próximos aceites ficam com a nova versão.
     'versao_termos' => '2026-11-09',
-    'versao_privacidade' => '2026-11-09',
+    'versao_privacidade' => '2026-11-23',
 ];

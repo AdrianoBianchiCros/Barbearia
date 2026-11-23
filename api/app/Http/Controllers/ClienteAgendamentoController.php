@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Agendamento;
 use App\Models\Funcionario;
+use App\Services\AvisoAgendamentoEmail;
 use App\Services\Disponibilidade;
 use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
@@ -80,7 +81,7 @@ class ClienteAgendamentoController extends Controller
         ));
     }
 
-    public function remarcar(Request $request, Mensageiro $mensageiro): JsonResponse
+    public function remarcar(Request $request, Mensageiro $mensageiro, AvisoAgendamentoEmail $avisoEmail): JsonResponse
     {
         $agendamento = $this->agendamento($request);
         $this->exigirAntecedencia($agendamento);
@@ -125,6 +126,7 @@ class ClienteAgendamentoController extends Controller
         });
 
         $mensageiro->agendamento($agendamento, 'remarcacao');
+        $avisoEmail->enviar($agendamento, 'remarcacao');
         $inicio = $agendamento->inicio->copy()->setTimezone($agendamento->empresa->fuso_horario);
 
         return response()->json([

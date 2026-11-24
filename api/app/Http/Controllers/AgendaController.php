@@ -10,12 +10,14 @@ use App\Models\Funcionario;
 use App\Models\Servico;
 use App\Services\AvisosAgenda;
 use App\Services\Comandas;
+use App\Services\Disponibilidade;
 use App\Services\ResumoAgendamento;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Agenda do dia: barbeiros, expediente, bloqueios e agendamentos.
@@ -23,6 +25,25 @@ use Illuminate\Support\Facades\DB;
  */
 class AgendaController extends Controller
 {
+    /** Mudanças de situação permitidas (as mesmas dos botões da agenda). Cancelado não volta. */
+    private const TRANSICOES = [
+        'agendado' => ['confirmado', 'em_atendimento', 'faltou', 'cancelado'],
+        'confirmado' => ['em_atendimento', 'faltou', 'cancelado'],
+        'em_atendimento' => ['concluido'],
+        'concluido' => ['confirmado', 'em_atendimento'], // reabrir
+        'faltou' => ['confirmado'],
+        'cancelado' => [],
+    ];
+
+    private const ROTULOS = [
+        'agendado' => 'Agendado',
+        'confirmado' => 'Confirmado',
+        'em_atendimento' => 'Em atendimento',
+        'concluido' => 'Concluído',
+        'cancelado' => 'Cancelado',
+        'faltou' => 'Faltou',
+    ];
+
     public function dia(Request $request, ResumoAgendamento $resumo): JsonResponse
     {
         $request->validate(['data' => ['nullable', 'date_format:Y-m-d']]);
@@ -179,9 +200,21 @@ class AgendaController extends Controller
             return response()->json(['message' => 'Você só pode alterar os seus próprios atendimentos.'], 403);
         }
 
-        $cancelando = $dados['status'] === 'cancelado' && $agendamento->status !== 'cancelado';
+        $novo = $dados['status'];
+        if ($novo !== $agendamento->status && ! in_array($novo, self::TRANSICOES[$agendamento->status] ?? [], true)) {
+            return response()->json(['message' => 'Não é possível passar de "'.self::ROTULOS[$agendamento->status].'" para "'.self::ROTULOS[$novo].'".'], 422);
+        }
 
-        DB::transaction(function () use ($agendamento, $dados, $comandas, $cancelando, $avisos, $usuario) {
+        $cancelando = $novo === 'cancelado' && $agendamento->status !== 'cancelado';
+        // Faltou não ocupa a agenda: ao desfazer, o horário pode já ter outro cliente.
+        $voltaAOcupar = in_array($novo, Disponibilidade::STATUS_OCUPAM, true)
+            && ! in_array($agendamento->status, Disponibilidade::STATUS_OCUPAM, true);
+
+        DB::transaction(function () use ($agendamento, $dados, $comandas, $cancelando, $voltaAOcupar, $avisos, $usuario) {
+            if ($voltaAOcupar) {
+                $this->exigirHorarioLivre($agendamento, $usuario->empresa->fuso_horario);
+            }
+
             // Concluído gera a comanda para receber; saindo de concluído, a comanda não paga é descartada
             if ($agendamento->status === 'concluido' && $dados['status'] !== 'concluido') {
                 $comandas->descartarAberta($agendamento);
@@ -204,5 +237,28 @@ class AgendaController extends Controller
             'status' => $agendamento->status,
             'comanda' => $agendamento->comanda()->first()?->only(['id', 'status', 'total']),
         ]);
+    }
+
+    /** Recusa a volta à agenda quando outro cliente já ocupa o horário com o mesmo barbeiro. */
+    private function exigirHorarioLivre(Agendamento $agendamento, string $fuso): void
+    {
+        // Trava a agenda do barbeiro para que dois pedidos não peguem o mesmo horário.
+        $barbeiro = Funcionario::whereKey($agendamento->funcionario_id)->lockForUpdate()->firstOrFail();
+        $inicio = $agendamento->inicio->copy()->setTimezone($fuso);
+
+        $motivo = (new Disponibilidade($fuso))->motivoIndisponivel(
+            $barbeiro,
+            $inicio->toDateString(),
+            $inicio->format('H:i'),
+            (int) $agendamento->inicio->diffInMinutes($agendamento->fim),
+            encaixe: true, // só o conflito com outro cliente importa (o horário pode já ter passado)
+            ignorarAgendamentoId: $agendamento->id,
+        );
+
+        if ($motivo) {
+            throw ValidationException::withMessages([
+                'status' => 'Outro cliente já está neste horário com o mesmo barbeiro. Remarque um dos dois antes.',
+            ]);
+        }
     }
 }

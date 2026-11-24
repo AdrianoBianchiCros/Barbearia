@@ -134,6 +134,56 @@ class AgendaDiaTest extends TestCase
         $this->assertNotNull($deOutro->fresh()->cancelado_em);
     }
 
+    public function test_desfazer_falta_nao_coloca_dois_clientes_no_mesmo_horario(): void
+    {
+        $usuario = $this->logarComo('recepcao');
+        $d = $this->montarBarbearia($usuario);
+
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'faltou'])->assertOk();
+        // Com a falta, o horário ficou livre e outro cliente foi encaixado nele.
+        $this->naEmpresa($usuario->empresa_id, fn () => Agendamento::create([
+            'cliente_id' => $d['cedo']->cliente_id,
+            'funcionario_id' => $d['carlos']->id,
+            'inicio' => $d['cedo']->inicio,
+            'fim' => $d['cedo']->fim,
+            'status' => 'confirmado',
+        ]));
+
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'confirmado'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status' => 'Outro cliente já está neste horário']);
+        $this->assertSame('faltou', $d['cedo']->fresh()->status);
+
+        // Sem conflito, desfazer a falta funciona.
+        $this->patchJson("/api/agendamentos/{$d['tarde']->id}/status", ['status' => 'faltou'])->assertOk();
+        $this->patchJson("/api/agendamentos/{$d['tarde']->id}/status", ['status' => 'confirmado'])->assertOk();
+    }
+
+    public function test_so_aceita_as_mudancas_de_situacao_previstas(): void
+    {
+        $usuario = $this->logarComo('recepcao');
+        $d = $this->montarBarbearia($usuario);
+
+        // Cancelado não volta nem vira atendimento (geraria comanda de horário cancelado).
+        foreach (['confirmado', 'agendado', 'concluido', 'em_atendimento'] as $status) {
+            $this->patchJson("/api/agendamentos/{$d['cancelado']->id}/status", ['status' => $status])
+                ->assertUnprocessable()
+                ->assertJsonPath('message', "Não é possível passar de \"Cancelado\" para \"{$this->rotulo($status)}\".");
+        }
+        $this->assertNull($d['cancelado']->comanda()->first());
+
+        // Não pula etapas: confirmado não vai direto para concluído.
+        $this->patchJson("/api/agendamentos/{$d['cedo']->id}/status", ['status' => 'concluido'])->assertUnprocessable();
+
+        // Repetir a situação atual não é erro.
+        $this->patchJson("/api/agendamentos/{$d['cancelado']->id}/status", ['status' => 'cancelado'])->assertOk();
+    }
+
+    private function rotulo(string $status): string
+    {
+        return ['confirmado' => 'Confirmado', 'agendado' => 'Agendado', 'concluido' => 'Concluído', 'em_atendimento' => 'Em atendimento'][$status];
+    }
+
     public function test_nao_ve_agenda_nem_altera_agendamento_de_outra_barbearia(): void
     {
         $outraEmpresa = Empresa::factory()->create();

@@ -40,7 +40,7 @@ export function anexarContratacao(dados: FormData, c: Contratacao): FormData {
   template: `
     <div class="grade-2">
       <label class="campo">
-        <span>Período de acesso</span>
+        <span>Vigência do contrato</span>
         <select name="periodo" [(ngModel)]="dados().periodo" required>
           @for (p of opcoes()?.periodos ?? []; track p.valor) {<option [value]="p.valor">{{ p.rotulo }}</option>}
         </select>
@@ -52,8 +52,9 @@ export function anexarContratacao(dados: FormData, c: Contratacao): FormData {
         </select>
       </label>
       <label class="campo">
-        <span>Valor pago (R$)</span>
+        <span>Mensalidade (R$)</span>
         <input type="number" min="0" step="0.01" name="valor" [(ngModel)]="dados().valor" required />
+        <small class="texto-suave">Cobrança mensal: cada pagamento libera 1 mês de acesso.</small>
         @if (erros()['valor']) {<small class="erro-campo">{{ erros()['valor'] }}</small>}
       </label>
       <label class="campo">

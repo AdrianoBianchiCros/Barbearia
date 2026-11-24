@@ -35,7 +35,14 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 189 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 190 testes na API · 9 testes no painel*
+
+- **Cobrança mensal recorrente (23/11/2026, ainda não publicado):** decisão do dono do produto: o "período" (1, 3, 6
+  ou 12 meses) é a **vigência do contrato** e o valor é a **mensalidade**. Cada pagamento (cadastro, renovação ou fatura
+  Pix confirmada) libera **1 mês** de acesso (`Assinatura::calcularFim`; o teste segue com 7 dias), e a próxima fatura
+  do dono é sempre a mensalidade de 1 mês. No admin os campos viraram "Vigência do contrato" e "Mensalidade (R$)"; no
+  painel do dono a cobrança aparece como "Mensalidade · contrato de 12 meses" (`Assinatura::rotuloCobranca`).
+  Contratações antigas não foram alteradas (o acesso já liberado continua até a data gravada).
 
 - **Contrato de prestação de serviço em PDF (23/11/2026, ainda não publicado):** no cadastro da barbearia (admin), se
   nenhum arquivo for anexado, o sistema **gera o contrato** com os dados preenchidos (CNPJ, endereço, telefone e e-mail
@@ -393,7 +400,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 189 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 190 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

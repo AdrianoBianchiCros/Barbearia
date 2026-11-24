@@ -44,13 +44,28 @@ class Assinatura extends Model
         return Attribute::get(fn () => filled($this->contrato_path));
     }
 
-    /** Último dia de acesso de um período que começa em $inicio (ex.: 1 mês a partir de 10/11 vai até 09/12). */
+    /**
+     * Último dia de acesso pago a partir de $inicio. A cobrança é sempre mensal: cada pagamento libera
+     * 1 mês (de 10/11 até 09/12), qualquer que seja o período; o período (3, 6, 12 meses) é a vigência
+     * do contrato. O teste usa os dias dele (7 dias).
+     */
     public static function calcularFim(string $periodo, Carbon $inicio): Carbon
     {
         $regra = config("assinatura.periodos.{$periodo}");
 
         return isset($regra['dias'])
             ? $inicio->copy()->addDays($regra['dias'] - 1)
-            : $inicio->copy()->addMonthsNoOverflow($regra['meses'])->subDay();
+            : $inicio->copy()->addMonthNoOverflow()->subDay();
+    }
+
+    /** Como a cobrança aparece para o dono: "Mensalidade", "Mensalidade · contrato de 12 meses" ou "Teste de 7 dias". */
+    public static function rotuloCobranca(string $periodo): string
+    {
+        $regra = config("assinatura.periodos.{$periodo}");
+        if (! $regra || isset($regra['dias'])) {
+            return $regra['rotulo'] ?? $periodo;
+        }
+
+        return $regra['meses'] === 1 ? 'Mensalidade' : "Mensalidade · contrato de {$regra['rotulo']}";
     }
 }

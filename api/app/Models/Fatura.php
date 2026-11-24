@@ -35,6 +35,6 @@ class Fatura extends Model
 
     protected function periodoRotulo(): Attribute
     {
-        return Attribute::get(fn () => config("assinatura.periodos.{$this->periodo}.rotulo", $this->periodo));
+        return Attribute::get(fn () => Assinatura::rotuloCobranca($this->periodo));
     }
 }

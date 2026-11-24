@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Administrador;
+use App\Models\Assinatura;
 use App\Models\Fatura;
 use App\Notifications\PagamentoInformado;
 use App\Services\Faturas;
@@ -23,7 +24,7 @@ class AssinaturaController extends Controller
 
         $pagas = $empresa->assinaturas()->latest('inicio')->latest('id')->get()->map(fn ($a) => [
             'id' => $a->id,
-            'periodo' => config("assinatura.periodos.{$a->periodo}.rotulo", $a->periodo),
+            'periodo' => Assinatura::rotuloCobranca($a->periodo),
             'inicio' => $a->inicio->toDateString(),
             'fim' => $a->fim->toDateString(),
             'valor' => $a->valor,

@@ -57,7 +57,7 @@ class FaturasTest extends TestCase
         $this->getJson('/api/assinatura')
             ->assertOk()
             ->assertJsonPath('pix_disponivel', true)
-            ->assertJsonPath('pagas.0.periodo', '1 mês')
+            ->assertJsonPath('pagas.0.periodo', 'Mensalidade')
             ->assertJsonPath('pagas.0.valor', '99.90')
             ->assertJsonPath('proxima.periodo', '1m')
             ->assertJsonPath('proxima.valor', '99.90')
@@ -69,6 +69,19 @@ class FaturasTest extends TestCase
         // A mesma fatura volta nas próximas consultas (o Pix não muda).
         $this->getJson('/api/assinatura')->assertOk();
         $this->assertSame(1, Fatura::count());
+    }
+
+    public function test_contrato_de_12_meses_e_cobrado_mes_a_mes(): void
+    {
+        $this->logarDono($this->barbearia('12m', 100));
+
+        $this->getJson('/api/assinatura')
+            ->assertOk()
+            ->assertJsonPath('pagas.0.periodo', 'Mensalidade · contrato de 12 meses')
+            ->assertJsonPath('proxima.valor', '100.00') // a mensalidade, não o total do contrato
+            ->assertJsonPath('proxima.inicio', '2026-11-21')
+            ->assertJsonPath('proxima.fim', '2026-12-20') // libera 1 mês
+            ->assertJsonPath('proxima.periodo_rotulo', 'Mensalidade · contrato de 12 meses');
     }
 
     public function test_sem_proxima_fatura_no_teste_ou_sem_prazo(): void

@@ -131,14 +131,15 @@ class AdminBarbeariasTest extends TestCase
             ->assertJsonPath('barbearia.acesso.situacao', 'vencendo');
     }
 
-    public function test_renovacao_soma_ao_vencimento_atual(): void
+    public function test_renovacao_soma_um_mes_ao_vencimento_atual(): void
     {
         $this->logarAdmin();
         $empresa = Empresa::factory()->create(['acesso_ate' => '2026-11-20']);
 
-        $this->postJson("/api/admin/barbearias/{$empresa->id}/renovar", ['periodo' => '3m', 'forma_pagamento' => 'boleto', 'valor' => 270])
+        // Contrato de 3 meses com mensalidade de R$ 90: cada pagamento libera 1 mês.
+        $this->postJson("/api/admin/barbearias/{$empresa->id}/renovar", ['periodo' => '3m', 'forma_pagamento' => 'boleto', 'valor' => 90])
             ->assertOk()
-            ->assertJsonPath('acesso.vence_em', '2027-02-20')
+            ->assertJsonPath('acesso.vence_em', '2026-12-20')
             ->assertJsonCount(1, 'assinaturas')
             ->assertJsonPath('assinaturas.0.inicio', '2026-11-21');
     }
@@ -148,9 +149,9 @@ class AdminBarbeariasTest extends TestCase
         $this->logarAdmin();
         $empresa = Empresa::factory()->create(['acesso_ate' => '2026-10-01']);
 
-        $this->postJson("/api/admin/barbearias/{$empresa->id}/renovar", ['periodo' => '12m', 'forma_pagamento' => 'pix', 'valor' => 900])
+        $this->postJson("/api/admin/barbearias/{$empresa->id}/renovar", ['periodo' => '12m', 'forma_pagamento' => 'pix', 'valor' => 100])
             ->assertOk()
-            ->assertJsonPath('acesso.vence_em', '2027-11-09')
+            ->assertJsonPath('acesso.vence_em', '2026-12-09') // mensal: 1 mês a partir de hoje
             ->assertJsonPath('acesso.situacao', 'em_dia');
     }
 

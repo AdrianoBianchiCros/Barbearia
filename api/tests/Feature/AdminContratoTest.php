@@ -62,6 +62,9 @@ class AdminContratoTest extends TestCase
         $this->assertSame('cem reais', $anual['mensalidade_extenso']);
         $this->assertSame(250.0, $anual['taxa_instalacao']);
         $this->assertSame('duzentos e cinquenta reais', $anual['taxa_extenso']);
+        $this->assertSame(350.0, $anual['primeiro_pagamento']); // 1ª mensalidade + taxa, no fim do teste grátis
+        $this->assertSame('trezentos e cinquenta reais', $anual['primeiro_pagamento_extenso']);
+        $this->assertSame(7, $anual['teste_gratis_dias']);
         $this->assertSame('11.222.333/0001-81', $anual['contratante']['documento']);
 
         $mensal = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '1m', 'forma_pagamento' => 'boleto', 'valor' => 99.90], now());

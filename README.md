@@ -43,6 +43,13 @@ Para acessar:
   do dono é sempre a mensalidade de 1 mês. No admin os campos viraram "Vigência do contrato" e "Mensalidade (R$)"; no
   painel do dono a cobrança aparece como "Mensalidade · contrato de 12 meses" (`Assinatura::rotuloCobranca`).
   Contratações antigas não foram alteradas (o acesso já liberado continua até a data gravada).
+- **7 dias grátis em todo contrato novo (23/11/2026, ainda não publicado):** a opção "Teste de 7 dias" saiu do
+  cadastro (fica só no histórico antigo). O cadastro registra os dias grátis (`assinaturas.gratis`, sem cobrança),
+  guardando a mensalidade e a taxa contratadas; a **1ª fatura** do painel do dono vence no fim do teste com
+  **mensalidade + taxa de instalação** (`faturas.taxa_instalacao`, total no Pix); as seguintes são só a mensalidade.
+  Dias em `ASSINATURA_TESTE_GRATIS_DIAS` (padrão 7). No contrato: cláusula 2.3 (teste gratuito, sem ônus se não
+  continuar) e, na 3.3, o valor do primeiro pagamento (ex.: R$ 250,00 = R$ 100,00 + R$ 150,00) e "a partir do segundo
+  ciclo, R$ 100,00 por mês". 7.6 continua com 48 h e a 4.1 com a vigência (decisões do dono do produto).
 
 - **Contrato de prestação de serviço em PDF (23/11/2026, ainda não publicado):** no cadastro da barbearia (admin), se
   nenhum arquivo for anexado, o sistema **gera o contrato** com os dados preenchidos (CNPJ, endereço, telefone e e-mail

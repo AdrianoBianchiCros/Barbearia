@@ -69,6 +69,12 @@
     poderá cadastrar outros usuários (recepção e barbeiros), respondendo pelo uso que fizerem do sistema.</p>
 <p>2.2. O CONTRATANTE é responsável pela guarda das senhas de acesso e por comunicar imediatamente à CONTRATADA
     qualquer uso não autorizado.</p>
+@if ($teste_gratis_dias > 0)
+<p>2.3. <strong>Período de teste gratuito:</strong> os primeiros {{ $teste_gratis_dias }}{{ $teste_gratis_dias <= 12 ? ' ('.$extenso[$teste_gratis_dias].')' : '' }}
+    dias, contados da disponibilização do acesso, são gratuitos, para que o CONTRATANTE avalie a plataforma. O primeiro
+    pagamento vence ao final desse período. Se o CONTRATANTE não desejar continuar, basta não efetuar o pagamento ou
+    comunicar o cancelamento até essa data, sem qualquer ônus, e o acesso será encerrado.</p>
+@endif
 
 <h2>Cláusula 3 – Do preço e da forma de pagamento</h2>
 <p>3.{{ ++$k }}. Pela disponibilização da plataforma SaaS, o CONTRATANTE pagará à CONTRATADA o valor de
@@ -81,7 +87,11 @@
     iniciais de preparação e disponibilização do ambiente do CONTRATANTE.</p>
 @endif
 <p>3.{{ ++$k }}. A assinatura será cobrada de forma recorrente, mensal e antecipada, mediante pagamento via
-    <strong>{{ $forma_pagamento }}</strong>, com vencimento na data correspondente ao início de cada novo ciclo mensal.</p>
+    <strong>{{ $forma_pagamento }}</strong>, com vencimento na data correspondente ao início de cada novo ciclo
+    mensal{{ $teste_gratis_dias > 0 ? ', sendo o primeiro vencimento ao final do período de teste gratuito' : '' }}.@if ($taxa_instalacao)
+    Assim, o primeiro pagamento será de <strong>{{ $r($primeiro_pagamento) }} ({{ $primeiro_pagamento_extenso }})</strong>,
+    composto pela primeira mensalidade de {{ $r($mensalidade) }} e pela taxa única de instalação de
+    {{ $r($taxa_instalacao) }}. A partir do segundo ciclo mensal, será devido o valor de {{ $r($mensalidade) }} por mês.@endif</p>
 <p>3.{{ ++$k }}. O atraso no pagamento sujeita o CONTRATANTE à multa de 2% (dois por cento) e juros de 1% (um por
     cento) ao mês sobre o valor devido. Após {{ $carencia_dias }}{{ $carencia_dias <= 12 ? ' ('.$extenso[$carencia_dias].')' : '' }}
     dias de atraso, a CONTRATADA poderá suspender temporariamente o acesso ao sistema até a regularização do pagamento,

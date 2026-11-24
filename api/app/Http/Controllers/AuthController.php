@@ -37,25 +37,23 @@ class AuthController extends Controller
     }
 
     /**
-     * Envia o link de redefinição de senha para um e-mail cadastrado.
-     * Avisa quando o e-mail não existe (decisão do produto; o limite "senha" segura tentativas em massa).
+     * Envia o link de redefinição de senha para um e-mail cadastrado e ativo.
+     * A resposta é a mesma exista ou não o e-mail, para não revelar quem tem cadastro.
      */
     public function esqueciSenha(Request $request): JsonResponse
     {
         $dados = $request->validate(['email' => ['required', 'email']], [], ['email' => 'e-mail']);
+        $resposta = response()->json([
+            'message' => 'Se este e-mail estiver cadastrado, enviamos um link para criar uma nova senha. Confira sua caixa de entrada e o spam.',
+        ]);
 
         $usuario = User::where('email', $dados['email'])->first();
-
-        if (! $usuario) {
-            throw ValidationException::withMessages(['email' => 'E-mail não encontrado para recuperar a senha.']);
-        }
-
-        if (! $usuario->ativo || ! $usuario->empresa?->ativo) {
-            throw ValidationException::withMessages(['email' => 'Acesso desativado. Fale com o responsável pela barbearia.']);
+        if (! $usuario || ! $usuario->ativo || ! $usuario->empresa?->ativo) {
+            return $resposta;
         }
 
         try {
-            $status = SenhaBroker::sendResetLink(['email' => $usuario->email]);
+            SenhaBroker::sendResetLink(['email' => $usuario->email]);
         } catch (\Throwable $e) {
             report($e); // ex.: o servidor de e-mail recusou o login (SMTP 535)
 
@@ -64,13 +62,8 @@ class AuthController extends Controller
             ], 503);
         }
 
-        if ($status === SenhaBroker::RESET_THROTTLED) {
-            throw ValidationException::withMessages(['email' => 'Já enviamos um link há pouco. Aguarde um minuto para pedir outro.']);
-        }
-
-        return response()->json([
-            'message' => 'Enviamos um link para criar uma nova senha. Confira sua caixa de entrada.',
-        ]);
+        // Pedido repetido em menos de 1 minuto (RESET_THROTTLED): o link anterior continua valendo.
+        return $resposta;
     }
 
     /**

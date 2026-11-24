@@ -121,20 +121,19 @@ class AutenticacaoTest extends TestCase
         });
     }
 
-    public function test_esqueci_a_senha_avisa_email_nao_encontrado_ou_desativado(): void
+    public function test_esqueci_a_senha_nao_revela_se_o_email_existe(): void
     {
         Notification::fake();
+        User::factory()->create(['email' => 'ze@exemplo.test']);
         User::factory()->create(['email' => 'inativo@exemplo.test', 'ativo' => false]);
 
-        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ninguem@exemplo.test'])
-            ->assertUnprocessable()
-            ->assertJsonPath('errors.email.0', 'E-mail não encontrado para recuperar a senha.');
+        $respostas = collect(['ze@exemplo.test', 'ninguem@exemplo.test', 'inativo@exemplo.test'])
+            ->map(fn ($email) => $this->postJson('/api/auth/esqueci-senha', ['email' => $email])->assertOk()->json());
 
-        $this->postJson('/api/auth/esqueci-senha', ['email' => 'inativo@exemplo.test'])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['email']);
-
-        Notification::assertNothingSent();
+        // A mesma resposta para cadastrado, inexistente e desativado.
+        $this->assertCount(1, $respostas->unique());
+        $this->assertStringStartsWith('Se este e-mail estiver cadastrado', $respostas->first()['message']);
+        Notification::assertCount(1); // só o cadastrado e ativo recebe
     }
 
     public function test_esqueci_a_senha_avisa_quando_o_envio_falha(): void
@@ -147,15 +146,15 @@ class AutenticacaoTest extends TestCase
             ->assertJsonPath('message', 'Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.');
     }
 
-    public function test_esqueci_a_senha_pede_para_aguardar_entre_pedidos(): void
+    public function test_esqueci_a_senha_nao_reenvia_em_menos_de_um_minuto(): void
     {
         Notification::fake();
         User::factory()->create(['email' => 'ze@exemplo.test']);
 
         $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk();
-        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['email']);
+        $this->postJson('/api/auth/esqueci-senha', ['email' => 'ze@exemplo.test'])->assertOk();
+
+        Notification::assertCount(1); // o primeiro link continua valendo
     }
 
     public function test_redefine_a_senha_com_token_valido_e_encerra_sessoes(): void

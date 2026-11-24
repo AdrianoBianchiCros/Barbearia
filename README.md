@@ -169,9 +169,9 @@ Para acessar:
   digitada (`web/src/app/layout/ver-senha.ts`, também na tela de nova senha). Link "Esqueci a senha" logo abaixo do
   campo de senha → tela `/esqueci-senha` (informa o e-mail cadastrado) → e-mail com link para
   `/redefinir-senha?token=…&email=…` → nova senha → volta ao login com aviso. A API (`POST /api/auth/esqueci-senha` e
-  `/api/auth/redefinir-senha`) avisa "E-mail não encontrado para recuperar a senha" (decisão do produto: revela quem tem
-  conta, mitigado pelo limite de 10 pedidos por hora por IP), recusa usuário ou barbearia desativados, pede para
-  aguardar 1 min entre pedidos e responde 503 se o envio falhar (erro no `laravel.log`). O link vale 60 min e a troca
+  `/api/auth/redefinir-senha`) responde sempre "Se este e-mail estiver cadastrado, enviamos um link…" (desde
+  23/11/2026, para não revelar quem tem conta; antes avisava "E-mail não encontrado"), só envia para usuário e
+  barbearia ativos, não reenvia em menos de 1 min e responde 503 se o envio falhar (erro no `laravel.log`). O link vale 60 min e a troca
   encerra as sessões abertas.
 - **E-mail em produção funcionando (10/11/2026):** as caixas de `abianchitech.com` ficam no **Titan Email**
   (MX `mx1/mx2.titan.email`), não no cPanel. Por isso o SMTP `mail.abianchitech.com` (servidor da HostGator) recusava

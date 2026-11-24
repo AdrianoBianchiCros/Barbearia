@@ -194,6 +194,21 @@ class PaginaPublicaTest extends TestCase
         $this->agendar(['servico_ids' => [$alheio->id]])->assertUnprocessable()->assertJsonValidationErrors('servico_ids.0');
     }
 
+    public function test_mensagens_de_erro_usam_nomes_que_o_cliente_entende(): void
+    {
+        $this->agendar([
+            'servico_ids' => [$this->corte->id, $this->corte->id],
+            'hora' => '25:00',
+            'data' => '2030-02-30',
+            'observacoes' => str_repeat('a', 301),
+        ])->assertUnprocessable()->assertJsonValidationErrors([
+            'servico_ids.0' => 'Escolha cada serviço uma vez só.',
+            'hora' => 'Informe a hora no formato 14:30.',
+            'data' => 'Informe uma data válida.',
+            'observacoes' => 'O campo observação não pode ser superior a 300 caracteres.',
+        ]);
+    }
+
     public function test_cliente_marca_no_maximo_um_horario_por_semana(): void
     {
         $this->agendar()->assertCreated(); // terça 15/01

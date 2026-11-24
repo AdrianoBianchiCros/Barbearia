@@ -174,9 +174,10 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
-        ],
+        // Campos do sistema da barbearia
+        'data' => ['date_format' => 'Informe uma data válida.'],
+        'hora' => ['date_format' => 'Informe a hora no formato 14:30.'],
+        'servico_ids.*' => ['distinct' => 'Escolha cada serviço uma vez só.'],
     ],
 
     /*
@@ -236,6 +237,30 @@ return [
         'category' => 'categoria',
         'blood_type' => 'tipo sanguíneo',
         'birth_date' => 'data de nascimento',
+
+        // Campos do sistema da barbearia
+        'cliente_id' => 'cliente',
+        'funcionario_id' => 'barbeiro',
+        'servico_id' => 'serviço',
+        'servico_ids' => 'serviços',
+        'servico_ids.*' => 'serviço',
+        'produto_id' => 'produto',
+        'observacoes' => 'observação',
+        'telefone' => 'telefone',
+        'email' => 'e-mail',
+        'status' => 'situação',
+        'desconto' => 'desconto',
+        'itens' => 'itens',
+        'itens.*.servico_id' => 'serviço',
+        'itens.*.produto_id' => 'produto',
+        'itens.*.funcionario_id' => 'barbeiro',
+        'itens.*.quantidade' => 'quantidade',
+        'itens.*.preco_unitario' => 'preço',
+        'pagamentos' => 'pagamentos',
+        'pagamentos.*.forma' => 'forma de pagamento',
+        'pagamentos.*.valor' => 'valor do pagamento',
+        'novo_cliente.email' => 'e-mail do cliente',
+        'ignorar_agendamento_id' => 'agendamento',
     ],
 
 ];

@@ -225,6 +225,16 @@ export class AdminService {
     return this.http.post<DetalheBarbearia>(`${API}/faturas/${faturaId}/confirmar`, {});
   }
 
+  /** Contrato de prestação de serviço em PDF com os dados do formulário de cadastro (nada é gravado). */
+  previaContrato(dados: FormData): Observable<Blob> {
+    return this.http.post(`${API}/contrato/previa`, dados, { responseType: 'blob' });
+  }
+
+  /** Contrato em PDF de uma barbearia já cadastrada, com os dados atuais e a última contratação. */
+  contratoGerado(empresaId: number): Observable<Blob> {
+    return this.http.get(`${API}/barbearias/${empresaId}/contrato-gerado`, { responseType: 'blob' });
+  }
+
   /** Baixa o contrato com o token (um link direto não levaria a autenticação). */
   contrato(assinaturaId: number): Observable<Blob> {
     return this.http.get(`${API}/assinaturas/${assinaturaId}/contrato`, { responseType: 'blob' });

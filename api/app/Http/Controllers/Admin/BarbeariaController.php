@@ -10,9 +10,11 @@ use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
 use App\Services\ConsultaCnpj;
+use App\Services\ContratoPrestacao;
 use App\Services\Faturas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -101,17 +103,9 @@ class BarbeariaController extends Controller
     /**
      * Cria a barbearia, o login do dono (com senha provisória) e a primeira contratação.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, ContratoPrestacao $contratos): JsonResponse
     {
-        // CNPJ/CPF e CEP só com números; UF em maiúsculas.
-        foreach (['documento', 'cep'] as $campo) {
-            if ($request->filled($campo)) {
-                $request->merge([$campo => preg_replace('/\D/', '', $request->input($campo))]);
-            }
-        }
-        if ($request->filled('uf')) {
-            $request->merge(['uf' => strtoupper($request->input('uf'))]);
-        }
+        $this->normalizarDadosEmpresa($request);
 
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
@@ -129,7 +123,9 @@ class BarbeariaController extends Controller
         ]);
 
         $senha = User::gerarSenhaProvisoria();
-        $contrato = $this->guardarContrato($request->file('contrato'));
+        // Sem arquivo anexado, o sistema gera o contrato de prestação de serviço com os dados preenchidos.
+        $contrato = $this->guardarContrato($request->file('contrato'))
+            ?? $this->gerarContrato($contratos, $this->empresaDosDados($dados), $dados);
 
         try {
             [$empresa, $dono] = DB::transaction(function () use ($dados, $senha, $contrato, $request) {
@@ -151,7 +147,7 @@ class BarbeariaController extends Controller
                 ]);
                 $dono->forceFill(['trocar_senha' => true])->save();
 
-                $inicio = isset($dados['inicio']) ? Carbon::parse($dados['inicio']) : $this->hoje();
+                $inicio = $this->inicioDosDados($dados);
                 $this->registrarContratacao($empresa, $dados, $inicio, $contrato, $request);
 
                 return [$empresa, $dono];
@@ -306,6 +302,99 @@ class BarbeariaController extends Controller
         $empresa->update(['acesso_ate' => $fim->toDateString()]);
 
         return $assinatura;
+    }
+
+    /**
+     * Contrato gerado com os dados do formulário, sem gravar nada (botão "Ver contrato" do cadastro).
+     * POST /api/admin/contrato/previa
+     */
+    public function previaContrato(Request $request, ContratoPrestacao $contratos): Response
+    {
+        $this->normalizarDadosEmpresa($request);
+        $dados = $request->validate([
+            'nome' => ['required', 'string', 'max:120'],
+            'telefone' => ['nullable', 'string', 'max:20'],
+            'documento' => ['nullable', 'string', 'max:20'],
+            ...$this->regrasDadosEmpresa(),
+            'dono_nome' => ['required', 'string', 'max:120'],
+            'dono_email' => ['required', 'email', 'max:180'],
+            ...collect($this->regrasContratacao())->except('contrato')->all(),
+        ], [], $this->nomesCampos() + ['nome' => 'nome da barbearia', 'dono_nome' => 'nome do dono', 'dono_email' => 'e-mail do dono']);
+
+        $empresa = $this->empresaDosDados($dados);
+        $pdf = $contratos->pdf($empresa, $dados['dono_nome'], $dados['dono_email'], $dados, $this->inicioDosDados($dados));
+
+        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa));
+    }
+
+    /**
+     * Contrato de uma barbearia já cadastrada, com os dados atuais e as condições da última contratação
+     * (início do serviço = a primeira contratação). GET /api/admin/barbearias/{empresa}/contrato-gerado
+     */
+    public function contratoGerado(Empresa $empresa, ContratoPrestacao $contratos): Response
+    {
+        $ultima = $empresa->assinaturas()->latest('inicio')->latest('id')->first();
+        abort_unless($ultima, 422, 'Esta barbearia ainda não tem contratação registrada.');
+        $primeira = $empresa->assinaturas()->oldest('inicio')->oldest('id')->first();
+        $dono = $empresa->usuarios()->where('perfil', 'dono')->orderBy('id')->first();
+
+        $pdf = $contratos->pdf(
+            $empresa,
+            $dono?->nome ?? $empresa->nome,
+            $dono?->email ?? (string) $empresa->email,
+            $ultima->only(['periodo', 'forma_pagamento', 'valor']),
+            Carbon::parse($primeira->inicio),
+        );
+
+        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa));
+    }
+
+    /** CNPJ/CPF e CEP só com números; UF em maiúsculas. */
+    private function normalizarDadosEmpresa(Request $request): void
+    {
+        foreach (['documento', 'cep'] as $campo) {
+            if ($request->filled($campo)) {
+                $request->merge([$campo => preg_replace('/\D/', '', $request->input($campo))]);
+            }
+        }
+        if ($request->filled('uf')) {
+            $request->merge(['uf' => strtoupper($request->input('uf'))]);
+        }
+    }
+
+    /** Barbearia montada com os dados do formulário (sem gravar), para o contrato. */
+    private function empresaDosDados(array $dados): Empresa
+    {
+        return new Empresa([
+            'nome' => $dados['nome'],
+            'documento' => $dados['documento'] ?? null,
+            'telefone' => $dados['telefone'] ?? null,
+            ...collect($dados)->only(array_keys($this->regrasDadosEmpresa()))->all(),
+            'email' => ($dados['email'] ?? null) ?: $dados['dono_email'],
+        ]);
+    }
+
+    private function inicioDosDados(array $dados): Carbon
+    {
+        return isset($dados['inicio']) ? Carbon::parse($dados['inicio']) : $this->hoje();
+    }
+
+    /** Gera o PDF do contrato e guarda no disco privado, como se fosse um anexo. */
+    private function gerarContrato(ContratoPrestacao $contratos, Empresa $empresa, array $dados): array
+    {
+        $pdf = $contratos->pdf($empresa, $dados['dono_nome'], $dados['dono_email'], $dados, $this->inicioDosDados($dados));
+        $path = 'contratos/'.Str::uuid().'.pdf';
+        Storage::disk('local')->put($path, $pdf);
+
+        return ['path' => $path, 'nome' => ContratoPrestacao::nomeArquivo($empresa)];
+    }
+
+    private function respostaPdf(string $pdf, string $nome): Response
+    {
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.addslashes($nome).'"',
+        ]);
     }
 
     /** O contrato fica no disco privado (storage/app/private), nunca na pasta pública. */

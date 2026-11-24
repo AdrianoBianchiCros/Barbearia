@@ -14,6 +14,13 @@ return [
     // Dias antes do vencimento em que o dono recebe o aviso por e-mail (0 = no dia).
     'aviso_email_dias' => [10, 3, 1, 0],
 
+    /*
+     * Contrato gerado no cadastro da barbearia (PDF): período mínimo (fidelidade) e multa por
+     * cancelamento antes dele, em % das mensalidades que faltam até completar o período.
+     */
+    'fidelidade_meses' => (int) env('CONTRATO_FIDELIDADE_MESES', 3),
+    'multa_rescisoria_percentual' => (float) env('CONTRATO_MULTA_PERCENTUAL', 20),
+
     // Períodos que podem ser contratados: rótulo e duração.
     'periodos' => [
         'teste' => ['rotulo' => 'Teste de 7 dias', 'dias' => 7],

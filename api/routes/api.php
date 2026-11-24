@@ -60,6 +60,8 @@ Route::prefix('admin')->group(function () {
 
         Route::get('opcoes', [Admin\BarbeariaController::class, 'opcoes']);
         Route::get('cnpj/{cnpj}', [Admin\BarbeariaController::class, 'consultarCnpj'])->middleware('throttle:30,1');
+        Route::post('contrato/previa', [Admin\BarbeariaController::class, 'previaContrato']);
+        Route::get('barbearias/{empresa}/contrato-gerado', [Admin\BarbeariaController::class, 'contratoGerado']);
         Route::get('barbearias', [Admin\BarbeariaController::class, 'index']);
         Route::post('barbearias', [Admin\BarbeariaController::class, 'store']);
         Route::get('barbearias/{empresa}', [Admin\BarbeariaController::class, 'show']);

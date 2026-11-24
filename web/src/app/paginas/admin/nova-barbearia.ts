@@ -153,8 +153,15 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
         <section class="cartao-secao">
           <h2>Plano e contrato</h2>
           <app-campos-contratacao [dados]="contratacao" [opcoes]="opcoes()" [erros]="erros()" />
+          <p class="texto-suave pequeno">
+            Sem arquivo anexado, o sistema gera o contrato de prestação de serviço com os dados acima e guarda junto
+            com a contratação. Confira antes em "Ver contrato".
+          </p>
           <div class="rodape-secao">
             <a class="botao botao-secundario botao-auto" routerLink="/admin/barbearias">Cancelar</a>
+            <button class="botao botao-secundario botao-auto" type="button" [disabled]="gerandoContrato()" (click)="verContrato(f)">
+              {{ gerandoContrato() ? 'Gerando…' : 'Ver contrato (PDF)' }}
+            </button>
             <button class="botao botao-auto" type="submit" [disabled]="salvando()">
               {{ salvando() ? 'Cadastrando…' : 'Cadastrar e liberar acesso' }}
             </button>
@@ -183,6 +190,7 @@ export class NovaBarbearia implements OnInit {
   protected readonly erros = signal<Record<string, string>>({});
   protected readonly criada = signal<{ barbearia: BarbeariaAdmin; acesso: DadosAcesso } | null>(null);
   protected readonly consultando = signal(false);
+  protected readonly gerandoContrato = signal(false);
   protected readonly consulta = signal<ConsultaCnpj | null>(null);
   protected readonly ufs = UFS;
   private ultimoConsultado = '';
@@ -204,14 +212,7 @@ export class NovaBarbearia implements OnInit {
     this.erro.set('');
     this.erros.set({});
 
-    const dados = new FormData();
-    Object.entries(this.form).forEach(([campo, valor]) => {
-      if (typeof valor === 'boolean') dados.append(campo, valor ? '1' : '0');
-      else if (valor) dados.append(campo, valor);
-    });
-    anexarContratacao(dados, this.contratacao);
-
-    this.api.criar(dados).subscribe({
+    this.api.criar(this.montarDados()).subscribe({
       next: (r) => {
         this.criada.set(r);
         this.salvando.set(false);
@@ -220,6 +221,48 @@ export class NovaBarbearia implements OnInit {
         this.erros.set(errosPorCampo(e));
         this.erro.set(mensagemDeErro(e));
         this.salvando.set(false);
+      },
+    });
+  }
+
+  private montarDados(): FormData {
+    const dados = new FormData();
+    Object.entries(this.form).forEach(([campo, valor]) => {
+      if (typeof valor === 'boolean') dados.append(campo, valor ? '1' : '0');
+      else if (valor) dados.append(campo, valor);
+    });
+    anexarContratacao(dados, this.contratacao);
+    return dados;
+  }
+
+  /** Baixa o contrato gerado com os dados preenchidos, sem cadastrar nada. */
+  verContrato(f: NgForm): void {
+    if (f.invalid) {
+      f.control.markAllAsTouched();
+      this.erro.set('Para gerar o contrato, preencha o nome da barbearia, o nome e o e-mail do dono e o valor pago.');
+      return;
+    }
+    this.erro.set('');
+    this.gerandoContrato.set(true);
+    const dados = this.montarDados();
+    dados.delete('contrato');
+    this.api.previaContrato(dados).subscribe({
+      next: (pdf) => {
+        this.gerandoContrato.set(false);
+        const url = URL.createObjectURL(pdf);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Contrato - ${this.form.nome}.pdf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+      error: async (e) => {
+        this.gerandoContrato.set(false);
+        // Com responseType "blob", o erro de validação também chega como arquivo.
+        const corpo = e?.error instanceof Blob ? JSON.parse((await e.error.text()) || '{}') : e?.error;
+        const erro = { ...e, error: corpo };
+        this.erros.set(errosPorCampo(erro));
+        this.erro.set(mensagemDeErro(erro));
       },
     });
   }

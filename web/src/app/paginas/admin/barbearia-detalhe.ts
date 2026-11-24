@@ -82,6 +82,9 @@ import { CartaoAcesso } from './cartao-acesso';
             @if (b.dono) {
               <button class="botao botao-secundario botao-auto" type="button" (click)="novaSenha()">Gerar nova senha do dono</button>
             }
+            @if (b.ultima_assinatura) {
+              <button class="botao botao-secundario botao-auto" type="button" (click)="gerarContrato(b)">Gerar contrato (PDF)</button>
+            }
           </div>
         </section>
       </div>
@@ -313,6 +316,21 @@ export class BarbeariaDetalhe implements OnInit {
     if (!confirm('Gerar uma nova senha para o dono? A senha atual deixa de valer e as sessões abertas são encerradas.')) return;
     this.api.novaSenha(this.id).subscribe({
       next: (r) => this.acessoGerado.set(r.acesso),
+      error: (e) => this.aviso.erro(mensagemDeErro(e)),
+    });
+  }
+
+  /** Contrato de prestação de serviço com os dados atuais da barbearia e a última contratação. */
+  gerarContrato(b: DetalheBarbearia): void {
+    this.api.contratoGerado(b.id).subscribe({
+      next: (arquivo) => {
+        const url = URL.createObjectURL(arquivo);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Contrato - ${b.nome}.pdf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
     });
   }

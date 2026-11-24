@@ -11,6 +11,8 @@ return [
     'endereco' => env('PLATAFORMA_ENDERECO', '[preencher endereço]'),
     'email' => env('PLATAFORMA_EMAIL', '[preencher e-mail de contato]'),
     'telefone' => env('PLATAFORMA_TELEFONE'),
+    // Cidade/UF do foro do contrato de prestação de serviço (ex.: "São Paulo/SP").
+    'foro' => env('PLATAFORMA_FORO', '[preencher cidade/UF do foro]'),
 
     // Encarregado pelo tratamento de dados pessoais (LGPD, art. 41)
     'encarregado_nome' => env('PLATAFORMA_ENCARREGADO_NOME', '[preencher nome do encarregado]'),

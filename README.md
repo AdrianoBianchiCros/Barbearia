@@ -35,7 +35,15 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 172 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 177 testes na API · 9 testes no painel*
+
+- **QA de 23/11/2026 e correções (ainda não publicado):** a skill `/qa` (`.claude/skills/qa/SKILL.md`) testa o sistema
+  num banco isolado e gera `teste-AAAA-MM-DD.md` quando acha bugs. O primeiro QA (`teste-2026-11-23.md`) achou 7, todos
+  corrigidos, um commit para cada: bibliotecas Laravel/Symfony atualizadas (8 alertas do `composer audit`); "Desfazer
+  falta" não põe mais dois clientes no mesmo horário e a mudança de situação só aceita as transições dos botões
+  (cancelado não volta); comanda não vende produto além do estoque; "Esqueci a senha" não revela se o e-mail existe;
+  mensagens de validação com nomes em português; telefone exige DDD e número válidos; 2 arquivos ajustados ao Pint.
+  Pontos de atenção que ficaram para decidir estão no fim do relatório (encaixe ignora folga, raiz fixa dos links).
 
 - **Sino de alterações na agenda (23/11/2026, ainda não publicado):** sino entre "Hoje" e a busca da agenda (e ao lado
   do dia no painel do barbeiro) com os **cancelamentos e remarcações**, venham do painel ou do cliente pelo link
@@ -355,7 +363,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 172 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 177 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

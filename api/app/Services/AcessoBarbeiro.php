@@ -31,6 +31,13 @@ class AcessoBarbeiro
         }
 
         $usuario = $barbeiro->usuario_id ? User::find($barbeiro->usuario_id) : null;
+        // Dono ou recepção que também atende: o login é o do painel da barbearia e não pode
+        // ser trocado aqui (antes, a senha e o e-mail do dono viravam os do barbeiro e a sessão caía).
+        if ($usuario && $usuario->perfil !== 'barbeiro') {
+            throw ValidationException::withMessages([
+                'email' => "{$barbeiro->nome} já entra no painel da barbearia com o e-mail {$usuario->email} e vê a agenda completa por lá. Não precisa de outro acesso.",
+            ]);
+        }
         $this->garantirEmailLivre($barbeiro->email, $usuario);
 
         $senha = User::gerarSenhaProvisoria();

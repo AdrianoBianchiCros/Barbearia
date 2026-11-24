@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Funcionario;
+use App\Models\User;
 use App\Services\AcessoBarbeiro;
 use App\Support\Telefone;
 use Illuminate\Http\JsonResponse;
@@ -190,6 +191,8 @@ class FuncionarioController extends Controller
 
         return array_merge($funcionario->toArray(), [
             'painel_barbeiro_url' => AcessoBarbeiro::link(),
+            // Perfil do login ligado ao cadastro: "dono"/"recepcao" quando quem atende já usa o painel da barbearia.
+            'acesso_perfil' => $funcionario->usuario_id ? User::whereKey($funcionario->usuario_id)->value('perfil') : null,
             'servicos' => $funcionario->servicos->sortBy('nome')->map(fn ($s) => [
                 'id' => $s->id,
                 'nome' => $s->nome,

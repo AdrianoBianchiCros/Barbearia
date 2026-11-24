@@ -39,6 +39,8 @@ export interface Funcionario {
   horarios_trabalho: FaixaHorario[];
   /** Login do barbeiro no painel dele (nulo enquanto o acesso não foi liberado). */
   usuario_id: number | null;
+  /** Perfil desse login: "dono"/"recepcao" quando quem atende já usa o painel da barbearia. */
+  acesso_perfil?: 'dono' | 'recepcao' | 'barbeiro' | null;
   /** Endereço do painel do barbeiro, para o dono enviar junto com a senha provisória. */
   painel_barbeiro_url: string;
 }

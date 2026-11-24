@@ -211,6 +211,31 @@ class BarbeiroPainelTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_liberar_acesso_de_quem_ja_e_dono_nao_mexe_no_login_do_dono(): void
+    {
+        // O dono também atende: o cadastro de barbeiro dele aponta para o login de dono.
+        $carlos = $this->naEmpresa($this->dono->empresa, fn () => Funcionario::create([
+            'nome' => 'Carlos', 'email' => 'carlos@exemplo.test', 'usuario_id' => $this->dono->id,
+        ]));
+        $emailDono = $this->dono->email;
+        $token = $this->dono->createToken('painel')->plainTextToken;
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($token)->getJson("/api/funcionarios/{$carlos->id}")
+            ->assertOk()->assertJsonPath('acesso_perfil', 'dono');
+
+        $this->withToken($token)->postJson("/api/funcionarios/{$carlos->id}/acesso")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email' => 'Carlos já entra no painel da barbearia']);
+
+        // A sessão continua valendo e o login do dono não mudou.
+        $this->withToken($token)->getJson('/api/auth/eu')->assertOk()->assertJsonPath('usuario.email', $emailDono);
+        $dono = $this->dono->fresh();
+        $this->assertSame($emailDono, $dono->email);
+        $this->assertFalse((bool) $dono->trocar_senha);
+        Notification::assertNothingSent();
+    }
+
     public function test_login_de_barbeiro_sem_cadastro_ligado_avisa(): void
     {
         Sanctum::actingAs(User::factory()->for($this->dono->empresa)->perfil('barbeiro')->create());

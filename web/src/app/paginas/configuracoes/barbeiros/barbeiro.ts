@@ -110,7 +110,9 @@ interface DiaExpediente {
                   <a [href]="f.painel_barbeiro_url" target="_blank" rel="noopener">{{ f.painel_barbeiro_url }}</a>
                   <button class="botao-link" type="button" (click)="copiar(f.painel_barbeiro_url, 'Link copiado.')">Copiar link</button>
                 </div>
-                @if (f.usuario_id) {
+                @if (f.acesso_perfil === 'dono' || f.acesso_perfil === 'recepcao') {
+                  <p class="pequeno">{{ f.nome }} já entra no painel da barbearia ({{ f.acesso_perfil === 'dono' ? 'dono' : 'recepção' }}) e vê a agenda completa por lá. Não precisa de outro acesso.</p>
+                } @else if (f.usuario_id) {
                   <p class="pequeno">Acesso liberado para <strong>{{ f.email }}</strong>.</p>
                   <button class="botao botao-secundario botao-auto" type="button" (click)="liberarAcesso()" [disabled]="salvando()">Gerar nova senha e reenviar</button>
                 } @else if (f.email) {

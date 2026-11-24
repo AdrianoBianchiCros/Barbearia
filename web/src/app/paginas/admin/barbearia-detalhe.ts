@@ -93,14 +93,14 @@ import { CartaoAcesso } from './cartao-acesso';
         <section class="cartao-secao">
           <h2>Próxima fatura (Pix pelo painel)</h2>
           <p>
-            <strong>{{ +f.valor | currency: 'BRL' }}</strong> · {{ f.periodo_rotulo }} · vence em
+            <strong>{{ +f.total | currency: 'BRL' }}</strong>{{ f.taxa_instalacao ? ' (com taxa de instalação)' : '' }} · {{ f.periodo_rotulo }} · vence em
             {{ f.vencimento + 'T12:00:00' | date: 'dd/MM/yyyy' }} · renova de {{ f.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }}
             a {{ f.fim + 'T12:00:00' | date: 'dd/MM/yyyy' }}
           </p>
           @if (f.status === 'informada') {
             <div class="alerta">
               O dono informou o pagamento em {{ f.informada_em | date: 'dd/MM/yyyy HH:mm' }}. Confira no extrato do banco o Pix
-              de {{ +f.valor | currency: 'BRL' }} (identificador <code>{{ f.txid }}</code>) antes de confirmar.
+              de {{ +f.total | currency: 'BRL' }} (identificador <code>{{ f.txid }}</code>) antes de confirmar.
             </div>
           } @else {
             <p class="texto-suave">Em aberto. Identificador do Pix: <code>{{ f.txid }}</code></p>
@@ -124,12 +124,20 @@ import { CartaoAcesso } from './cartao-acesso';
               @for (a of b.assinaturas; track a.id) {
                 <tr>
                   <td>
-                    <strong>{{ rotulo('periodos', a.periodo) }}</strong>
+                    <strong>{{ a.gratis ? 'Teste grátis' : 'Mensalidade' }}</strong>
+                    <small class="texto-suave"> · contrato de {{ rotulo('periodos', a.periodo) }}</small>
                     @if (a.observacao) {<br /><small class="texto-suave">{{ a.observacao }}</small>}
                   </td>
                   <td>{{ a.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }} a {{ a.fim + 'T12:00:00' | date: 'dd/MM/yyyy' }}</td>
                   <td>{{ rotulo('formas_pagamento', a.forma_pagamento) }}</td>
-                  <td>{{ +a.valor | currency: 'BRL' }}</td>
+                  <td>
+                    @if (a.gratis) {
+                      <span class="texto-suave">grátis</span>
+                    } @else {
+                      {{ +a.valor + +(a.taxa_instalacao ?? 0) | currency: 'BRL' }}
+                      @if (a.taxa_instalacao) {<br /><small class="texto-suave">com taxa de instalação</small>}
+                    }
+                  </td>
                   <td>
                     @if (a.tem_contrato) {
                       <button class="botao-link" type="button" (click)="baixarContrato(a)">{{ a.contrato_nome || 'Baixar' }}</button>

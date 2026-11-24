@@ -14,9 +14,12 @@ return [
     // Dias antes do vencimento em que o dono recebe o aviso por e-mail (0 = no dia).
     'aviso_email_dias' => [10, 3, 1, 0],
 
-    // Períodos que podem ser contratados: rótulo e duração.
+    // Dias grátis no início de todo contrato novo; a 1ª fatura (mensalidade + taxa de instalação) vence no fim deles.
+    'teste_gratis_dias' => (int) env('ASSINATURA_TESTE_GRATIS_DIAS', 7),
+
+    // Vigência do contrato (a cobrança é sempre mensal). "teste" ficou só para o histórico antigo.
     'periodos' => [
-        'teste' => ['rotulo' => 'Teste de 7 dias', 'dias' => 7],
+        'teste' => ['rotulo' => 'Teste de 7 dias', 'dias' => 7, 'historico' => true],
         '1m' => ['rotulo' => '1 mês', 'meses' => 1],
         '3m' => ['rotulo' => '3 meses', 'meses' => 3],
         '6m' => ['rotulo' => '6 meses', 'meses' => 6],

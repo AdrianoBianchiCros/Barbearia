@@ -25,6 +25,7 @@ class Faturas
         $abertas = Fatura::withoutGlobalScopes()->where('empresa_id', $empresa->id)->whereIn('status', Fatura::EM_ABERTO)->get();
         $ultima = $empresa->assinaturas()->latest('inicio')->latest('id')->first();
 
+        // "teste" é o período antigo (antes do teste grátis em todo contrato): não gera fatura.
         if (! $empresa->ativo || ! $empresa->acesso_ate || ! $ultima || $ultima->periodo === 'teste' || (float) $ultima->valor <= 0) {
             return null;
         }
@@ -37,6 +38,8 @@ class Faturas
             'empresa_id' => $empresa->id,
             'periodo' => $ultima->periodo,
             'valor' => $ultima->valor,
+            // Depois do teste grátis, a 1ª fatura leva também a taxa de instalação.
+            'taxa_instalacao' => $ultima->gratis && (float) $ultima->taxa_instalacao > 0 ? $ultima->taxa_instalacao : null,
             'vencimento' => $empresa->acesso_ate->toDateString(),
             'inicio' => $inicio->toDateString(),
             'fim' => Assinatura::calcularFim($ultima->periodo, $inicio)->toDateString(),
@@ -57,7 +60,7 @@ class Faturas
             config('assinatura.pix.chave'),
             config('assinatura.pix.recebedor'),
             config('assinatura.pix.cidade'),
-            (float) $fatura->valor,
+            (float) $fatura->total,
             $fatura->txid,
         );
     }
@@ -76,6 +79,7 @@ class Faturas
                 'fim' => $fatura->fim->toDateString(),
                 'forma_pagamento' => 'pix',
                 'valor' => $fatura->valor,
+                'taxa_instalacao' => $fatura->taxa_instalacao,
                 'observacao' => "Fatura paga pelo painel (Pix {$fatura->txid}).",
             ]);
 

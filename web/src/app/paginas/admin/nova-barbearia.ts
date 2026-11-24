@@ -160,6 +160,8 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
             @if (erros()['taxa_instalacao']) {<small class="erro-campo">{{ erros()['taxa_instalacao'] }}</small>}
           </label>
           <p class="texto-suave pequeno">
+            O contrato começa com <strong>{{ opcoes()?.teste_gratis_dias ?? 7 }} dias grátis</strong>: a 1ª fatura (mensalidade + taxa
+            de instalação) vence no fim do teste, pelo painel do dono.
             Sem arquivo anexado, o sistema gera o contrato de prestação de serviço com os dados acima e guarda junto
             com a contratação. Confira antes em "Ver contrato".
           </p>

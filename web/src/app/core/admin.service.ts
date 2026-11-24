@@ -22,6 +22,8 @@ export interface OpcoesAdmin {
   formas_pagamento: Opcao[];
   carencia_dias: number;
   aviso_dias: number;
+  /** Dias grátis no início de todo contrato novo. */
+  teste_gratis_dias: number;
 }
 
 export interface Assinatura {
@@ -31,6 +33,9 @@ export interface Assinatura {
   fim: string;
   forma_pagamento: string;
   valor: string;
+  taxa_instalacao?: string | null;
+  /** Dias grátis do início do contrato (nada foi pago nesta linha). */
+  gratis?: boolean;
   observacao: string | null;
   contrato_nome: string | null;
   tem_contrato: boolean;

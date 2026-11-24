@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
  * Contratação ou renovação do acesso de uma barbearia: período, pagamento e contrato.
  * Sem o filtro automático por barbearia: é usada só pela área do administrador.
  */
-#[Fillable(['empresa_id', 'administrador_id', 'periodo', 'inicio', 'fim', 'forma_pagamento', 'valor', 'taxa_instalacao', 'contrato_path', 'contrato_nome', 'observacao'])]
+#[Fillable(['empresa_id', 'administrador_id', 'periodo', 'inicio', 'fim', 'forma_pagamento', 'valor', 'taxa_instalacao', 'gratis', 'contrato_path', 'contrato_nome', 'observacao'])]
 class Assinatura extends Model
 {
     protected $hidden = ['contrato_path'];
@@ -26,6 +26,7 @@ class Assinatura extends Model
             'fim' => 'date:Y-m-d',
             'valor' => 'decimal:2',
             'taxa_instalacao' => 'decimal:2',
+            'gratis' => 'boolean',
         ];
     }
 

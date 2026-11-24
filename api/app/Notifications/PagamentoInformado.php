@@ -21,7 +21,7 @@ class PagamentoInformado extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $valor = 'R$ '.number_format((float) $this->fatura->valor, 2, ',', '.');
+        $valor = 'R$ '.number_format((float) $this->fatura->total, 2, ',', '.');
         $link = rtrim(config('app.painel_url'), '/')."/admin/barbearias/{$this->empresa->id}";
 
         return (new MailMessage)

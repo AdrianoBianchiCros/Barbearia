@@ -53,7 +53,9 @@ class BarbeariaController extends Controller
     public function opcoes(): JsonResponse
     {
         return response()->json([
-            'periodos' => collect(config('assinatura.periodos'))->map(fn ($p, $chave) => ['valor' => $chave, 'rotulo' => $p['rotulo']])->values(),
+            'periodos' => collect(config('assinatura.periodos'))->reject(fn ($p) => $p['historico'] ?? false)
+                ->map(fn ($p, $chave) => ['valor' => $chave, 'rotulo' => $p['rotulo']])->values(),
+            'teste_gratis_dias' => config('assinatura.teste_gratis_dias'),
             'formas_pagamento' => collect(config('assinatura.formas_pagamento'))->map(fn ($rotulo, $chave) => ['valor' => $chave, 'rotulo' => $rotulo])->values(),
             'carencia_dias' => config('assinatura.carencia_dias'),
             'aviso_dias' => config('assinatura.aviso_dias'),
@@ -148,7 +150,7 @@ class BarbeariaController extends Controller
                 $dono->forceFill(['trocar_senha' => true])->save();
 
                 $inicio = $this->inicioDosDados($dados);
-                $this->registrarContratacao($empresa, $dados, $inicio, $contrato, $request);
+                $this->registrarContratacao($empresa, $dados, $inicio, $contrato, $request, gratis: true);
 
                 return [$empresa, $dono];
             });
@@ -262,7 +264,7 @@ class BarbeariaController extends Controller
     private function regrasContratacao(): array
     {
         return [
-            'periodo' => ['required', Rule::in(array_keys(config('assinatura.periodos')))],
+            'periodo' => ['required', Rule::in(collect(config('assinatura.periodos'))->reject(fn ($p) => $p['historico'] ?? false)->keys()->all())],
             'forma_pagamento' => ['required', Rule::in(array_keys(config('assinatura.formas_pagamento')))],
             'valor' => ['required', 'numeric', 'min:0', 'max:999999'],
             'taxa_instalacao' => ['nullable', 'numeric', 'min:0', 'max:99999'],
@@ -283,10 +285,15 @@ class BarbeariaController extends Controller
         ];
     }
 
-    /** Grava a contratação e estende o acesso da barbearia até o fim do período. */
-    private function registrarContratacao(Empresa $empresa, array $dados, Carbon $inicio, ?array $contrato, Request $request): Assinatura
+    /**
+     * Grava a contratação e estende o acesso. No cadastro ($gratis), o contrato começa com os dias grátis:
+     * nada é cobrado agora; a mensalidade e a taxa ficam guardadas para a 1ª fatura, que vence no fim do teste.
+     */
+    private function registrarContratacao(Empresa $empresa, array $dados, Carbon $inicio, ?array $contrato, Request $request, bool $gratis = false): Assinatura
     {
-        $fim = Assinatura::calcularFim($dados['periodo'], $inicio);
+        $fim = $gratis
+            ? $inicio->copy()->addDays(max(1, (int) config('assinatura.teste_gratis_dias')) - 1)
+            : Assinatura::calcularFim($dados['periodo'], $inicio);
 
         $assinatura = Assinatura::create([
             'empresa_id' => $empresa->id,
@@ -297,6 +304,7 @@ class BarbeariaController extends Controller
             'forma_pagamento' => $dados['forma_pagamento'],
             'valor' => $dados['valor'],
             'taxa_instalacao' => $dados['taxa_instalacao'] ?? null,
+            'gratis' => $gratis,
             'observacao' => $dados['observacao'] ?? null,
             'contrato_path' => $contrato['path'] ?? null,
             'contrato_nome' => $contrato['nome'] ?? null,

@@ -13,7 +13,12 @@ export interface Fatura {
   id: number;
   periodo: string;
   periodo_rotulo: string;
+  /** Mensalidade. */
   valor: string;
+  /** Taxa de instalação: só na 1ª fatura, depois do teste grátis. */
+  taxa_instalacao: string | null;
+  /** O que se paga no Pix: mensalidade + taxa. */
+  total: string;
   vencimento: string;
   inicio: string;
   fim: string;

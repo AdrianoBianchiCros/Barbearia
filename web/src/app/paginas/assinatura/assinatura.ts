@@ -46,7 +46,10 @@ import { PLATAFORMA } from '../../core/plataforma';
         @if (d.proxima; as f) {
           <div class="proxima">
             <div>
-              <p class="valor">{{ +f.valor | currency: 'BRL' }}</p>
+              <p class="valor">{{ +f.total | currency: 'BRL' }}</p>
+              @if (f.taxa_instalacao) {
+                <p class="texto-suave pequeno">Mensalidade {{ +f.valor | currency: 'BRL' }} + taxa única de instalação {{ +f.taxa_instalacao | currency: 'BRL' }}</p>
+              }
               <p>
                 <strong>{{ f.periodo_rotulo }}</strong> · vence em
                 <strong>{{ f.vencimento + 'T12:00:00' | date: 'dd/MM/yyyy' }}</strong>

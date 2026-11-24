@@ -11,6 +11,7 @@ use App\Models\Funcionario;
 use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
+use App\Services\Faturas;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -84,18 +85,19 @@ class AdminBarbeariasTest extends TestCase
         $resposta = $this->post('/api/admin/barbearias', $this->dadosNova(['contrato' => $contrato]), ['Accept' => 'application/json'])
             ->assertCreated()
             ->assertJsonPath('barbearia.slug', 'barbearia-do-ze')
-            ->assertJsonPath('barbearia.acesso.situacao', 'em_dia')
-            ->assertJsonPath('barbearia.acesso.vence_em', '2026-12-09')
+            ->assertJsonPath('barbearia.acesso.situacao', 'vencendo') // 7 dias grátis: a 1ª fatura vence logo
+            ->assertJsonPath('barbearia.acesso.vence_em', '2026-11-16')
             ->assertJsonPath('barbearia.dono.email', 'ze@exemplo.test')
             ->assertJsonPath('acesso.email', 'ze@exemplo.test');
 
         $empresa = Empresa::where('slug', 'barbearia-do-ze')->first();
-        $this->assertSame('2026-12-09', $empresa->acesso_ate->toDateString());
+        $this->assertSame('2026-11-16', $empresa->acesso_ate->toDateString());
 
         $assinatura = Assinatura::first();
         $this->assertSame($admin->id, $assinatura->administrador_id);
         $this->assertSame('2026-11-10', $assinatura->inicio->toDateString());
-        $this->assertSame('99.90', $assinatura->valor);
+        $this->assertSame('99.90', $assinatura->valor); // a mensalidade contratada, cobrada depois do teste
+        $this->assertTrue($assinatura->gratis);
         $this->assertSame('contrato-ze.pdf', $assinatura->contrato_nome);
         Storage::disk('local')->assertExists($assinatura->contrato_path);
 
@@ -106,7 +108,7 @@ class AdminBarbeariasTest extends TestCase
             ->assertOk()
             ->assertJsonPath('usuario.perfil', 'dono')
             ->assertJsonPath('usuario.trocar_senha', true)
-            ->assertJsonPath('acesso.vence_em', '2026-12-09');
+            ->assertJsonPath('acesso.vence_em', '2026-11-16');
     }
 
     public function test_cadastro_valida_os_campos(): void
@@ -121,14 +123,36 @@ class AdminBarbeariasTest extends TestCase
         $this->assertDatabaseCount('empresas', 1); // só a do usuário criado acima
     }
 
-    public function test_periodo_de_teste_vale_sete_dias(): void
+    public function test_contrato_comeca_com_7_dias_gratis_e_a_1a_fatura_leva_a_taxa(): void
     {
         $this->logarAdmin();
+        config(['assinatura.pix' => ['chave' => 'pix@abianchitech.com', 'recebedor' => 'ABianchi Tech', 'cidade' => 'São Paulo']]);
 
-        $this->postJson('/api/admin/barbearias', $this->dadosNova(['periodo' => 'teste', 'forma_pagamento' => 'cortesia', 'valor' => 0]))
-            ->assertCreated()
-            ->assertJsonPath('barbearia.acesso.vence_em', '2026-11-16')
-            ->assertJsonPath('barbearia.acesso.situacao', 'vencendo');
+        // "Teste" deixou de ser período: todo contrato começa com os dias grátis.
+        $this->postJson('/api/admin/barbearias', $this->dadosNova(['periodo' => 'teste']))->assertUnprocessable()->assertJsonValidationErrors('periodo');
+        $this->getJson('/api/admin/opcoes')->assertJsonPath('teste_gratis_dias', 7)
+            ->assertJsonMissing(['valor' => 'teste']);
+
+        $id = $this->postJson('/api/admin/barbearias', $this->dadosNova(['periodo' => '12m', 'valor' => 100, 'taxa_instalacao' => 150]))
+            ->assertCreated()->assertJsonPath('barbearia.acesso.vence_em', '2026-11-16')->json('barbearia.id');
+        $empresa = Empresa::findOrFail($id);
+        $faturas = app(Faturas::class);
+
+        // 1ª fatura: vence no fim do teste, com mensalidade + taxa.
+        $primeira = $faturas->proxima($empresa);
+        $this->assertSame('2026-11-16', $primeira->vencimento->toDateString());
+        $this->assertSame('100.00', $primeira->valor);
+        $this->assertSame('150.00', $primeira->taxa_instalacao);
+        $this->assertSame('250.00', $primeira->total);
+        $this->assertStringContainsString('5406250.00', $faturas->copiaECola($primeira)); // o Pix cobra o total
+
+        // Paga: libera 1 mês, e a próxima é só a mensalidade.
+        $faturas->confirmar($primeira, null);
+        $empresa->refresh();
+        $this->assertSame('2026-12-16', $empresa->acesso_ate->toDateString());
+        $segunda = $faturas->proxima($empresa);
+        $this->assertSame('100.00', $segunda->total);
+        $this->assertNull($segunda->taxa_instalacao);
     }
 
     public function test_renovacao_soma_um_mes_ao_vencimento_atual(): void

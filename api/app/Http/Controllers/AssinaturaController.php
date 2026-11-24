@@ -24,10 +24,12 @@ class AssinaturaController extends Controller
 
         $pagas = $empresa->assinaturas()->latest('inicio')->latest('id')->get()->map(fn ($a) => [
             'id' => $a->id,
-            'periodo' => Assinatura::rotuloCobranca($a->periodo),
+            // O teste grátis aparece como "Teste grátis", sem valor; a taxa de instalação soma no pagamento em que entrou.
+            'periodo' => $a->gratis ? 'Teste grátis de '.($a->inicio->diffInDays($a->fim) + 1).' dias' : Assinatura::rotuloCobranca($a->periodo),
             'inicio' => $a->inicio->toDateString(),
             'fim' => $a->fim->toDateString(),
-            'valor' => $a->valor,
+            'valor' => $a->gratis ? '0.00' : number_format((float) $a->valor + (float) $a->taxa_instalacao, 2, '.', ''),
+            'gratis' => $a->gratis,
             'forma_pagamento' => config("assinatura.formas_pagamento.{$a->forma_pagamento}", $a->forma_pagamento),
             'registrada_em' => $a->created_at?->toDateString(),
         ]);

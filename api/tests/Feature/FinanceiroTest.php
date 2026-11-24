@@ -168,6 +168,30 @@ class FinanceiroTest extends TestCase
         $this->putJson('/api/empresa', ['limite_gaveta' => -1])->assertUnprocessable();
     }
 
+    public function test_nao_vende_mais_produto_do_que_ha_em_estoque(): void
+    {
+        $this->abrirCaixa();
+        $comanda = $this->postJson('/api/comandas', [])->assertCreated()->json();
+        $pomada = fn (int $qtd) => ['tipo' => 'produto', 'produto_id' => $this->pomada->id, 'quantidade' => $qtd, 'preco_unitario' => 40];
+
+        // 6 + 5 na mesma comanda passa dos 10 em estoque.
+        $this->postJson("/api/comandas/{$comanda['id']}/fechar", [
+            'itens' => [$pomada(6), $pomada(5)],
+            'pagamentos' => [['forma' => 'pix', 'valor' => 440]],
+        ])->assertUnprocessable()->assertJsonValidationErrors(['itens' => 'Só há 10 de "Pomada" em estoque.']);
+
+        $this->assertSame(10, $this->pomada->fresh()->estoque);
+        $this->assertDatabaseCount('pagamentos', 0);
+        $this->getJson("/api/comandas/{$comanda['id']}")->assertJsonPath('status', 'aberta');
+
+        // Exatamente o que há em estoque, pode.
+        $this->postJson("/api/comandas/{$comanda['id']}/fechar", [
+            'itens' => [$pomada(10)],
+            'pagamentos' => [['forma' => 'pix', 'valor' => 400]],
+        ])->assertOk();
+        $this->assertSame(0, $this->pomada->fresh()->estoque);
+    }
+
     public function test_estorno_devolve_estoque_e_reabre_comanda(): void
     {
         $this->abrirCaixa();

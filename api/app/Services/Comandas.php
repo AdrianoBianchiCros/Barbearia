@@ -107,9 +107,20 @@ class Comandas
                 ]);
             }
 
-            // Baixa de estoque dos produtos controlados
-            foreach ($comanda->itens()->where('tipo', 'produto')->whereNotNull('produto_id')->get() as $item) {
-                Produto::whereKey($item->produto_id)->whereNotNull('estoque')->decrement('estoque', $item->quantidade);
+            // Baixa de estoque dos produtos controlados; não vende mais do que há em estoque.
+            $porProduto = $comanda->itens()->where('tipo', 'produto')->whereNotNull('produto_id')->get()
+                ->groupBy('produto_id')->map(fn ($itens) => $itens->sum('quantidade'));
+            foreach ($porProduto as $produtoId => $quantidade) {
+                $produto = Produto::whereKey($produtoId)->lockForUpdate()->first();
+                if ($produto?->estoque === null) {
+                    continue; // produto sem controle de estoque
+                }
+                if ($quantidade > $produto->estoque) {
+                    throw ValidationException::withMessages([
+                        'itens' => "Só há {$produto->estoque} de \"{$produto->nome}\" em estoque.",
+                    ]);
+                }
+                $produto->decrement('estoque', $quantidade);
             }
 
             $comanda->fill([

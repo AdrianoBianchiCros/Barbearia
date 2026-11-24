@@ -37,6 +37,11 @@ export class BarbeiroService {
     return this.http.get<AgendaBarbeiro>(`${API}/agenda`, { params: { data } });
   }
 
+  /** Inicia o próprio atendimento de hoje (concluir fica com a recepção ou o dono). */
+  iniciar(id: number): Observable<{ id: number; status: StatusAgendamento }> {
+    return this.http.post<{ id: number; status: StatusAgendamento }>(`${API}/agendamentos/${id}/iniciar`, {});
+  }
+
   comissoes(inicio: string, fim: string): Observable<RelatorioComissoes> {
     return this.http.get<RelatorioComissoes>(`${API}/comissoes`, { params: { inicio, fim } });
   }

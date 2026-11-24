@@ -178,6 +178,39 @@ class BarbeiroPainelTest extends TestCase
         $this->getJson('/api/barbeiro/agenda')->assertForbidden();
     }
 
+    public function test_barbeiro_inicia_o_proprio_atendimento_de_hoje_mas_nao_conclui(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2030-01-15 08:00', 'America/Sao_Paulo'));
+        $barbeiro = User::factory()->for($this->dono->empresa)->perfil('barbeiro')->create();
+        [$meu, $doRafael, $amanha] = $this->naEmpresa($this->dono->empresa, function () use ($barbeiro) {
+            $carlos = Funcionario::create(['nome' => 'Carlos', 'usuario_id' => $barbeiro->id]);
+            $rafael = Funcionario::create(['nome' => 'Rafael']);
+            $cliente = Cliente::create(['nome' => 'João', 'telefone' => '11988887777']);
+            $ag = fn ($f, $quando) => Agendamento::create([
+                'cliente_id' => $cliente->id,
+                'funcionario_id' => $f->id,
+                'inicio' => Carbon::parse($quando, 'America/Sao_Paulo')->utc(),
+                'fim' => Carbon::parse($quando, 'America/Sao_Paulo')->addMinutes(30)->utc(),
+                'status' => 'confirmado',
+                'valor_total' => 45,
+            ]);
+
+            return [$ag($carlos, '2030-01-15 09:00'), $ag($rafael, '2030-01-15 10:00'), $ag($carlos, '2030-01-16 09:00')];
+        });
+
+        Sanctum::actingAs($barbeiro);
+        $this->postJson("/api/barbeiro/agendamentos/{$meu->id}/iniciar")->assertOk()->assertJsonPath('status', 'em_atendimento');
+        $this->postJson("/api/barbeiro/agendamentos/{$meu->id}/iniciar")->assertUnprocessable(); // já iniciado
+        $this->postJson("/api/barbeiro/agendamentos/{$doRafael->id}/iniciar")->assertForbidden();
+        $this->postJson("/api/barbeiro/agendamentos/{$amanha->id}/iniciar")
+            ->assertUnprocessable()->assertJsonPath('message', 'Só é possível iniciar atendimentos de hoje.');
+
+        // Concluir continua com a recepção ou o dono.
+        $this->patchJson("/api/agendamentos/{$meu->id}/status", ['status' => 'concluido'])->assertForbidden();
+        $this->assertSame('em_atendimento', $meu->fresh()->status);
+        Carbon::setTestNow();
+    }
+
     public function test_login_de_barbeiro_sem_cadastro_ligado_avisa(): void
     {
         Sanctum::actingAs(User::factory()->for($this->dono->empresa)->perfil('barbeiro')->create());

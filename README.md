@@ -35,7 +35,7 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 177 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 178 testes na API · 9 testes no painel*
 
 - **QA de 23/11/2026 e correções (ainda não publicado):** a skill `/qa` (`.claude/skills/qa/SKILL.md`) testa o sistema
   num banco isolado e gera `teste-AAAA-MM-DD.md` quando acha bugs. O primeiro QA (`teste-2026-11-23.md`) achou 7, todos
@@ -110,8 +110,10 @@ Para acessar:
   mesmo e-mail de dono). Para desfazer, só pelo banco (`deleted_at = null`, slug e `ativo` de volta).
 
 - **Painel do barbeiro (23/11/2026, ainda não publicado):** área própria em **`/painel/barbeiro`** (entrada em
-  `/barbeiro/login`, mesmo login com textos do barbeiro), pensada para o celular, **só consulta**: "Minha agenda"
-  (dia a dia, só os atendimentos dele, sem telefone do cliente, com expediente e bloqueios) e "Minha comissão" (este
+  `/barbeiro/login`, mesmo login com textos do barbeiro), pensada para o celular: "Minha agenda"
+  (dia a dia, só os atendimentos dele, sem telefone do cliente, com expediente e bloqueios; nos atendimentos de hoje, botão
+  **"Iniciar atendimento"** abaixo do preço, `POST /api/barbeiro/agendamentos/{id}/iniciar`; concluir e receber
+  continuam com a recepção ou o dono) e "Minha comissão" (este
   mês, mês passado ou outro período: comissão, vales, repasses e **a receber**). API: `GET /api/barbeiro/agenda` e
   `/api/barbeiro/comissoes` (`BarbeiroController` e o `ComissaoController` de antes).
   - **Acesso pelo e-mail do cadastro** (`AppServicesAcessoBarbeiro`; o e-mail é **obrigatório** no cadastro novo): ao cadastrar o barbeiro, o dono
@@ -363,7 +365,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 177 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 178 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

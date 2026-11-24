@@ -86,9 +86,10 @@ Route::middleware(['auth:sanctum', 'empresa'])->group(function () {
     Route::get('avisos', [AvisoAgendaController::class, 'index']);
     Route::post('avisos/vistos', [AvisoAgendaController::class, 'vistos']);
 
-    // Painel do barbeiro: só a própria agenda e a própria comissão.
+    // Painel do barbeiro: a própria agenda (e iniciar os próprios atendimentos) e a própria comissão.
     Route::middleware('perfil:barbeiro')->prefix('barbeiro')->group(function () {
         Route::get('agenda', [BarbeiroController::class, 'agenda']);
+        Route::post('agendamentos/{agendamento}/iniciar', [BarbeiroController::class, 'iniciar']);
         Route::get('comissoes', [ComissaoController::class, 'index']);
     });
 

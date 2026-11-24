@@ -78,4 +78,28 @@ class BarbeiroController extends Controller
             ])->values(),
         ]);
     }
+
+    /**
+     * O barbeiro inicia o próprio atendimento do dia. Concluir (e receber) continua
+     * com a recepção ou o dono.
+     * POST /api/barbeiro/agendamentos/{agendamento}/iniciar
+     */
+    public function iniciar(Request $request, Agendamento $agendamento): JsonResponse
+    {
+        $usuario = $request->user();
+        if ($agendamento->funcionario?->usuario_id !== $usuario->id) {
+            return response()->json(['message' => 'Você só pode iniciar os seus próprios atendimentos.'], 403);
+        }
+        if (! in_array($agendamento->status, ['agendado', 'confirmado'], true)) {
+            return response()->json(['message' => 'Este atendimento não pode mais ser iniciado.'], 422);
+        }
+        $fuso = $usuario->empresa->fuso_horario;
+        if (! $agendamento->inicio->copy()->setTimezone($fuso)->isSameDay(now($fuso))) {
+            return response()->json(['message' => 'Só é possível iniciar atendimentos de hoje.'], 422);
+        }
+
+        $agendamento->update(['status' => 'em_atendimento']);
+
+        return response()->json(['id' => $agendamento->id, 'status' => $agendamento->status]);
+    }
 }

@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { STATUS_ROTULO } from '../../core/agenda.service';
 import { AuthService } from '../../core/auth.service';
-import { AgendaBarbeiro, BarbeiroService } from '../../core/barbeiro.service';
+import { AgendaBarbeiro, AtendimentoBarbeiro, BarbeiroService } from '../../core/barbeiro.service';
 import { mensagemDeErro } from '../../core/erros';
 import { ComissaoBarbeiro } from '../../core/financeiro.service';
 import { SinoAvisos } from '../../layout/sino-avisos';
@@ -23,7 +23,7 @@ function somarDias(data: string, dias: number): string {
 
 /**
  * Painel do barbeiro (/barbeiro): só a própria agenda do dia e a comissão a receber.
- * Pensado para o celular; não altera nada, só consulta.
+ * Pensado para o celular; o barbeiro só inicia os próprios atendimentos de hoje (concluir é com a recepção).
  */
 @Component({
   selector: 'app-painel-barbeiro',
@@ -102,6 +102,11 @@ function somarDias(data: string, dias: number): string {
                 <div class="valor">
                   <span class="etiqueta">{{ rotuloStatus[ag.status] }}</span>
                   <span class="pequeno">{{ +ag.valor_total | currency: 'BRL' }}</span>
+                  @if (podeIniciar(ag)) {
+                    <button class="botao botao-auto botao-iniciar" type="button" [disabled]="iniciando() === ag.id" (click)="iniciar(ag)">
+                      {{ iniciando() === ag.id ? 'Iniciando…' : 'Iniciar atendimento' }}
+                    </button>
+                  }
                 </div>
               </li>
             }
@@ -168,6 +173,7 @@ function somarDias(data: string, dias: number): string {
     .hora-atendimento, .detalhes, .valor { display: flex; flex-direction: column; gap: 2px; }
     .detalhes { min-width: 0; }
     .valor { align-items: flex-end; }
+    .botao-iniciar { margin-top: 6px; padding: 6px 12px; font-size: 14px; white-space: nowrap; }
     .destaque {
       display: flex; flex-direction: column; gap: 4px; padding: 20px; margin-bottom: 12px;
       background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--radius-cards);
@@ -191,6 +197,7 @@ export class PainelBarbeiro implements OnInit {
   protected readonly comissao = signal<ComissaoBarbeiro | null>(null);
   protected readonly periodo = signal<Periodo>('mes');
   protected readonly erro = signal('');
+  protected readonly iniciando = signal<number | null>(null);
   protected inicio = this.hoje.slice(0, 8) + '01';
   protected fim = this.hoje;
 
@@ -211,6 +218,27 @@ export class PainelBarbeiro implements OnInit {
     if (!data) return;
     this.data.set(data);
     this.carregarAgenda();
+  }
+
+  /** Só os atendimentos de hoje que ainda não começaram; concluir fica com a recepção. */
+  podeIniciar(ag: AtendimentoBarbeiro): boolean {
+    return this.data() === this.hoje && (ag.status === 'agendado' || ag.status === 'confirmado');
+  }
+
+  iniciar(ag: AtendimentoBarbeiro): void {
+    this.iniciando.set(ag.id);
+    this.api.iniciar(ag.id).subscribe({
+      next: (r) => {
+        this.iniciando.set(null);
+        this.agenda.update((a) =>
+          a ? { ...a, agendamentos: a.agendamentos.map((x) => (x.id === r.id ? { ...x, status: r.status } : x)) } : a,
+        );
+      },
+      error: (e) => {
+        this.iniciando.set(null);
+        this.erro.set(mensagemDeErro(e));
+      },
+    });
   }
 
   abrirComissao(): void {

@@ -9,6 +9,7 @@ use App\Models\Funcionario;
 use App\Models\Servico;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class PaginaPublicaTest extends TestCase
@@ -65,7 +66,7 @@ class PaginaPublicaTest extends TestCase
         parent::tearDown();
     }
 
-    private function agendar(array $dados = []): \Illuminate\Testing\TestResponse
+    private function agendar(array $dados = []): TestResponse
     {
         return $this->postJson('/api/publico/barbearia-do-ze/agendamentos', $dados + [
             'aceite_privacidade' => true,

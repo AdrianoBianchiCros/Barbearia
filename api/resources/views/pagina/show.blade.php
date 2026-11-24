@@ -28,7 +28,7 @@
     <meta property="og:image" content="{{ $imagem }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="theme-color" content="#0d0d0e">
-    @if ($empresa->logo_url)<link rel="icon" href="{{ $empresa->logo_url }}">@endif
+    <link rel="icon" href="{{ $empresa->favicon_url }}">
     <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <link rel="preload" as="image" href="{{ $fotoCapa }}">
     <style>

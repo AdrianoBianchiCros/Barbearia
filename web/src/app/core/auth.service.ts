@@ -21,6 +21,8 @@ export interface Empresa {
   slug: string;
   telefone: string | null;
   fuso_horario: string;
+  /** Ícone da aba: o mesmo da página da barbearia (logo ou inicial na cor dela). */
+  favicon_url?: string | null;
 }
 
 export type SituacaoAcesso = 'sem_prazo' | 'em_dia' | 'vencendo' | 'carencia' | 'vencida' | 'suspensa';

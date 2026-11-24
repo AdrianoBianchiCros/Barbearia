@@ -98,6 +98,21 @@ class PaginaPublicaTest extends TestCase
             ->assertDontSee('Inativo');
     }
 
+    public function test_pagina_e_painel_usam_o_mesmo_icone_da_barbearia(): void
+    {
+        $this->empresa->update(['cor_primaria' => '#8b1e1e']);
+        $icone = $this->empresa->fresh()->favicon_url;
+
+        // Sem logo: a inicial do nome ("Barbearia do Zé" → Z) na cor da barbearia.
+        $this->assertStringStartsWith('data:image/svg+xml,', $icone);
+        $this->assertStringContainsString('%238b1e1e', $icone);
+        $this->assertStringContainsString('%3EZ%3C', $icone);
+
+        $this->get('/barbearia-do-ze')->assertOk()->assertSee('<link rel="icon" href="'.e($icone).'">', false);
+        $this->logarComo('dono', $this->empresa);
+        $this->getJson('/api/auth/eu')->assertOk()->assertJsonPath('empresa.favicon_url', $icone);
+    }
+
     public function test_pagina_inexistente_ou_de_barbearia_inativa_da_404(): void
     {
         Empresa::factory()->inativa()->create(['slug' => 'fechada']);

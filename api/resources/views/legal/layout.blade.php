@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('titulo') | {{ $p['nome'] }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon-abianchi.svg') }}">
     <meta name="robots" content="noindex">
     <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <style>

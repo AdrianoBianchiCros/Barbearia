@@ -35,7 +35,13 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 190 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 191 testes na API · 9 testes no painel*
+
+- **Favicon (23/11/2026, ainda não publicado):** o painel da barbearia e o do barbeiro usam o **mesmo ícone da página
+  da barbearia** (`Empresa::favicon_url`: o logo ou, sem logo, a inicial do nome na cor da barbearia, SVG embutido;
+  vai na sessão do painel e acompanha a troca do logo em Configurações). A **administração**, as telas de login e as
+  páginas de Privacidade/Termos usam o ícone da ABianchi, igual ao de abianchitech.com (`favicon-abianchi.svg` em
+  `web/public` e `api/public/img`). A troca é feita pelo `FaviconService` do painel conforme a rota.
 
 - **Cobrança mensal recorrente (23/11/2026, ainda não publicado):** decisão do dono do produto: o "período" (1, 3, 6
   ou 12 meses) é a **vigência do contrato** e o valor é a **mensalidade**. Cada pagamento (cadastro, renovação ou fatura
@@ -407,7 +413,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 190 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 191 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

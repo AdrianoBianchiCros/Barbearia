@@ -105,6 +105,8 @@ export interface EmpresaCompleta {
   cor_primaria: string;
   fuso_horario: string;
   logo_url: string | null;
+  /** Ícone da aba (logo ou inicial na cor da barbearia). */
+  favicon_url?: string | null;
   capa_url: string | null;
 }
 

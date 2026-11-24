@@ -138,7 +138,8 @@ class AuthController extends Controller
 
         return [
             'usuario' => $usuario->only(['id', 'nome', 'email', 'perfil', 'trocar_senha']),
-            'empresa' => $empresa->only(['id', 'nome', 'slug', 'telefone', 'fuso_horario']),
+            // favicon_url: o painel usa o mesmo ícone da página da barbearia.
+            'empresa' => $empresa->only(['id', 'nome', 'slug', 'telefone', 'fuso_horario']) + ['favicon_url' => $empresa->favicon_url],
             // Prazo do acesso pago: o painel mostra o aviso de vencimento só para o dono.
             'acesso' => $usuario->temPerfil('dono') ? $empresa->resumoAcesso() : null,
         ];

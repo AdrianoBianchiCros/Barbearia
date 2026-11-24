@@ -25,7 +25,7 @@ class Empresa extends Model
     /** @use HasFactory<EmpresaFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $appends = ['logo_url', 'capa_url', 'wa_token_configurado'];
+    protected $appends = ['logo_url', 'capa_url', 'favicon_url', 'wa_token_configurado'];
 
     protected $hidden = ['logo_path', 'capa_path', 'wa_token'];
 
@@ -49,6 +49,26 @@ class Empresa extends Model
     protected function logoUrl(): Attribute
     {
         return Attribute::get(fn () => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null);
+    }
+
+    /**
+     * Ícone da aba do navegador, igual na página da barbearia e no painel: o logo ou, sem logo,
+     * a inicial do nome na cor da barbearia (SVG embutido).
+     */
+    protected function faviconUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            if ($this->logo_url) {
+                return $this->logo_url;
+            }
+            $inicial = mb_strtoupper(mb_substr(trim(preg_replace('/^barbearia\s+(d[aeo]s?\s+)?/iu', '', (string) $this->nome)) ?: 'B', 0, 1));
+            $cor = preg_match('/^#[0-9a-f]{6}$/i', (string) $this->cor_primaria) ? $this->cor_primaria : '#1f3a5f';
+            $svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='{$cor}'/>"
+                ."<text x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='#fff'>"
+                .htmlspecialchars($inicial, ENT_QUOTES | ENT_XML1).'</text></svg>';
+
+            return 'data:image/svg+xml,'.rawurlencode($svg);
+        });
     }
 
     /** O token da Meta nunca sai da API; o painel só sabe se ele foi informado. */

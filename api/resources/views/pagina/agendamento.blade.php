@@ -19,7 +19,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Seu horário · {{ $empresa->nome }}</title>
     <meta name="theme-color" content="#0d0d0e">
-    @if ($empresa->logo_url)<link rel="icon" href="{{ $empresa->logo_url }}">@endif
+    <link rel="icon" href="{{ $empresa->favicon_url }}">
     <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <style>
         :root {

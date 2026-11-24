@@ -89,7 +89,7 @@ function somarDias(data: string, dias: number): string {
           <ul class="atendimentos">
             @for (ag of a.agendamentos; track ag.id) {
               <li class="atendimento" [class.encerrado]="ag.status === 'concluido' || ag.status === 'faltou'">
-                <div class="horario">
+                <div class="hora-atendimento">
                   <strong>{{ ag.inicio | date: 'HH:mm' }}</strong>
                   <span class="texto-suave pequeno">{{ ag.fim | date: 'HH:mm' }}</span>
                 </div>
@@ -165,7 +165,7 @@ function somarDias(data: string, dias: number): string {
       background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--radius-cards);
     }
     .atendimento.encerrado { opacity: 0.65; }
-    .horario, .detalhes, .valor { display: flex; flex-direction: column; gap: 2px; }
+    .hora-atendimento, .detalhes, .valor { display: flex; flex-direction: column; gap: 2px; }
     .detalhes { min-width: 0; }
     .valor { align-items: flex-end; }
     .destaque {

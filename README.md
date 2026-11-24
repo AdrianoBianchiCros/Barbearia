@@ -46,7 +46,7 @@ Para acessar:
   pago), renovação automática a cada ciclo do plano, **taxa de instalação opcional** (campo no cadastro, guardada em
   `assinaturas.taxa_instalacao`; sem taxa, a cláusula some e a numeração se ajusta), valores **por extenso**
   (`App\Support\Extenso`), atraso (2% + 1% a.m., suspensão após a carência), reajuste pelo IPCA, LGPD detalhada
-  (controladora/operadora, incidentes em 24 h, terceiros, exportação e exclusão), responsabilidade conforme a lei e foro.
+  (controladora/operadora, incidentes em prazo razoável, preferencialmente até 48 h, terceiros, exportação e exclusão), responsabilidade conforme a lei e foro.
   Os textos de cobrança e renovação mudam com o plano (mensal ou de N meses) e a forma de pagamento.
   Modelo em `resources/views/contratos/prestacao-servico.blade.php`, dados em `App\Services\ContratoPrestacao`, PDF pelo
   `barryvdh/laravel-dompdf` (dependência nova). Configuração:

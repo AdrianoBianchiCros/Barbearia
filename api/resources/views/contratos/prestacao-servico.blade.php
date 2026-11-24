@@ -147,8 +147,8 @@
     de infraestrutura tecnológica, hospedagem, armazenamento e outros serviços necessários ao funcionamento da
     plataforma, inclusive provedores de nuvem, adotando medidas razoáveis para que tais fornecedores estejam sujeitos a
     obrigações de proteção e segurança compatíveis com os serviços prestados.</p>
-<p>7.6. <strong>Incidentes de segurança.</strong> A CONTRATADA comunicará ao CONTRATANTE, em até 24 (vinte e quatro)
-    horas após tomar conhecimento, qualquer incidente de segurança envolvendo dados pessoais tratados em nome do
+<p>7.6. <strong>Incidentes de segurança.</strong> A CONTRATADA comunicará ao CONTRATANTE, em prazo razoável,
+    preferencialmente em até 48 (quarenta e oito) horas após tomar conhecimento, qualquer incidente de segurança envolvendo dados pessoais tratados em nome do
     CONTRATANTE que possa acarretar risco ou dano relevante aos titulares, fornecendo as informações disponíveis para
     auxiliar na avaliação e adoção das providências necessárias. A comunicação inicial poderá ser complementada à
     medida que novas informações forem apuradas.</p>

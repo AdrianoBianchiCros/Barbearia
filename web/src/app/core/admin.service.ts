@@ -38,12 +38,43 @@ export interface Assinatura {
   administrador: { id: number; nome: string } | null;
 }
 
+/** Dados da empresa vindos da Receita Federal (consulta do CNPJ), editáveis no cadastro. */
+export interface DadosEmpresa {
+  razao_social: string | null;
+  email: string | null;
+  situacao_cadastral: string | null;
+  data_abertura: string | null;
+  natureza_juridica: string | null;
+  cnae_principal: string | null;
+  porte: string | null;
+  optante_simples: boolean | null;
+  optante_mei: boolean | null;
+  cep: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+}
+
+/** Resposta de GET /admin/cnpj/{cnpj}: campos do cadastro + sugestão do nome do dono. */
+export interface ConsultaCnpj extends DadosEmpresa {
+  documento: string;
+  nome: string | null;
+  telefone: string | null;
+  dono_nome: string | null;
+  /** Nome da barbearia que já usa este CNPJ, se houver. */
+  ja_cadastrada: string | null;
+}
+
 export interface BarbeariaAdmin {
   id: number;
   nome: string;
   slug: string;
   telefone: string | null;
   documento: string | null;
+  empresa?: DadosEmpresa;
   ativo: boolean;
   criada_em: string | null;
   acesso: ResumoAcesso;
@@ -159,6 +190,11 @@ export class AdminService {
   }
 
   /** Dados em FormData por causa do contrato anexado. */
+  /** Dados da Receita Federal pelo CNPJ (o servidor consulta a API pública do OpenCNPJ). */
+  consultarCnpj(cnpj: string): Observable<ConsultaCnpj> {
+    return this.http.get<ConsultaCnpj>(`${API}/cnpj/${cnpj.replace(/\D/g, '')}`);
+  }
+
   criar(dados: FormData): Observable<{ barbearia: BarbeariaAdmin; acesso: DadosAcesso }> {
     return this.http.post<{ barbearia: BarbeariaAdmin; acesso: DadosAcesso }>(`${API}/barbearias`, dados);
   }

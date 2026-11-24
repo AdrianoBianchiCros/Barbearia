@@ -9,6 +9,7 @@ use App\Models\Fatura;
 use App\Models\MensagemWhatsapp;
 use App\Models\User;
 use App\Notifications\SenhaProvisoria;
+use App\Services\ConsultaCnpj;
 use App\Services\Faturas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,25 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class BarbeariaController extends Controller
 {
+    /**
+     * Dados da Receita Federal a partir do CNPJ (API pública do OpenCNPJ), para preencher o cadastro.
+     * GET /api/admin/cnpj/{cnpj}
+     */
+    public function consultarCnpj(string $cnpj, ConsultaCnpj $consulta): JsonResponse
+    {
+        try {
+            $dados = $consulta->consultar($cnpj);
+        } catch (\RuntimeException $e) {
+            report($e);
+
+            return response()->json(['message' => $e->getMessage()], 503);
+        }
+
+        $dados['ja_cadastrada'] = Empresa::withTrashed()->where('documento', $dados['documento'])->value('nome');
+
+        return response()->json($dados);
+    }
+
     /** Períodos, formas de pagamento e regras de prazo para montar os formulários. */
     public function opcoes(): JsonResponse
     {
@@ -83,10 +103,21 @@ class BarbeariaController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // CNPJ/CPF e CEP só com números; UF em maiúsculas.
+        foreach (['documento', 'cep'] as $campo) {
+            if ($request->filled($campo)) {
+                $request->merge([$campo => preg_replace('/\D/', '', $request->input($campo))]);
+            }
+        }
+        if ($request->filled('uf')) {
+            $request->merge(['uf' => strtoupper($request->input('uf'))]);
+        }
+
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
             'telefone' => ['nullable', 'string', 'max:20'],
             'documento' => ['nullable', 'string', 'max:20'],
+            ...$this->regrasDadosEmpresa(),
             'dono_nome' => ['required', 'string', 'max:120'],
             'dono_email' => ['required', 'email', 'max:180', 'unique:usuarios,email'],
             ...$this->regrasContratacao(),
@@ -107,7 +138,8 @@ class BarbeariaController extends Controller
                     'slug' => Empresa::gerarSlug($dados['nome']),
                     'telefone' => $dados['telefone'] ?? null,
                     'documento' => $dados['documento'] ?? null,
-                    'email' => $dados['dono_email'],
+                    ...collect($dados)->only(array_keys($this->regrasDadosEmpresa()))->all(),
+                    'email' => ($dados['email'] ?? null) ?: $dados['dono_email'],
                 ])->refresh(); // carrega os valores padrão do banco (ex.: fuso horário)
 
                 $dono = new User([
@@ -330,6 +362,29 @@ class BarbeariaController extends Controller
         return Carbon::parse(now('America/Sao_Paulo')->toDateString());
     }
 
+    /** Dados da empresa (preenchidos pela consulta do CNPJ, mas editáveis). */
+    private function regrasDadosEmpresa(): array
+    {
+        return [
+            'email' => ['nullable', 'email', 'max:180'],
+            'razao_social' => ['nullable', 'string', 'max:160'],
+            'situacao_cadastral' => ['nullable', 'string', 'max:30'],
+            'data_abertura' => ['nullable', 'date_format:Y-m-d'],
+            'natureza_juridica' => ['nullable', 'string', 'max:120'],
+            'cnae_principal' => ['nullable', 'string', 'max:200'],
+            'porte' => ['nullable', 'string', 'max:40'],
+            'optante_simples' => ['nullable', 'boolean'],
+            'optante_mei' => ['nullable', 'boolean'],
+            'cep' => ['nullable', 'string', 'max:9'],
+            'logradouro' => ['nullable', 'string', 'max:255'],
+            'numero' => ['nullable', 'string', 'max:20'],
+            'complemento' => ['nullable', 'string', 'max:80'],
+            'bairro' => ['nullable', 'string', 'max:80'],
+            'cidade' => ['nullable', 'string', 'max:80'],
+            'uf' => ['nullable', 'string', 'size:2'],
+        ];
+    }
+
     private function resumo(Empresa $empresa): array
     {
         $dono = $empresa->usuarios->first();
@@ -341,6 +396,10 @@ class BarbeariaController extends Controller
             'slug' => $empresa->slug,
             'telefone' => $empresa->telefone,
             'documento' => $empresa->documento,
+            'empresa' => $empresa->only([
+                'razao_social', 'email', 'situacao_cadastral', 'data_abertura', 'natureza_juridica', 'cnae_principal',
+                'porte', 'optante_simples', 'optante_mei', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf',
+            ]),
             'ativo' => $empresa->ativo,
             'criada_em' => $empresa->created_at?->toDateString(),
             'acesso' => $empresa->resumoAcesso(),

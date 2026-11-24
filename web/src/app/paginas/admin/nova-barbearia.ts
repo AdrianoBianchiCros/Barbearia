@@ -1,10 +1,23 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AdminService, BarbeariaAdmin, DadosAcesso, OpcoesAdmin } from '../../core/admin.service';
+import { AdminService, BarbeariaAdmin, ConsultaCnpj, DadosAcesso, OpcoesAdmin } from '../../core/admin.service';
 import { errosPorCampo, mensagemDeErro } from '../../core/erros';
 import { anexarContratacao, CamposContratacao, contratacaoVazia } from './campos-contratacao';
 import { CartaoAcesso } from './cartao-acesso';
+
+/** Campos do cadastro; os da empresa são preenchidos pela consulta do CNPJ e podem ser corrigidos. */
+function formularioVazio() {
+  return {
+    documento: '', nome: '', razao_social: '', telefone: '', email: '',
+    situacao_cadastral: '', data_abertura: '', natureza_juridica: '', cnae_principal: '', porte: '',
+    optante_simples: null as boolean | null, optante_mei: null as boolean | null,
+    cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+    dono_nome: '', dono_email: '',
+  };
+}
+
+const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
 
 /** Cadastro de uma barbearia cliente: dados, dono, período pago e contrato. */
 @Component({
@@ -36,19 +49,86 @@ import { CartaoAcesso } from './cartao-acesso';
 
         <section class="cartao-secao">
           <h2>Barbearia</h2>
-          <label class="campo">
-            <span>Nome da barbearia</span>
-            <input name="nome" [(ngModel)]="form.nome" required maxlength="120" />
-            @if (erros()['nome']) {<small class="erro-campo">{{ erros()['nome'] }}</small>}
-          </label>
+          <p class="texto-suave">Informe o CNPJ: os dados da Receita Federal preenchem o cadastro (dá para corrigir depois).</p>
+          <div class="linha-cnpj">
+            <label class="campo">
+              <span>CNPJ <em>(ou CPF, sem consulta)</em></span>
+              <input name="documento" [(ngModel)]="form.documento" maxlength="20" inputmode="numeric" placeholder="00.000.000/0000-00"
+                (blur)="consultarSeCnpj()" (keydown.enter)="$event.preventDefault(); consultarCnpj()" />
+              @if (erros()['documento']) {<small class="erro-campo">{{ erros()['documento'] }}</small>}
+            </label>
+            <button class="botao botao-secundario botao-auto" type="button" [disabled]="consultando()" (click)="consultarCnpj()">
+              {{ consultando() ? 'Consultando…' : 'Buscar dados do CNPJ' }}
+            </button>
+          </div>
+          @if (consulta(); as c) {
+            <div class="aviso-cnpj" [class.atencao]="c.situacao_cadastral !== 'Ativa' || c.ja_cadastrada" role="status">
+              Situação na Receita: <strong>{{ c.situacao_cadastral || '—' }}</strong>
+              @if (c.situacao_cadastral && c.situacao_cadastral !== 'Ativa') { · confira antes de cadastrar}
+              @if (c.ja_cadastrada) {<br />Este CNPJ já está na barbearia <strong>{{ c.ja_cadastrada }}</strong>.}
+            </div>
+          }
+
           <div class="grade-2">
             <label class="campo">
-              <span>WhatsApp <em>(opcional)</em></span>
+              <span>Nome da barbearia (fantasia)</span>
+              <input name="nome" [(ngModel)]="form.nome" required maxlength="120" />
+              @if (erros()['nome']) {<small class="erro-campo">{{ erros()['nome'] }}</small>}
+            </label>
+            <label class="campo">
+              <span>Razão social</span>
+              <input name="razao_social" [(ngModel)]="form.razao_social" maxlength="160" />
+            </label>
+          </div>
+          <div class="grade-2">
+            <label class="campo">
+              <span>WhatsApp / telefone <em>(opcional)</em></span>
               <input type="tel" name="telefone" [(ngModel)]="form.telefone" placeholder="(11) 99999-0000" maxlength="20" />
             </label>
             <label class="campo">
-              <span>CNPJ ou CPF <em>(opcional)</em></span>
-              <input name="documento" [(ngModel)]="form.documento" maxlength="20" />
+              <span>E-mail da barbearia <em>(se vazio, usa o do dono)</em></span>
+              <input type="email" name="email" [(ngModel)]="form.email" maxlength="180" />
+              @if (erros()['email']) {<small class="erro-campo">{{ erros()['email'] }}</small>}
+            </label>
+          </div>
+        </section>
+
+        <section class="cartao-secao">
+          <h2>Dados da empresa</h2>
+          <div class="grade-2">
+            <label class="campo"><span>Situação cadastral</span><input name="situacao_cadastral" [(ngModel)]="form.situacao_cadastral" maxlength="30" /></label>
+            <label class="campo"><span>Data de abertura</span><input type="date" name="data_abertura" [(ngModel)]="form.data_abertura" /></label>
+          </div>
+          <div class="grade-2">
+            <label class="campo"><span>Natureza jurídica</span><input name="natureza_juridica" [(ngModel)]="form.natureza_juridica" maxlength="120" /></label>
+            <label class="campo"><span>Porte</span><input name="porte" [(ngModel)]="form.porte" maxlength="40" /></label>
+          </div>
+          <label class="campo"><span>Atividade principal (CNAE)</span><input name="cnae_principal" [(ngModel)]="form.cnae_principal" maxlength="200" /></label>
+          <div class="grade-2">
+            <label class="campo-check"><input type="checkbox" name="optante_simples" [(ngModel)]="form.optante_simples" /> Optante pelo Simples Nacional</label>
+            <label class="campo-check"><input type="checkbox" name="optante_mei" [(ngModel)]="form.optante_mei" /> MEI</label>
+          </div>
+        </section>
+
+        <section class="cartao-secao">
+          <h2>Endereço</h2>
+          <div class="grade-2">
+            <label class="campo"><span>CEP</span><input name="cep" [(ngModel)]="form.cep" maxlength="9" inputmode="numeric" placeholder="00000-000" /></label>
+            <label class="campo"><span>Bairro</span><input name="bairro" [(ngModel)]="form.bairro" maxlength="80" /></label>
+          </div>
+          <label class="campo"><span>Logradouro</span><input name="logradouro" [(ngModel)]="form.logradouro" maxlength="255" /></label>
+          <div class="grade-2">
+            <label class="campo"><span>Número</span><input name="numero" [(ngModel)]="form.numero" maxlength="20" /></label>
+            <label class="campo"><span>Complemento</span><input name="complemento" [(ngModel)]="form.complemento" maxlength="80" /></label>
+          </div>
+          <div class="grade-2">
+            <label class="campo"><span>Cidade</span><input name="cidade" [(ngModel)]="form.cidade" maxlength="80" /></label>
+            <label class="campo">
+              <span>UF</span>
+              <select name="uf" [(ngModel)]="form.uf">
+                <option value="">—</option>
+                @for (uf of ufs; track uf) {<option [value]="uf">{{ uf }}</option>}
+              </select>
             </label>
           </div>
         </section>
@@ -83,6 +163,16 @@ import { CartaoAcesso } from './cartao-acesso';
       </form>
     }
   `,
+  styles: `
+    .linha-cnpj { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .linha-cnpj .campo { flex: 1; min-width: 220px; }
+    .linha-cnpj .botao { margin-bottom: 16px; }
+    .aviso-cnpj {
+      margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius-inputs, 8px); font-size: 14px;
+      background: var(--cor-sucesso-fundo); color: var(--cor-texto);
+    }
+    .aviso-cnpj.atencao { background: var(--cor-erro-fundo); }
+  `,
 })
 export class NovaBarbearia implements OnInit {
   private readonly api = inject(AdminService);
@@ -92,8 +182,12 @@ export class NovaBarbearia implements OnInit {
   protected readonly erro = signal('');
   protected readonly erros = signal<Record<string, string>>({});
   protected readonly criada = signal<{ barbearia: BarbeariaAdmin; acesso: DadosAcesso } | null>(null);
+  protected readonly consultando = signal(false);
+  protected readonly consulta = signal<ConsultaCnpj | null>(null);
+  protected readonly ufs = UFS;
+  private ultimoConsultado = '';
 
-  protected form = { nome: '', telefone: '', documento: '', dono_nome: '', dono_email: '' };
+  protected form = formularioVazio();
   protected contratacao = contratacaoVazia();
 
   ngOnInit(): void {
@@ -111,7 +205,10 @@ export class NovaBarbearia implements OnInit {
     this.erros.set({});
 
     const dados = new FormData();
-    Object.entries(this.form).forEach(([campo, valor]) => valor && dados.append(campo, valor));
+    Object.entries(this.form).forEach(([campo, valor]) => {
+      if (typeof valor === 'boolean') dados.append(campo, valor ? '1' : '0');
+      else if (valor) dados.append(campo, valor);
+    });
     anexarContratacao(dados, this.contratacao);
 
     this.api.criar(dados).subscribe({
@@ -127,8 +224,51 @@ export class NovaBarbearia implements OnInit {
     });
   }
 
+  /** Ao sair do campo: consulta sozinho quando há 14 números (CNPJ) ainda não consultados. */
+  consultarSeCnpj(): void {
+    const cnpj = this.form.documento.replace(/\D/g, '');
+    if (cnpj.length === 14 && cnpj !== this.ultimoConsultado) this.consultarCnpj();
+  }
+
+  /** Busca os dados na Receita Federal e preenche o formulário (o que vier vazio não apaga o digitado). */
+  consultarCnpj(): void {
+    const cnpj = this.form.documento.replace(/\D/g, '');
+    if (cnpj.length !== 14) {
+      this.erros.set({ ...this.erros(), documento: 'Informe os 14 números do CNPJ para buscar os dados.' });
+      return;
+    }
+    this.consultando.set(true);
+    this.erros.set({ ...this.erros(), documento: '' });
+    this.ultimoConsultado = cnpj;
+    this.api.consultarCnpj(cnpj).subscribe({
+      next: (c) => {
+        this.consultando.set(false);
+        this.consulta.set(c);
+        const { ja_cadastrada: _ja, ...campos } = c;
+        for (const [campo, valor] of Object.entries(campos)) {
+          if (valor === null || valor === '' || !(campo in this.form)) continue;
+          if (campo === 'dono_nome' && this.form.dono_nome.trim()) continue; // sugestão do sócio não apaga o digitado
+          (this.form as Record<string, unknown>)[campo] = valor;
+        }
+        this.form.documento = this.formatarCnpj(c.documento);
+        if (this.form.cep.length === 8) this.form.cep = `${this.form.cep.slice(0, 5)}-${this.form.cep.slice(5)}`;
+      },
+      error: (e) => {
+        this.consultando.set(false);
+        this.consulta.set(null);
+        this.erros.set({ ...this.erros(), documento: errosPorCampo(e)['documento'] || mensagemDeErro(e) });
+      },
+    });
+  }
+
+  private formatarCnpj(d: string): string {
+    return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  }
+
   novaCadastro(): void {
-    this.form = { nome: '', telefone: '', documento: '', dono_nome: '', dono_email: '' };
+    this.form = formularioVazio();
+    this.consulta.set(null);
+    this.ultimoConsultado = '';
     this.contratacao = contratacaoVazia();
     this.criada.set(null);
   }

@@ -35,7 +35,16 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 178 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 183 testes na API · 9 testes no painel*
+
+- **Cadastro da barbearia pelo CNPJ (23/11/2026, ainda não publicado):** em "Nova barbearia" (admin), o CNPJ vem
+  primeiro; ao sair do campo (ou em "Buscar dados do CNPJ") o servidor consulta a API pública do **OpenCNPJ**
+  (`GET https://api.opencnpj.org/{cnpj}`, sem chave; `App\Services\ConsultaCnpj`, rota `GET /api/admin/cnpj/{cnpj}`,
+  30 por minuto) e preenche nome fantasia, razão social, telefone, e-mail, situação cadastral, abertura, natureza
+  jurídica, CNAE, porte, Simples/MEI, endereço e sugere o nome do dono (1º sócio). Tudo editável; avisa se a situação
+  não é "Ativa" ou se o CNPJ já tem barbearia. Confere o dígito verificador antes de consultar. Campos novos em
+  `empresas` (migração `2026_11_24_000001`); o detalhe da barbearia mostra esses dados. Testes em `AdminCnpjTest`
+  (API simulada). No PC local o PHP não tem o pacote de certificados (cURL error 60); na HostGator funciona.
 
 - **QA de 23/11/2026 e correções (ainda não publicado):** a skill `/qa` (`.claude/skills/qa/SKILL.md`) testa o sistema
   num banco isolado e gera `teste-AAAA-MM-DD.md` quando acha bugs. O primeiro QA (`teste-2026-11-23.md`) achou 7, todos
@@ -269,6 +278,7 @@ Para acessar:
 - Exclusão lógica (soft delete) nos cadastros.
 
 ### Venda do SaaS — área do administrador (`/painel/admin`)
+- **Nova barbearia pelo CNPJ:** dados da Receita Federal (OpenCNPJ) preenchem o cadastro, com endereço e dados da empresa.
 - **Faturas no painel do dono** (`/assinatura`, aberta pelo farol do vencimento): próxima fatura com Pix (QR Code e
   copia e cola pela chave Nubank), "Já paguei", faturas pagas; o administrador confirma o recebimento e o acesso renova.
 - Administradores da plataforma em tabela própria (`administradores`), criados por `php artisan admin:criar`;
@@ -365,7 +375,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 178 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 183 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

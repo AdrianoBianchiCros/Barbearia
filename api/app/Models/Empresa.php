@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'nome', 'slug', 'slogan', 'descricao', 'documento', 'telefone', 'whatsapp', 'email', 'instagram',
+    'razao_social', 'situacao_cadastral', 'data_abertura', 'natureza_juridica', 'cnae_principal', 'porte', 'optante_simples', 'optante_mei',
     'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf', 'cor_primaria', 'limite_gaveta', 'fuso_horario', 'ativo', 'acesso_ate',
     'wa_ativo', 'wa_lembrete_24h', 'wa_lembrete_2h', 'wa_phone_number_id', 'wa_token', 'cancelamento_antecedencia_horas',
 ])]
@@ -39,6 +40,9 @@ class Empresa extends Model
             'wa_lembrete_2h' => 'boolean',
             'wa_token' => 'encrypted',
             'cancelamento_antecedencia_horas' => 'integer',
+            'data_abertura' => 'date:Y-m-d',
+            'optante_simples' => 'boolean',
+            'optante_mei' => 'boolean',
         ];
     }
 

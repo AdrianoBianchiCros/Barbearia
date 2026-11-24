@@ -65,6 +65,19 @@ import { CartaoAcesso } from './cartao-acesso';
           <p class="texto-suave">
             WhatsApp: {{ b.telefone || '—' }} · CNPJ/CPF: {{ b.documento || '—' }} · {{ b.total_usuarios }} usuário(s)
           </p>
+          @if (b.empresa?.razao_social || b.empresa?.situacao_cadastral) {
+            <p class="texto-suave pequeno">
+              @if (b.empresa!.razao_social) {<strong>{{ b.empresa!.razao_social }}</strong><br />}
+              Situação: {{ b.empresa!.situacao_cadastral || '—' }}
+              @if (b.empresa!.data_abertura) { · aberta em {{ b.empresa!.data_abertura.split('-').reverse().join('/') }}}
+              @if (b.empresa!.porte) { · {{ b.empresa!.porte }}}
+              @if (b.empresa!.optante_mei) { · MEI} @else if (b.empresa!.optante_simples) { · Simples Nacional}
+              @if (b.empresa!.cnae_principal) {<br />{{ b.empresa!.cnae_principal }}}
+              @if (b.empresa!.logradouro) {
+                <br />{{ b.empresa!.logradouro }}{{ b.empresa!.numero ? ', ' + b.empresa!.numero : '' }}{{ b.empresa!.bairro ? ' · ' + b.empresa!.bairro : '' }}{{ b.empresa!.cidade ? ' · ' + b.empresa!.cidade + '-' + (b.empresa!.uf || '') : '' }}
+              }
+            </p>
+          }
           <div class="rodape-secao">
             @if (b.dono) {
               <button class="botao botao-secundario botao-auto" type="button" (click)="novaSenha()">Gerar nova senha do dono</button>

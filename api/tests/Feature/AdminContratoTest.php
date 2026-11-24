@@ -26,7 +26,6 @@ class AdminContratoTest extends TestCase
         Storage::fake('local');
         Notification::fake();
         Sanctum::actingAs(Administrador::create(['nome' => 'Adriano', 'email' => 'admin@exemplo.test', 'password' => 'segredo123', 'ativo' => true]));
-        config(['assinatura.fidelidade_meses' => 3, 'assinatura.multa_rescisoria_percentual' => 20]);
     }
 
     protected function tearDown(): void
@@ -52,20 +51,33 @@ class AdminContratoTest extends TestCase
         ];
     }
 
-    public function test_multa_e_mensalidade_seguem_a_fidelidade_e_o_plano(): void
+    public function test_textos_do_contrato_seguem_o_plano_e_a_taxa(): void
     {
         $contrato = app(ContratoPrestacao::class);
         $empresa = new Empresa(['nome' => 'Barbearia do Zé', 'documento' => '11222333000181']);
 
-        $mensal = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '1m', 'forma_pagamento' => 'pix', 'valor' => 99.90], now());
-        $this->assertSame([39.96, 19.98, 0.0], array_column($mensal['multas'], 'valor'));
-        $this->assertSame('Após 1 mês', $mensal['multas'][0]['momento']);
+        $mensal = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '1m', 'forma_pagamento' => 'pix', 'valor' => 100, 'taxa_instalacao' => 250], now());
+        $this->assertSame('mensal', $mensal['ciclo']);
+        $this->assertSame('cem reais', $mensal['valor_extenso']);
+        $this->assertSame(250.0, $mensal['taxa_instalacao']);
+        $this->assertSame('duzentos e cinquenta reais', $mensal['taxa_extenso']);
         $this->assertSame('11.222.333/0001-81', $mensal['contratante']['documento']);
 
-        // Plano trimestral pago à vista: a multa usa a mensalidade equivalente.
+        // Plano trimestral pago à vista, sem taxa de instalação.
         $trimestral = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '3m', 'forma_pagamento' => 'boleto', 'valor' => 299.70], now());
-        $this->assertSame(99.90, $trimestral['mensalidade']);
+        $this->assertSame('de 3 meses', $trimestral['ciclo']);
+        $this->assertNull($trimestral['taxa_instalacao']);
         $this->assertSame('Boleto', $trimestral['forma_pagamento']);
+        $this->assertSame('duzentos e noventa e nove reais e setenta centavos', $trimestral['valor_extenso']);
+    }
+
+    public function test_taxa_de_instalacao_fica_na_contratacao(): void
+    {
+        $this->postJson('/api/admin/barbearias', $this->dados(['taxa_instalacao' => 250]))->assertCreated();
+
+        $this->assertSame('250.00', Assinatura::firstOrFail()->taxa_instalacao);
+        $this->postJson('/api/admin/barbearias', $this->dados(['dono_email' => 'outro@exemplo.test', 'taxa_instalacao' => -1]))
+            ->assertUnprocessable()->assertJsonValidationErrors('taxa_instalacao');
     }
 
     public function test_cadastro_sem_anexo_gera_e_guarda_o_contrato_em_pdf(): void

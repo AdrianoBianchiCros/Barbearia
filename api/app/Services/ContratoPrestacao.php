@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Empresa;
+use App\Support\Extenso;
 use App\Support\Telefone;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
 class ContratoPrestacao
 {
     /**
-     * @param  array{periodo: string, forma_pagamento: string, valor: float|string}  $contratacao
+     * @param  array{periodo: string, forma_pagamento: string, valor: float|string, taxa_instalacao?: float|string|null}  $contratacao
      * @return string conteúdo do PDF
      */
     public function pdf(Empresa $empresa, string $donoNome, string $donoEmail, array $contratacao, Carbon $inicio): string
@@ -36,18 +37,7 @@ class ContratoPrestacao
         $periodo = config('assinatura.periodos.'.$contratacao['periodo'], []);
         $meses = $periodo['meses'] ?? null;
         $valor = (float) $contratacao['valor'];
-        $mensalidade = $meses ? round($valor / $meses, 2) : $valor;
-        $fidelidade = (int) config('assinatura.fidelidade_meses');
-        $percentual = (float) config('assinatura.multa_rescisoria_percentual');
-
-        // Multa se o cancelamento for pedido após N meses: % das mensalidades que faltam para completar a fidelidade.
-        $multas = [];
-        for ($n = 1; $n <= $fidelidade; $n++) {
-            $multas[] = [
-                'momento' => 'Após '.$n.' '.($n === 1 ? 'mês' : 'meses'),
-                'valor' => round(($fidelidade - $n) * $mensalidade * $percentual / 100, 2),
-            ];
-        }
+        $taxa = (float) ($contratacao['taxa_instalacao'] ?? 0);
 
         $rua = trim(implode(', ', array_filter([$empresa->logradouro, $empresa->numero, $empresa->complemento])));
         $cidade = trim(implode('/', array_filter([$empresa->cidade, $empresa->uf])));
@@ -68,13 +58,18 @@ class ContratoPrestacao
             ],
             'plano' => $periodo['rotulo'] ?? $contratacao['periodo'],
             'valor' => $valor,
-            'mensalidade' => $mensalidade,
+            'valor_extenso' => Extenso::reais($valor),
             'meses' => $meses,
+            // Mensal: "mensais"; vários meses: "pelo período de 3 meses"; teste: "pelo período de teste de 7 dias".
+            'ciclo' => match (true) {
+                $meses === 1 => 'mensal',
+                (bool) $meses => "de {$meses} meses",
+                default => mb_strtolower($periodo['rotulo'] ?? 'contratado'),
+            },
+            'taxa_instalacao' => $taxa > 0 ? $taxa : null,
+            'taxa_extenso' => $taxa > 0 ? Extenso::reais($taxa) : null,
             'forma_pagamento' => config('assinatura.formas_pagamento.'.$contratacao['forma_pagamento'], $contratacao['forma_pagamento']),
             'inicio' => $inicio,
-            'fidelidade' => $fidelidade,
-            'percentual_multa' => $percentual,
-            'multas' => $multas,
             'carencia_dias' => (int) config('assinatura.carencia_dias'),
             'emitido_em' => now('America/Sao_Paulo'),
         ];

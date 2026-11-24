@@ -35,19 +35,21 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 188 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 189 testes na API · 9 testes no painel*
 
 - **Contrato de prestação de serviço em PDF (23/11/2026, ainda não publicado):** no cadastro da barbearia (admin), se
   nenhum arquivo for anexado, o sistema **gera o contrato** com os dados preenchidos (CNPJ, endereço, telefone e e-mail
   das duas partes, plano, valor, forma de pagamento, início) e guarda junto com a contratação (download no histórico).
   Botão **"Ver contrato (PDF)"** no cadastro (prévia, `POST /api/admin/contrato/previa`) e **"Gerar contrato (PDF)"** no
-  detalhe da barbearia (`GET /api/admin/barbearias/{id}/contrato-gerado`). Cláusulas do dono do produto: **fidelidade
-  de 3 meses**, renovação automática por prazo indeterminado, multa de **20% das mensalidades que faltam** (tabela no
-  contrato: R$ 39,96 / R$ 19,98 / R$ 0,00 com mensalidade de R$ 99,90), sem multa por descumprimento da outra parte,
-  exportação dos dados após o fim; mais objeto (licença de uso SaaS), atraso (2% + 1% a.m., suspensão após a carência),
-  reajuste anual pelo IPCA, LGPD (barbearia controladora, plataforma operadora), limite de responsabilidade e foro.
+  detalhe da barbearia (`GET /api/admin/barbearias/{id}/contrato-gerado`). Texto revisado pelo dono do produto em
+  23/11/2026: **prazo indeterminado, sem fidelidade nem multa** (cancela a qualquer momento, vale até o fim do período
+  pago), renovação automática a cada ciclo do plano, **taxa de instalação opcional** (campo no cadastro, guardada em
+  `assinaturas.taxa_instalacao`; sem taxa, a cláusula some e a numeração se ajusta), valores **por extenso**
+  (`App\Support\Extenso`), atraso (2% + 1% a.m., suspensão após a carência), reajuste pelo IPCA, LGPD detalhada
+  (controladora/operadora, incidentes em 24 h, terceiros, exportação e exclusão), responsabilidade conforme a lei e foro.
+  Os textos de cobrança e renovação mudam com o plano (mensal ou de N meses) e a forma de pagamento.
   Modelo em `resources/views/contratos/prestacao-servico.blade.php`, dados em `App\Services\ContratoPrestacao`, PDF pelo
-  `barryvdh/laravel-dompdf` (dependência nova). Configuração: `CONTRATO_FIDELIDADE_MESES`, `CONTRATO_MULTA_PERCENTUAL` e
+  `barryvdh/laravel-dompdf` (dependência nova). Configuração:
   **`PLATAFORMA_RAZAO_SOCIAL`, `PLATAFORMA_ENDERECO`, `PLATAFORMA_EMAIL`, `PLATAFORMA_TELEFONE`, `PLATAFORMA_FORO` no
   `.env` do servidor** (sem eles o contrato sai com "[preencher …]"). Modelo sem revisão jurídica: vale passar por um
   advogado. Testes em `AdminContratoTest`.
@@ -390,7 +392,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 188 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 189 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

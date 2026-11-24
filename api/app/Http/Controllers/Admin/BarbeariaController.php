@@ -265,6 +265,7 @@ class BarbeariaController extends Controller
             'periodo' => ['required', Rule::in(array_keys(config('assinatura.periodos')))],
             'forma_pagamento' => ['required', Rule::in(array_keys(config('assinatura.formas_pagamento')))],
             'valor' => ['required', 'numeric', 'min:0', 'max:999999'],
+            'taxa_instalacao' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'inicio' => ['nullable', 'date'],
             'observacao' => ['nullable', 'string', 'max:500'],
             'contrato' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
@@ -278,6 +279,7 @@ class BarbeariaController extends Controller
             'forma_pagamento' => 'forma de pagamento',
             'inicio' => 'início',
             'observacao' => 'observação',
+            'taxa_instalacao' => 'taxa de instalação',
         ];
     }
 
@@ -294,6 +296,7 @@ class BarbeariaController extends Controller
             'fim' => $fim->toDateString(),
             'forma_pagamento' => $dados['forma_pagamento'],
             'valor' => $dados['valor'],
+            'taxa_instalacao' => $dados['taxa_instalacao'] ?? null,
             'observacao' => $dados['observacao'] ?? null,
             'contrato_path' => $contrato['path'] ?? null,
             'contrato_nome' => $contrato['nome'] ?? null,
@@ -342,7 +345,7 @@ class BarbeariaController extends Controller
             $empresa,
             $dono?->nome ?? $empresa->nome,
             $dono?->email ?? (string) $empresa->email,
-            $ultima->only(['periodo', 'forma_pagamento', 'valor']),
+            $ultima->only(['periodo', 'forma_pagamento', 'valor']) + ['taxa_instalacao' => $primeira->taxa_instalacao],
             Carbon::parse($primeira->inicio),
         );
 

@@ -14,6 +14,7 @@ function formularioVazio() {
     optante_simples: null as boolean | null, optante_mei: null as boolean | null,
     cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
     dono_nome: '', dono_email: '',
+    taxa_instalacao: '',
   };
 }
 
@@ -153,6 +154,11 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
         <section class="cartao-secao">
           <h2>Plano e contrato</h2>
           <app-campos-contratacao [dados]="contratacao" [opcoes]="opcoes()" [erros]="erros()" />
+          <label class="campo campo-taxa">
+            <span>Taxa de instalação (R$) <em>(opcional, cobrada uma vez com a primeira mensalidade)</em></span>
+            <input type="number" name="taxa_instalacao" [(ngModel)]="form.taxa_instalacao" min="0" step="0.01" placeholder="0,00" />
+            @if (erros()['taxa_instalacao']) {<small class="erro-campo">{{ erros()['taxa_instalacao'] }}</small>}
+          </label>
           <p class="texto-suave pequeno">
             Sem arquivo anexado, o sistema gera o contrato de prestação de serviço com os dados acima e guarda junto
             com a contratação. Confira antes em "Ver contrato".

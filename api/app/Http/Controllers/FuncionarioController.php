@@ -176,7 +176,7 @@ class FuncionarioController extends Controller
             'atende_clientes' => ['sometimes', 'boolean'],
             'ativo' => ['sometimes', 'boolean'],
         ], [
-            'telefone.regex' => 'Informe o telefone com DDD (10 ou 11 dígitos).',
+            'telefone.regex' => 'Informe um telefone válido com DDD, ex.: (11) 3456-7890.',
         ], [
             'tipo_vinculo' => 'tipo de vínculo',
             'comissao_percentual' => 'comissão',

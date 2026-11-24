@@ -58,8 +58,8 @@ class EmpresaController extends Controller
             'limite_gaveta' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'fuso_horario' => ['sometimes', 'required', 'timezone:all'],
         ], [
-            'telefone.regex' => 'Informe o telefone com DDD (10 ou 11 dígitos).',
-            'whatsapp.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'telefone.regex' => 'Informe um telefone válido com DDD, ex.: (11) 3456-7890.',
+            'whatsapp.regex' => 'Informe um WhatsApp válido com DDD, ex.: (11) 98888-7777.',
             'instagram.regex' => 'Informe apenas o usuário do Instagram (ex.: barbeariadoze).',
             'cor_primaria.regex' => 'Escolha uma cor válida.',
             'slug.not_in' => 'Esse endereço é reservado pelo sistema. Escolha outro.',

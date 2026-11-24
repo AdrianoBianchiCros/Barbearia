@@ -194,6 +194,17 @@ class PaginaPublicaTest extends TestCase
         $this->agendar(['servico_ids' => [$alheio->id]])->assertUnprocessable()->assertJsonValidationErrors('servico_ids.0');
     }
 
+    public function test_telefone_precisa_ter_ddd_e_numero_validos(): void
+    {
+        // DDD com zero, celular sem o 9, fixo começando com 0 ou 1.
+        foreach (['0000000000', '(01) 98888-7777', '11188887777', '1112345678', '11 9888-777'] as $invalido) {
+            $this->agendar(['telefone' => $invalido])->assertUnprocessable()->assertJsonValidationErrors('telefone');
+        }
+
+        $this->agendar(['telefone' => '(21) 3456-7890'])->assertCreated(); // fixo
+        $this->agendar(['telefone' => '+55 (85) 98888-7777', 'hora' => '09:30'])->assertCreated(); // celular com DDI
+    }
+
     public function test_mensagens_de_erro_usam_nomes_que_o_cliente_entende(): void
     {
         $this->agendar([

@@ -97,7 +97,7 @@ class ClienteController extends Controller
             'observacoes' => ['nullable', 'string', 'max:2000'],
             'aceita_whatsapp' => ['sometimes', 'boolean'],
         ], [
-            'telefone.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'telefone.regex' => 'Informe um WhatsApp válido com DDD, ex.: (11) 98888-7777.',
             'telefone.unique' => 'Já existe um cliente com este telefone.',
         ], [
             'telefone' => 'WhatsApp',

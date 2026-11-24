@@ -221,7 +221,7 @@ class AgendamentoController extends Controller
             'observacoes' => ['nullable', 'string', 'max:500'],
             'encaixe' => ['sometimes', 'boolean'],
         ], [
-            'novo_cliente.telefone.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'novo_cliente.telefone.regex' => 'Informe um WhatsApp válido com DDD, ex.: (11) 98888-7777.',
             'cliente_id.required_without' => 'Escolha um cliente ou cadastre um novo.',
         ], [
             'funcionario_id' => 'barbeiro',

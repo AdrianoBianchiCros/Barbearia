@@ -34,6 +34,10 @@ class Telefone
         };
     }
 
-    /** Regra de validação para telefone brasileiro já normalizado (DDD + número). */
-    public const REGRA = 'regex:/^\d{10,11}$/';
+    /**
+     * Regra de validação para telefone brasileiro já normalizado: DDD válido (11 a 99, sem zero)
+     * + celular com 9 dígitos começando por 9, ou fixo com 8 dígitos começando de 2 a 8.
+     * Usar sempre dentro de um array de regras (o padrão tem "|").
+     */
+    public const REGRA = 'regex:/^[1-9][1-9](?:9\d{8}|[2-8]\d{7})$/';
 }

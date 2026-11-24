@@ -144,7 +144,7 @@ class PaginaPublicaController extends Controller
             'aceite_privacidade' => ['accepted'],
             'maioridade' => ['accepted'],
         ], [
-            'telefone.regex' => 'Informe o WhatsApp com DDD (10 ou 11 dígitos).',
+            'telefone.regex' => 'Informe um WhatsApp válido com DDD, ex.: (11) 98888-7777.',
             'email.email' => 'Informe um e-mail válido ou deixe o campo em branco.',
             'aceite_privacidade.accepted' => 'Para agendar, aceite a Política de privacidade.',
             'maioridade.accepted' => 'Confirme que você tem 18 anos ou mais, ou que é o responsável legal por quem será atendido.',

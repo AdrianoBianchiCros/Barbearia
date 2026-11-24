@@ -3,11 +3,6 @@
     $c = $contratante;
     $p = $contratada;
     $extenso = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze'];
-    $mensal = $ciclo === 'mensal';
-    // Textos que mudam com o plano: mensal ou pago por vários meses de uma vez.
-    $valorDoPlano = $mensal ? 'mensais' : ($meses ? "a cada período de {$meses} meses" : "pelo período {$ciclo}");
-    $cobranca = $mensal ? 'mensal' : ($meses ? "a cada {$meses} meses" : 'por período');
-    $renovacao = $mensal ? 'mensal' : ($meses ? "a cada {$meses} meses" : 'a cada período');
     $k = 0; // numeração da cláusula 3 (a taxa de instalação só aparece quando existe)
 @endphp
 <!DOCTYPE html>
@@ -77,17 +72,16 @@
 
 <h2>Cláusula 3 – Do preço e da forma de pagamento</h2>
 <p>3.{{ ++$k }}. Pela disponibilização da plataforma SaaS, o CONTRATANTE pagará à CONTRATADA o valor de
-    <strong>{{ $r($valor) }} ({{ $valor_extenso }})</strong> {{ $valorDoPlano }}, referente à assinatura do plano
-    contratado ({{ $plano }}).</p>
+    <strong>{{ $r($mensalidade) }} ({{ $mensalidade_extenso }})</strong> mensais, referente à assinatura do plano
+    contratado.</p>
 @if ($taxa_instalacao)
 <p>3.{{ ++$k }}. No início da contratação, será cobrada uma taxa única de instalação e configuração inicial da
     plataforma, no valor de <strong>{{ $r($taxa_instalacao) }} ({{ $taxa_extenso }})</strong>, juntamente com a primeira
-    {{ $mensal ? 'mensalidade' : 'cobrança da assinatura' }}. Essa taxa não será recorrente e será destinada aos serviços
+    mensalidade. Essa taxa não será recorrente e será destinada aos serviços
     iniciais de preparação e disponibilização do ambiente do CONTRATANTE.</p>
 @endif
-<p>3.{{ ++$k }}. A assinatura será cobrada de forma recorrente, {{ $cobranca }} e antecipada, mediante pagamento via
-    <strong>{{ $forma_pagamento }}</strong>, com vencimento na data correspondente ao início de cada novo ciclo
-    {{ $mensal ? 'mensal' : 'de cobrança' }}.</p>
+<p>3.{{ ++$k }}. A assinatura será cobrada de forma recorrente, mensal e antecipada, mediante pagamento via
+    <strong>{{ $forma_pagamento }}</strong>, com vencimento na data correspondente ao início de cada novo ciclo mensal.</p>
 <p>3.{{ ++$k }}. O atraso no pagamento sujeita o CONTRATANTE à multa de 2% (dois por cento) e juros de 1% (um por
     cento) ao mês sobre o valor devido. Após {{ $carencia_dias }}{{ $carencia_dias <= 12 ? ' ('.$extenso[$carencia_dias].')' : '' }}
     dias de atraso, a CONTRATADA poderá suspender temporariamente o acesso ao sistema até a regularização do pagamento,
@@ -96,14 +90,14 @@
     falta, de outro índice oficial que o substitua, mediante aviso prévio de 30 (trinta) dias.</p>
 
 <h2>Cláusula 4 – Da vigência, renovação e rescisão</h2>
-<p>4.1. O presente contrato terá início na data de disponibilização do acesso à plataforma SaaS, sendo celebrado por
-    prazo indeterminado, sem exigência de período mínimo de permanência.</p>
-<p>4.2. O contrato permanecerá ativo mediante renovação automática {{ $renovacao }}, com cobrança recorrente e
-    antecipada do valor correspondente ao plano contratado, enquanto não houver solicitação de cancelamento por
-    qualquer das partes.</p>
+<p>4.1. O presente contrato terá vigência de <strong>{{ $vigencia }}</strong>, contada a partir da
+    disponibilização do acesso à plataforma SaaS, sem exigência de período mínimo de permanência.</p>
+<p>4.2. Ao final da vigência, o contrato será renovado automaticamente por iguais períodos, enquanto não houver
+    solicitação de cancelamento por qualquer das partes, mantida a cobrança mensal, recorrente e antecipada prevista na
+    Cláusula 3.</p>
 <p>4.3. O CONTRATANTE poderá solicitar o cancelamento a qualquer momento, sem incidência de multa rescisória ou
-    cobrança de {{ $mensal ? 'mensalidades futuras' : 'períodos futuros' }}, mediante comunicação pelos canais oficiais
-    da CONTRATADA. O cancelamento produzirá efeitos ao término do período {{ $mensal ? 'mensal ' : '' }}já pago,
+    cobrança de mensalidades futuras, mediante comunicação pelos canais oficiais da CONTRATADA. O cancelamento
+    produzirá efeitos ao término do período mensal já pago,
     permanecendo o acesso disponível até essa data. Os valores referentes a períodos já iniciados não serão
     reembolsados, ressalvadas as hipóteses legais aplicáveis.</p>
 <p>4.4. Qualquer das partes poderá rescindir o presente contrato em caso de descumprimento das obrigações contratuais

@@ -51,24 +51,27 @@ class AdminContratoTest extends TestCase
         ];
     }
 
-    public function test_textos_do_contrato_seguem_o_plano_e_a_taxa(): void
+    public function test_periodo_e_o_prazo_do_contrato_e_o_valor_e_a_mensalidade(): void
     {
         $contrato = app(ContratoPrestacao::class);
         $empresa = new Empresa(['nome' => 'Barbearia do Zé', 'documento' => '11222333000181']);
 
-        $mensal = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '1m', 'forma_pagamento' => 'pix', 'valor' => 100, 'taxa_instalacao' => 250], now());
-        $this->assertSame('mensal', $mensal['ciclo']);
-        $this->assertSame('cem reais', $mensal['valor_extenso']);
-        $this->assertSame(250.0, $mensal['taxa_instalacao']);
-        $this->assertSame('duzentos e cinquenta reais', $mensal['taxa_extenso']);
-        $this->assertSame('11.222.333/0001-81', $mensal['contratante']['documento']);
+        $anual = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '12m', 'forma_pagamento' => 'pix', 'valor' => 100, 'taxa_instalacao' => 250], now());
+        $this->assertSame('12 (doze) meses', $anual['vigencia']);
+        $this->assertSame(100.0, $anual['mensalidade']); // o valor é a mensalidade, não o total do período
+        $this->assertSame('cem reais', $anual['mensalidade_extenso']);
+        $this->assertSame(250.0, $anual['taxa_instalacao']);
+        $this->assertSame('duzentos e cinquenta reais', $anual['taxa_extenso']);
+        $this->assertSame('11.222.333/0001-81', $anual['contratante']['documento']);
 
-        // Plano trimestral pago à vista, sem taxa de instalação.
-        $trimestral = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '3m', 'forma_pagamento' => 'boleto', 'valor' => 299.70], now());
-        $this->assertSame('de 3 meses', $trimestral['ciclo']);
-        $this->assertNull($trimestral['taxa_instalacao']);
-        $this->assertSame('Boleto', $trimestral['forma_pagamento']);
-        $this->assertSame('duzentos e noventa e nove reais e setenta centavos', $trimestral['valor_extenso']);
+        $mensal = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => '1m', 'forma_pagamento' => 'boleto', 'valor' => 99.90], now());
+        $this->assertSame('01 (um) mês', $mensal['vigencia']);
+        $this->assertNull($mensal['taxa_instalacao']);
+        $this->assertSame('Boleto', $mensal['forma_pagamento']);
+        $this->assertSame('noventa e nove reais e noventa centavos', $mensal['mensalidade_extenso']);
+
+        $teste = $contrato->dados($empresa, 'José', 'ze@exemplo.test', ['periodo' => 'teste', 'forma_pagamento' => 'pix', 'valor' => 0], now());
+        $this->assertSame('07 (sete) dias', $teste['vigencia']);
     }
 
     public function test_taxa_de_instalacao_fica_na_contratacao(): void

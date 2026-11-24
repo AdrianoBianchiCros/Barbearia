@@ -56,16 +56,13 @@ class ContratoPrestacao
                 'representante' => $donoNome,
                 'representante_email' => $donoEmail,
             ],
+            // O período contratado é o prazo do contrato; o valor é sempre a mensalidade (cobrança mensal recorrente).
             'plano' => $periodo['rotulo'] ?? $contratacao['periodo'],
-            'valor' => $valor,
-            'valor_extenso' => Extenso::reais($valor),
-            'meses' => $meses,
-            // Mensal: "mensais"; vários meses: "pelo período de 3 meses"; teste: "pelo período de teste de 7 dias".
-            'ciclo' => match (true) {
-                $meses === 1 => 'mensal',
-                (bool) $meses => "de {$meses} meses",
-                default => mb_strtolower($periodo['rotulo'] ?? 'contratado'),
-            },
+            'mensalidade' => $valor,
+            'mensalidade_extenso' => Extenso::reais($valor),
+            'vigencia' => $meses
+                ? sprintf('%02d (%s) %s', $meses, Extenso::numero($meses), $meses === 1 ? 'mês' : 'meses')
+                : sprintf('%02d (%s) dias', $periodo['dias'] ?? 0, Extenso::numero($periodo['dias'] ?? 0)),
             'taxa_instalacao' => $taxa > 0 ? $taxa : null,
             'taxa_extenso' => $taxa > 0 ? Extenso::reais($taxa) : null,
             'forma_pagamento' => config('assinatura.formas_pagamento.'.$contratacao['forma_pagamento'], $contratacao['forma_pagamento']),

@@ -190,7 +190,7 @@ export class Shell {
     );
   });
   protected readonly icones = ICONES;
-  /** Endereço da página pública da barbearia, por exemplo app.abianchitech.com/saas/barbearia/{slug}. */
+  /** Endereço da página pública da barbearia, por exemplo app.rossum.com.br/saas/barbearia/{slug}. */
   protected readonly enderecoPagina = computed(() => `${ENDERECO_SITE}/${this.sessao()?.empresa.slug ?? ''}`);
 
   /** Aviso de vencimento do plano para o dono (a API só manda o prazo para ele). */

@@ -15,8 +15,8 @@ concurrency:
 env:
   PHP_REMOTO: /opt/cpanel/ea-php83/root/usr/bin/php
   DIR_SISTEMA: /home4/adri0667/saas/barbearia
-  DIR_PUBLICO: /home4/adri0667/app.abianchitech.com/saas/barbearia
-  URL_SAUDE: https://app.abianchitech.com/saas/barbearia/up
+  DIR_PUBLICO: /home4/adri0667/app.rossum.com.br/saas/barbearia
+  URL_SAUDE: https://app.rossum.com.br/saas/barbearia/up
 
 jobs:
   testes:

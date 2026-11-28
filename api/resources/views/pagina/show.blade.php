@@ -33,10 +33,11 @@
     <link rel="preload" as="image" href="{{ $fotoCapa }}">
     <style>
         :root {
-            --acento: {{ $empresa->cor_primaria }};
+            --acento: {{ $acento }};
             --acento-texto: {{ $corTexto }};
             --acento-claro: {{ $acentoClaro }};
-            --ouro: #c8a165;
+            --ouro: {{ $acentoClaro }};
+            --acento-escuro: {{ $acentoEscuro }};
             --escuro: #0d0d0e;
             --escuro-2: #17171a;
             --creme: #f4efe6;
@@ -66,8 +67,8 @@
         .botao:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -10px var(--acento); }
         .botao:hover::after { transform: translateX(120%); }
         .botao:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
-        .botao-ouro { background: var(--ouro); color: #1b1408; }
-        .botao-ouro:hover { box-shadow: 0 12px 30px -10px var(--ouro); }
+        .botao-ouro { background: var(--acento); color: var(--acento-texto); }
+        .botao-ouro:hover { box-shadow: 0 12px 30px -10px var(--acento); }
         .botao-vazado { background: transparent; color: var(--claro); box-shadow: inset 0 0 0 1.5px rgba(245,241,234,.5); }
         .botao-vazado:hover { box-shadow: inset 0 0 0 1.5px var(--claro); }
         .botao-claro { background: #fff; color: var(--texto); box-shadow: inset 0 0 0 1px var(--borda); }
@@ -114,7 +115,7 @@
         @media (max-width: 820px) { .poste { display: none; } }
 
         /* ---------- Faixa rolante ---------- */
-        .faixa { background: var(--ouro); color: #1b1408; overflow: hidden; white-space: nowrap; transform: rotate(-1.5deg) scale(1.03); margin: -24px 0 0; position: relative; z-index: 2; box-shadow: 0 20px 40px -20px rgba(0,0,0,.6); }
+        .faixa { background: var(--acento); color: var(--acento-texto); overflow: hidden; white-space: nowrap; transform: rotate(-1.5deg) scale(1.03); margin: -24px 0 0; position: relative; z-index: 2; box-shadow: 0 20px 40px -20px rgba(0,0,0,.6); }
         .faixa .trilho { display: inline-flex; animation: correr 32s linear infinite; padding: 16px 0; }
         .faixa span { font-family: var(--display); font-size: 1.9rem; letter-spacing: .06em; padding: 0 22px; display: inline-flex; align-items: center; gap: 44px; }
         .faixa span::after { content: "✂"; font-size: 1.3rem; }
@@ -124,10 +125,10 @@
         .claro { background: var(--creme); color: var(--texto); }
         .rotulo { display: inline-flex; align-items: center; gap: 12px; font-size: .78rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--ouro); margin-bottom: 14px; }
         .rotulo::before { content: ""; width: 34px; height: 2px; background: currentColor; }
-        .claro .rotulo { color: #9a7438; }
+        .claro .rotulo { color: var(--acento-escuro); }
         h2 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 7vw, 4.6rem); line-height: .95; margin: 0 0 22px; letter-spacing: .01em; }
         h2 em { font-family: var(--serif); font-style: italic; font-weight: 500; color: var(--ouro); font-size: .82em; }
-        .claro h2 em { color: #9a7438; }
+        .claro h2 em { color: var(--acento-escuro); }
         .intro { max-width: 560px; color: var(--claro-suave); font-size: 1.08rem; margin: 0 0 48px; }
         .claro .intro { color: var(--suave); }
 
@@ -150,13 +151,13 @@
         }
 
         /* Serviços — cardápio */
-        .servicos { background: radial-gradient(ellipse at top right, rgba(200,161,101,.12), transparent 55%), var(--escuro); }
+        .servicos { background: radial-gradient(ellipse at top right, color-mix(in srgb, var(--ouro) 12%, transparent), transparent 55%), var(--escuro); }
         .cardapio { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 64px; }
         .item { display: block; padding: 22px 0; border-bottom: 1px dashed rgba(245,241,234,.16); text-decoration: none; transition: padding .25s, background .25s; }
         .item:hover { padding-left: 12px; }
         .item .linha-item { display: flex; align-items: baseline; gap: 14px; }
         .item h3 { margin: 0; font-size: 1.22rem; font-weight: 600; }
-        .item .pontos { flex: 1; border-bottom: 2px dotted rgba(200,161,101,.45); transform: translateY(-5px); }
+        .item .pontos { flex: 1; border-bottom: 2px dotted color-mix(in srgb, var(--ouro) 45%, transparent); transform: translateY(-5px); }
         .item .valor { font-family: var(--display); font-size: 1.9rem; color: var(--ouro); line-height: 1; }
         .item p { margin: 6px 0 0; font-size: .92rem; color: var(--claro-suave); }
         .item .tempo { display: inline-flex; align-items: center; gap: 6px; }
@@ -168,11 +169,11 @@
         .barbeiro { position: relative; border-radius: 22px; overflow: hidden; aspect-ratio: 3/4; background: linear-gradient(160deg, #2a2723, #121111); color: var(--claro); text-decoration: none; display: block; }
         .barbeiro img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1), filter .5s; filter: grayscale(.35); }
         .barbeiro:hover img { transform: scale(1.07); filter: grayscale(0); }
-        .barbeiro .inicial { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 8rem; color: rgba(200,161,101,.35); }
+        .barbeiro .inicial { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 8rem; color: color-mix(in srgb, var(--ouro) 35%, transparent); }
         .barbeiro .info { position: absolute; inset: auto 0 0; padding: 70px 22px 22px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.85)); }
         .barbeiro strong { display: block; font-family: var(--display); font-size: 2rem; font-weight: 400; letter-spacing: .03em; line-height: 1; }
         .barbeiro small { color: var(--ouro); font-weight: 500; }
-        .barbeiro .agendar-com { position: absolute; top: 16px; right: 16px; padding: 8px 14px; border-radius: 999px; background: var(--ouro); color: #1b1408; font-size: .8rem; font-weight: 700; opacity: 0; transform: translateY(-8px); transition: .3s; }
+        .barbeiro .agendar-com { position: absolute; top: 16px; right: 16px; padding: 8px 14px; border-radius: 999px; background: var(--acento); color: var(--acento-texto); font-size: .8rem; font-weight: 700; opacity: 0; transform: translateY(-8px); transition: .3s; }
         .barbeiro:hover .agendar-com { opacity: 1; transform: none; }
 
         /* Galeria */
@@ -198,7 +199,7 @@
         .cartao-agenda::before { content: ""; position: absolute; inset: 0 0 auto; height: 6px; background: repeating-linear-gradient(-45deg, #c62828 0 12px, #fff 12px 24px, #1e4fa8 24px 36px, #fff 36px 48px); background-size: 68px 100%; animation: correr-poste 2s linear infinite; }
         .cabeca-agenda { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
         .cabeca-agenda h2 { margin: 0; color: var(--texto); }
-        .cabeca-agenda h2 em { color: #9a7438; }
+        .cabeca-agenda h2 em { color: var(--acento-escuro); }
         .cabeca-agenda p { margin: 0; color: var(--suave); max-width: 320px; }
         .passos { display: flex; gap: 8px; margin-bottom: 30px; }
         .passos span { flex: 1; height: 5px; border-radius: 5px; background: var(--creme-2); position: relative; overflow: hidden; }

@@ -13,6 +13,7 @@ use App\Services\AvisoAgendamentoEmail;
 use App\Services\Disponibilidade;
 use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
+use App\Support\Cores;
 use App\Support\Telefone;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -55,12 +56,12 @@ class PaginaPublicaController extends Controller
             'empresa' => $empresa,
             'galeria' => $galeria,
             'fotoCapa' => $empresa->capa_url ?? asset('img/pagina/salao.jpg'),
-            'acentoClaro' => $this->clarear($empresa->cor_primaria),
             'servicos' => $servicos,
             'barbeiros' => $barbeiros,
             'funcionamento' => $this->funcionamento($barbeiros),
             'endereco' => $this->endereco($empresa),
-            'corTexto' => $this->corDoTexto($empresa->cor_primaria),
+            // Cor principal escolhida em Configurações e suas variações legíveis.
+            ...Cores::paraPagina($empresa->cor_primaria, '#1f3a5f'),
             // Prazo de acesso vencido: a página continua no ar, mas sem o agendamento online.
             'agendamentoLiberado' => $empresa->acessoLiberado(),
             'config' => [
@@ -338,35 +339,5 @@ class PaginaPublicaController extends Controller
         $partes = array_filter([$rua, $empresa->bairro, $cidade]);
 
         return $partes ? implode(' · ', $partes) : null;
-    }
-
-    /** Branco ou preto, o que tiver mais contraste sobre a cor principal. */
-    private function corDoTexto(string $hex): string
-    {
-        return $this->luminancia(sscanf($hex, '#%02x%02x%02x')) > 0.179 ? '#111111' : '#ffffff';
-    }
-
-    /**
-     * A cor principal clareada até ficar legível sobre o fundo escuro da página
-     * (cores muito escuras, como azul-marinho, sumiriam no preto).
-     */
-    private function clarear(string $hex): string
-    {
-        $rgb = sscanf($hex, '#%02x%02x%02x');
-        for ($t = 0; $t < 1 && $this->luminancia($rgb) < 0.3; $t += 0.05) {
-            $rgb = array_map(fn ($c) => (int) round($c + (255 - $c) * 0.05), $rgb);
-        }
-
-        return vsprintf('#%02x%02x%02x', $rgb);
-    }
-
-    private function luminancia(array $rgb): float
-    {
-        [$r, $g, $b] = array_map(
-            fn ($c) => ($c /= 255) <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4,
-            $rgb,
-        );
-
-        return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
     }
 }

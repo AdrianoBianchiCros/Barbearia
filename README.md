@@ -35,7 +35,13 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 191 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 194 testes na API · 9 testes no painel*
+
+- **Cor principal e logo no menu (27/11/2026):** a cor escolhida em Configurações agora é a cor dos botões
+  principais, títulos em destaque, faixa rolante e detalhes da página pública e do link do cliente (antes só
+  pintava detalhes; os botões usavam uma cor fixa). `App\Support\Cores` calcula o texto que vai em cima da cor e
+  versões clara (fundo escuro) e escura (faixas claras), então qualquer cor fica legível. Com logo enviado, o topo do
+  menu do painel mostra o logo no lugar da inicial. Testes em `CorPrincipalTest`.
 
 - **Favicon (23/11/2026, ainda não publicado):** o painel da barbearia e o do barbeiro usam o **mesmo ícone da página
   da barbearia** (`Empresa::favicon_url`: o logo ou, sem logo, a inicial do nome na cor da barbearia, SVG embutido;
@@ -413,7 +419,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 191 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 194 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

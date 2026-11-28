@@ -299,7 +299,7 @@ export class DadosBarbearia implements OnInit {
         this.salvando.set(false);
         this.aplicar(e);
         // Mantém o nome e o link "Minha página" do menu em dia
-        this.auth.atualizarEmpresa({ nome: e.nome, slug: e.slug, favicon_url: e.favicon_url });
+        this.auth.atualizarEmpresa({ nome: e.nome, slug: e.slug, favicon_url: e.favicon_url, logo_url: e.logo_url });
         this.aviso.sucesso('Dados da barbearia salvos.');
       },
       error: (e) => {
@@ -317,7 +317,7 @@ export class DadosBarbearia implements OnInit {
     this.api.enviarImagemEmpresa(tipo, arquivo).subscribe({
       next: (e) => {
         this.empresa.set(e);
-        this.auth.atualizarEmpresa({ favicon_url: e.favicon_url }); // o ícone da aba acompanha o logo
+        this.auth.atualizarEmpresa({ favicon_url: e.favicon_url, logo_url: e.logo_url }); // o ícone da aba e o topo do menu acompanham o logo
         this.aviso.sucesso(tipo === 'logo' ? 'Logo atualizado.' : 'Capa atualizada.');
         input.value = '';
       },
@@ -329,7 +329,7 @@ export class DadosBarbearia implements OnInit {
     this.api.removerImagemEmpresa(tipo).subscribe({
       next: (e) => {
         this.empresa.set(e);
-        this.auth.atualizarEmpresa({ favicon_url: e.favicon_url });
+        this.auth.atualizarEmpresa({ favicon_url: e.favicon_url, logo_url: e.logo_url });
       },
       error: (e) => this.aviso.erro(mensagemDeErro(e)),
     });

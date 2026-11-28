@@ -23,8 +23,10 @@
     <link href="{{ asset('fonts/fontes.css') }}" rel="stylesheet">
     <style>
         :root {
-            --acento: {{ $empresa->cor_primaria }};
-            --ouro: #c8a165;
+            --acento: {{ $acento }};
+            --acento-texto: {{ $corTexto }};
+            --acento-escuro: {{ $acentoEscuro }};
+            --ouro: {{ $acentoClaro }};
             --escuro: #0d0d0e;
             --creme: #f4efe6;
             --creme-2: #e9e1d3;
@@ -49,7 +51,7 @@
         .selo.cancelado { background: #fef3f2; color: var(--erro); }
         .selo.encerrado { background: #eee; color: #555; }
         h1 { font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 2.6rem; line-height: 1; margin: 16px 0 4px; }
-        h1 em { font-family: "Playfair Display", serif; font-style: italic; color: #9a7438; font-size: .8em; }
+        h1 em { font-family: "Playfair Display", serif; font-style: italic; color: var(--acento-escuro); font-size: .8em; }
         .quando { font-size: 1.1rem; color: var(--suave); margin: 0 0 20px; }
         .quando b { color: var(--texto); }
         .detalhes { background: var(--creme); border-radius: 16px; padding: 6px 18px; margin-bottom: 22px; }
@@ -61,7 +63,7 @@
         .botao { display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 999px; padding: 15px 22px; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; background: var(--escuro); color: #fff; transition: transform .15s, opacity .15s; }
         .botao:hover { transform: translateY(-1px); }
         .botao:disabled { opacity: .5; cursor: wait; transform: none; }
-        .botao.ouro { background: var(--ouro); color: #1b1408; }
+        .botao.ouro { background: var(--acento); color: var(--acento-texto); }
         .botao.claro { background: #fff; color: var(--texto); box-shadow: inset 0 0 0 1.5px var(--borda); }
         .botao.perigo { background: #fff; color: var(--erro); box-shadow: inset 0 0 0 1.5px #f3c4c0; }
         .botao.whats { background: #25d366; color: #fff; }
@@ -77,7 +79,7 @@
         .dia.sel small { color: var(--ouro); }
         .horarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin: 12px 0 16px; }
         .hora { padding: 11px 0; border: 2px solid var(--creme-2); border-radius: 12px; background: #fff; font: inherit; font-weight: 700; cursor: pointer; color: inherit; }
-        .hora.sel, .hora:hover { border-color: var(--acento); background: var(--acento); color: #fff; }
+        .hora.sel, .hora:hover { border-color: var(--acento); background: var(--acento); color: var(--acento-texto); }
         .vazio { color: var(--suave); text-align: center; padding: 14px; background: var(--creme); border-radius: 12px; margin: 12px 0 16px; }
         .rodape { color: rgba(245,241,234,.6); font-size: .88rem; margin-top: 22px; text-align: center; }
         .rodape a { color: #f5f1ea; }

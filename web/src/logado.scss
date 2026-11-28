@@ -120,6 +120,17 @@
   border-bottom: 1px solid var(--cor-borda);
 }
 
+// Logo do estabelecimento no topo do menu (Configurações); sem logo, fica a inicial (.marca-icone).
+.marca-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-cards);
+  object-fit: cover;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+}
+
 .marca-icone {
   display: grid;
   place-items: center;

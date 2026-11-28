@@ -9,6 +9,7 @@ use App\Services\AvisosAgenda;
 use App\Services\Disponibilidade;
 use App\Services\LimiteAgendamentoCliente;
 use App\Services\WhatsApp\Mensageiro;
+use App\Support\Cores;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class ClienteAgendamentoController extends Controller
             'empresa' => $empresa,
             'inicio' => $agendamento->inicio->copy()->setTimezone($empresa->fuso_horario),
             'ativo' => $this->ativo($agendamento),
+            ...Cores::paraPagina($empresa->cor_primaria, '#1f3a5f'),
             'podeAlterar' => $this->podeAlterar($agendamento),
             'config' => [
                 'urlHorarios' => "{$base}/horarios",

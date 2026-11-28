@@ -83,7 +83,11 @@ const NOMES_PERFIL: Record<Perfil, string> = { dono: 'Dono', recepcao: 'Recep√ß√
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
           <div class="menu-marca" [title]="recolhido() ? s.empresa.nome : ''">
-            <span class="marca-icone">{{ s.empresa.nome.charAt(0) }}</span>
+            @if (s.empresa.logo_url) {
+              <img class="marca-logo" [src]="s.empresa.logo_url" alt="" />
+            } @else {
+              <span class="marca-icone">{{ s.empresa.nome.charAt(0) }}</span>
+            }
             <div class="marca-textos">
               <strong>{{ s.empresa.nome }}</strong>
               <small>Painel da barbearia</small>

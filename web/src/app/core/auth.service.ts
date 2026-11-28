@@ -23,6 +23,8 @@ export interface Empresa {
   fuso_horario: string;
   /** Ícone da aba: o mesmo da página da barbearia (logo ou inicial na cor dela). */
   favicon_url?: string | null;
+  /** Logo enviado em Configurações: aparece no topo do menu no lugar da inicial. */
+  logo_url?: string | null;
 }
 
 export type SituacaoAcesso = 'sem_prazo' | 'em_dia' | 'vencendo' | 'carencia' | 'vencida' | 'suspensa';

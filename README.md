@@ -575,7 +575,7 @@ o sistema fica todo no subdomínio `app`, em `app.abianchitech.com/saas/barbeari
 | `app.abianchitech.com/saas/barbearia/{slug}` | Página de cada barbearia com agendamento online |
 | `app.abianchitech.com/saas/barbearia/a/{token}` | Link do cliente |
 | `app.abianchitech.com/saas/barbearia/api` | API |
-| `app.abianchitech.com/saas/sistemas` | Vitrine com os SaaS da ABianchi Tech (`vitrine/index.html`, página estática). Para incluir um sistema, editar a lista `SISTEMAS` no arquivo e subir de novo |
+| `app.rossum.com.br/saas/sistemas` | Vitrine com os SaaS (`vitrine/index.html`, página estática). Para incluir ou ativar um sistema, editar a lista `SISTEMAS` e dar push: a publicação automática envia a vitrine junto com a Barbearia (desde 27/11/2026) |
 
 | Pasta no servidor (`/home4/adri0667`) | Conteúdo |
 |---|---|

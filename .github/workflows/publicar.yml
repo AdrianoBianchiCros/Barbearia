@@ -17,6 +17,8 @@ env:
   DIR_SISTEMA: /home4/adri0667/saas/barbearia
   DIR_PUBLICO: /home4/adri0667/app.rossum.com.br/saas/barbearia
   URL_SAUDE: https://app.rossum.com.br/saas/barbearia/up
+  # Vitrine com todos os SaaS (vitrine/index.html), publicada junto com a Barbearia.
+  DIR_VITRINE: /home4/adri0667/app.rossum.com.br/saas/sistemas
 
 jobs:
   testes:
@@ -181,6 +183,13 @@ jobs:
         run: |
           rsync -az --delete --no-perms --chmod=D755,F644 \
             web/dist/web/browser/ hostgator:$DIR_PUBLICO/painel/
+
+      - name: Enviar a vitrine dos sistemas
+        # Sem --delete: o que existir só no servidor (ex.: .htaccess) fica intacto.
+        run: |
+          ssh hostgator "mkdir -p $DIR_VITRINE"
+          rsync -az --no-perms --chmod=D755,F644 \
+            vitrine/ hostgator:$DIR_VITRINE/
 
       - name: Migrations e cache
         run: |

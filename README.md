@@ -35,7 +35,15 @@ Para acessar:
 
 ## Onde paramos
 
-*Atualizado em 23/11/2026 · sistema publicado na HostGator · 194 testes na API · 9 testes no painel*
+*Atualizado em 23/11/2026 · sistema publicado na HostGator · 198 testes na API · 11 testes no painel*
+
+- **Plano Divulgação (27/11/2026):** para barbearias parceiras que usam o sistema de graça em troca de divulgá-lo.
+  Na "Vigência do contrato" do cadastro e da renovação (painel do administrador e portal) há a opção **"Divulgação
+  (parceria, sem mensalidade)"**: todos os recursos, sem mensalidade, sem taxa, sem os dias de teste e **sem
+  vencimento** (`empresas.acesso_ate` vazio: sem faturas, avisos ou bloqueio; vale até o administrador suspender ou
+  renovar com um plano pago, que começa no dia). Faturas em aberto são canceladas ao virar parceira. Sem anexo, gera
+  o **termo de parceria** (`contratos/parceria-divulgacao.blade.php`; sem revisão jurídica). Listas e detalhe mostram
+  a etiqueta "Divulgação". Testes em `DivulgacaoTest` e `campos-contratacao.spec`.
 
 - **Cor principal e logo no menu (27/11/2026):** a cor escolhida em Configurações agora é a cor dos botões
   principais, títulos em destaque, faixa rolante e detalhes da página pública e do link do cliente (antes só
@@ -419,7 +427,7 @@ Para acessar:
 - Sem terceiros sem consentimento: fontes locais, mapa do Google só após aceite, aviso de cookies com "Recusar".
 - Rodapé com CNPJ e links legais na página da barbearia, no login do painel e na vitrine.
 
-**Testes:** 194 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
+**Testes:** 198 testes na API (`php artisan test`) e 9 no painel (`npx ng test --watch=false`), todos passando.
 
 ---
 

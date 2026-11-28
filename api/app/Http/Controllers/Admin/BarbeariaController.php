@@ -108,6 +108,7 @@ class BarbeariaController extends Controller
     public function store(Request $request, ContratoPrestacao $contratos): JsonResponse
     {
         $this->normalizarDadosEmpresa($request);
+        $this->normalizarDivulgacao($request);
 
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
@@ -171,11 +172,14 @@ class BarbeariaController extends Controller
      */
     public function renovar(Request $request, Empresa $empresa): JsonResponse
     {
+        $this->normalizarDivulgacao($request);
         $dados = $request->validate($this->regrasContratacao(), [], $this->nomesCampos());
 
         $hoje = $this->hoje();
         $inicio = match (true) {
             isset($dados['inicio']) => Carbon::parse($dados['inicio']),
+            // Divulgação vale a partir de hoje (não há período pago a esperar acabar).
+            ContratoPrestacao::divulgacao($dados['periodo']) => $hoje,
             $empresa->acesso_ate && $empresa->acesso_ate->gte($hoje) => $empresa->acesso_ate->copy()->addDay(),
             default => $hoje,
         };
@@ -291,6 +295,10 @@ class BarbeariaController extends Controller
      */
     private function registrarContratacao(Empresa $empresa, array $dados, Carbon $inicio, ?array $contrato, Request $request, bool $gratis = false): Assinatura
     {
+        // Divulgação: sem teste grátis (já é gratuito) e sem vencimento.
+        $divulgacao = ContratoPrestacao::divulgacao($dados['periodo']);
+        $gratis = $gratis && ! $divulgacao;
+
         $fim = $gratis
             ? $inicio->copy()->addDays(max(1, (int) config('assinatura.teste_gratis_dias')) - 1)
             : Assinatura::calcularFim($dados['periodo'], $inicio);
@@ -310,7 +318,13 @@ class BarbeariaController extends Controller
             'contrato_nome' => $contrato['nome'] ?? null,
         ]);
 
-        $empresa->update(['acesso_ate' => $fim->toDateString()]);
+        $empresa->update(['acesso_ate' => $divulgacao ? null : $fim->toDateString()]);
+
+        // Virou parceria: faturas que estavam em aberto deixam de valer.
+        if ($divulgacao) {
+            Fatura::withoutGlobalScopes()->where('empresa_id', $empresa->id)->whereIn('status', Fatura::EM_ABERTO)
+                ->update(['status' => 'cancelada']);
+        }
 
         return $assinatura;
     }
@@ -322,6 +336,7 @@ class BarbeariaController extends Controller
     public function previaContrato(Request $request, ContratoPrestacao $contratos): Response
     {
         $this->normalizarDadosEmpresa($request);
+        $this->normalizarDivulgacao($request);
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
             'telefone' => ['nullable', 'string', 'max:20'],
@@ -335,7 +350,7 @@ class BarbeariaController extends Controller
         $empresa = $this->empresaDosDados($dados);
         $pdf = $contratos->pdf($empresa, $dados['dono_nome'], $dados['dono_email'], $dados, $this->inicioDosDados($dados));
 
-        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa));
+        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa, $dados['periodo']));
     }
 
     /**
@@ -357,7 +372,18 @@ class BarbeariaController extends Controller
             Carbon::parse($primeira->inicio),
         );
 
-        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa));
+        return $this->respostaPdf($pdf, ContratoPrestacao::nomeArquivo($empresa, $ultima->periodo));
+    }
+
+    /**
+     * Divulgação (parceria): sem mensalidade, sem taxa de instalação e sem forma de pagamento
+     * (fica registrada como cortesia), qualquer que seja o valor enviado pela tela.
+     */
+    private function normalizarDivulgacao(Request $request): void
+    {
+        if (ContratoPrestacao::divulgacao($request->input('periodo'))) {
+            $request->merge(['valor' => 0, 'taxa_instalacao' => null, 'forma_pagamento' => 'cortesia']);
+        }
     }
 
     /** CNPJ/CPF e CEP só com números; UF em maiúsculas. */
@@ -397,7 +423,7 @@ class BarbeariaController extends Controller
         $path = 'contratos/'.Str::uuid().'.pdf';
         Storage::disk('local')->put($path, $pdf);
 
-        return ['path' => $path, 'nome' => ContratoPrestacao::nomeArquivo($empresa)];
+        return ['path' => $path, 'nome' => ContratoPrestacao::nomeArquivo($empresa, $dados['periodo'])];
     }
 
     private function respostaPdf(string $pdf, string $nome): Response
@@ -506,6 +532,8 @@ class BarbeariaController extends Controller
             'dono' => $dono?->only(['id', 'nome', 'email']),
             'ultima_assinatura' => $ultima ? collect($ultima->toArray())->only(['periodo', 'forma_pagamento', 'valor', 'inicio', 'fim']) : null,
             'pagina_url' => url($empresa->slug),
+            // Parceria de divulgação: uso gratuito e sem vencimento.
+            'divulgacao' => $ultima?->periodo === 'divulgacao',
         ];
     }
 }

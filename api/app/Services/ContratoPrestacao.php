@@ -21,15 +21,23 @@ class ContratoPrestacao
      */
     public function pdf(Empresa $empresa, string $donoNome, string $donoEmail, array $contratacao, Carbon $inicio): string
     {
-        return Pdf::loadView('contratos.prestacao-servico', $this->dados($empresa, $donoNome, $donoEmail, $contratacao, $inicio))
+        // Divulgação: termo de parceria (uso gratuito em troca de divulgação), sem mensalidade nem vencimento.
+        $modelo = self::divulgacao($contratacao['periodo']) ? 'contratos.parceria-divulgacao' : 'contratos.prestacao-servico';
+
+        return Pdf::loadView($modelo, $this->dados($empresa, $donoNome, $donoEmail, $contratacao, $inicio))
             ->setPaper('a4')
             ->setOption('isFontSubsettingEnabled', true)
             ->output();
     }
 
-    public static function nomeArquivo(Empresa $empresa): string
+    public static function divulgacao(?string $periodo): bool
     {
-        return 'Contrato - '.preg_replace('/[\\\\\/:*?"<>|]/', '', $empresa->nome).'.pdf';
+        return (bool) config("assinatura.periodos.{$periodo}.sem_prazo", false);
+    }
+
+    public static function nomeArquivo(Empresa $empresa, ?string $periodo = null): string
+    {
+        return (self::divulgacao($periodo) ? 'Termo de parceria - ' : 'Contrato - ').preg_replace('/[\\\\\/:*?"<>|]/', '', $empresa->nome).'.pdf';
     }
 
     public function dados(Empresa $empresa, string $donoNome, string $donoEmail, array $contratacao, Carbon $inicio): array

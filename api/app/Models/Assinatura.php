@@ -54,6 +54,11 @@ class Assinatura extends Model
     {
         $regra = config("assinatura.periodos.{$periodo}");
 
+        // Divulgação não vence: a linha guarda só o início (o acesso da empresa fica sem prazo).
+        if ($regra['sem_prazo'] ?? false) {
+            return $inicio->copy();
+        }
+
         return isset($regra['dias'])
             ? $inicio->copy()->addDays($regra['dias'] - 1)
             : $inicio->copy()->addMonthNoOverflow()->subDay();
@@ -65,6 +70,9 @@ class Assinatura extends Model
         $regra = config("assinatura.periodos.{$periodo}");
         if (! $regra || isset($regra['dias'])) {
             return $regra['rotulo'] ?? $periodo;
+        }
+        if ($regra['sem_prazo'] ?? false) {
+            return 'Divulgação (parceria, sem mensalidade)';
         }
 
         return $regra['meses'] === 1 ? 'Mensalidade' : "Mensalidade · contrato de {$regra['rotulo']}";

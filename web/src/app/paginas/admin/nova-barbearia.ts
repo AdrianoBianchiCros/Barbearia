@@ -154,6 +154,7 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
         <section class="cartao-secao">
           <h2>Plano e contrato</h2>
           <app-campos-contratacao [dados]="contratacao" [opcoes]="opcoes()" [erros]="erros()" />
+          @if (contratacao.periodo !== 'divulgacao') {
           <label class="campo campo-taxa">
             <span>Taxa de instalação (R$) <em>(opcional, cobrada uma vez com a primeira mensalidade)</em></span>
             <input type="number" name="taxa_instalacao" [(ngModel)]="form.taxa_instalacao" min="0" step="0.01" placeholder="0,00" />
@@ -165,10 +166,13 @@ const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', '
             Sem arquivo anexado, o sistema gera o contrato de prestação de serviço com os dados acima e guarda junto
             com a contratação. Confira antes em "Ver contrato".
           </p>
+          } @else {
+            <p class="texto-suave pequeno">Sem arquivo anexado, o sistema gera o <strong>termo de parceria de divulgação</strong> (uso gratuito em troca de divulgação, prazo indeterminado). Confira antes em "Ver termo de parceria".</p>
+          }
           <div class="rodape-secao">
             <a class="botao botao-secundario botao-auto" routerLink="/admin/barbearias">Cancelar</a>
             <button class="botao botao-secundario botao-auto" type="button" [disabled]="gerandoContrato()" (click)="verContrato(f)">
-              {{ gerandoContrato() ? 'Gerando…' : 'Ver contrato (PDF)' }}
+              {{ gerandoContrato() ? 'Gerando…' : contratacao.periodo === 'divulgacao' ? 'Ver termo de parceria (PDF)' : 'Ver contrato (PDF)' }}
             </button>
             <button class="botao botao-auto" type="submit" [disabled]="salvando()">
               {{ salvando() ? 'Cadastrando…' : 'Cadastrar e liberar acesso' }}
@@ -260,7 +264,7 @@ export class NovaBarbearia implements OnInit {
         const url = URL.createObjectURL(pdf);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `Contrato - ${this.form.nome}.pdf`;
+        link.download = `${this.contratacao.periodo === 'divulgacao' ? 'Termo de parceria' : 'Contrato'} - ${this.form.nome}.pdf`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       },

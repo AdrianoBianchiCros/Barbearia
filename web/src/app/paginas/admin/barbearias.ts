@@ -48,6 +48,7 @@ import { mensagemDeErro } from '../../core/erros';
                 <td>{{ b.dono?.nome ?? '—' }}<br /><small class="texto-suave">{{ b.dono?.email }}</small></td>
                 <td>
                   <span class="etiqueta" [class]="situacoes[b.acesso.situacao].classe">{{ situacoes[b.acesso.situacao].rotulo }}</span>
+                  @if (b.divulgacao) {<span class="etiqueta etiqueta-ok">Divulgação</span>}
                   @if (b.pagamento_informado) {<br /><small class="pix-informado">Pix informado: confirmar</small>}
                 </td>
                 <td>
@@ -60,7 +61,7 @@ import { mensagemDeErro } from '../../core/erros';
                 </td>
                 <td>
                   @if (b.ultima_assinatura; as u) {
-                    {{ rotuloPeriodo(u.periodo) }} · {{ +u.valor | currency: 'BRL' }}
+                    @if (u.periodo === 'divulgacao') {Divulgação · grátis} @else { {{ rotuloPeriodo(u.periodo) }} · {{ +u.valor | currency: 'BRL' }} }
                   } @else {
                     —
                   }

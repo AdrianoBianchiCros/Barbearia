@@ -45,6 +45,7 @@ export function anexarContratacao(dados: FormData, c: Contratacao): FormData {
           @for (p of opcoes()?.periodos ?? []; track p.valor) {<option [value]="p.valor">{{ p.rotulo }}</option>}
         </select>
       </label>
+      @if (!divulgacao()) {
       <label class="campo">
         <span>Forma de pagamento</span>
         <select name="forma_pagamento" [(ngModel)]="dados().forma_pagamento" required>
@@ -57,6 +58,9 @@ export function anexarContratacao(dados: FormData, c: Contratacao): FormData {
         <small class="texto-suave">Cobrança mensal: cada pagamento libera 1 mês de acesso.</small>
         @if (erros()['valor']) {<small class="erro-campo">{{ erros()['valor'] }}</small>}
       </label>
+      } @else {
+        <p class="texto-suave">Parceria de divulgação: o cliente usa todos os recursos sem mensalidade, sem taxa e sem vencimento, em troca de divulgar o sistema. O acesso fica liberado até você suspender ou mudar o plano.</p>
+      }
       <label class="campo">
         <span>Início <em>(opcional)</em></span>
         <input type="date" name="inicio" [(ngModel)]="dados().inicio" />
@@ -79,6 +83,11 @@ export class CamposContratacao {
   readonly opcoes = input<OpcoesAdmin | null>(null);
   readonly erros = input<Record<string, string>>({});
   readonly dicaInicio = input('Se ficar em branco, começa hoje.');
+
+  /** Parceria de divulgação: sem mensalidade, sem forma de pagamento e sem vencimento. */
+  divulgacao(): boolean {
+    return this.dados().periodo === 'divulgacao';
+  }
 
   escolherArquivo(evento: Event): void {
     this.dados().contrato = (evento.target as HTMLInputElement).files?.[0] ?? null;

@@ -18,7 +18,7 @@ import { CartaoAcesso } from './cartao-acesso';
     @if (b(); as b) {
       <div class="cabecalho-pagina">
         <div>
-          <h1>{{ b.nome }} <span class="etiqueta" [class]="situacoes[b.acesso.situacao].classe">{{ situacoes[b.acesso.situacao].rotulo }}</span></h1>
+          <h1>{{ b.nome }} <span class="etiqueta" [class]="situacoes[b.acesso.situacao].classe">{{ situacoes[b.acesso.situacao].rotulo }}</span> @if (b.divulgacao) {<span class="etiqueta etiqueta-ok">Divulgação</span>}</h1>
           <p class="texto-suave">
             <a [href]="b.pagina_url" target="_blank" rel="noopener">{{ b.pagina_url }}</a>
             · cliente desde {{ b.criada_em ? (b.criada_em + 'T12:00:00' | date: 'dd/MM/yyyy') : '—' }}
@@ -40,6 +40,8 @@ import { CartaoAcesso } from './cartao-acesso';
               Depois do vencimento, o sistema continua funcionando por {{ opcoes()?.carencia_dias ?? 5 }} dias, até
               {{ b.acesso.bloqueia_em + 'T12:00:00' | date: 'dd/MM/yyyy' }}, e então bloqueia.
             </p>
+          } @else if (b.divulgacao) {
+            <p><strong>Parceria de divulgação:</strong> todos os recursos liberados, sem mensalidade e sem vencimento. Para encerrar, suspenda o acesso ou use "Renovar acesso" para passar a um plano pago.</p>
           } @else {
             <p>Sem prazo definido: o acesso não vence. Use "Renovar acesso" para registrar o plano.</p>
           }
@@ -83,7 +85,7 @@ import { CartaoAcesso } from './cartao-acesso';
               <button class="botao botao-secundario botao-auto" type="button" (click)="novaSenha()">Gerar nova senha do dono</button>
             }
             @if (b.ultima_assinatura) {
-              <button class="botao botao-secundario botao-auto" type="button" (click)="gerarContrato(b)">Gerar contrato (PDF)</button>
+              <button class="botao botao-secundario botao-auto" type="button" (click)="gerarContrato(b)">{{ b.divulgacao ? 'Gerar termo de parceria (PDF)' : 'Gerar contrato (PDF)' }}</button>
             }
           </div>
         </section>
@@ -124,14 +126,18 @@ import { CartaoAcesso } from './cartao-acesso';
               @for (a of b.assinaturas; track a.id) {
                 <tr>
                   <td>
+                    @if (a.periodo === 'divulgacao') {
+                    <strong>Divulgação (parceria)</strong>
+                    } @else {
                     <strong>{{ a.gratis ? 'Teste grátis' : 'Mensalidade' }}</strong>
-                    <small class="texto-suave"> · contrato de {{ rotulo('periodos', a.periodo) }}</small>
+                    <small class=\"texto-suave\"> · contrato de {{ rotulo('periodos', a.periodo) }}</small>
+                    }
                     @if (a.observacao) {<br /><small class="texto-suave">{{ a.observacao }}</small>}
                   </td>
-                  <td>{{ a.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }} a {{ a.fim + 'T12:00:00' | date: 'dd/MM/yyyy' }}</td>
+                  <td>@if (a.periodo === 'divulgacao') {desde {{ a.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }}, sem vencimento} @else { {{ a.inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }} a {{ a.fim + 'T12:00:00' | date: 'dd/MM/yyyy' }} }</td>
                   <td>{{ rotulo('formas_pagamento', a.forma_pagamento) }}</td>
                   <td>
-                    @if (a.gratis) {
+                    @if (a.gratis || a.periodo === 'divulgacao') {
                       <span class="texto-suave">grátis</span>
                     } @else {
                       {{ +a.valor + +(a.taxa_instalacao ?? 0) | currency: 'BRL' }}
@@ -335,7 +341,7 @@ export class BarbeariaDetalhe implements OnInit {
         const url = URL.createObjectURL(arquivo);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `Contrato - ${b.nome}.pdf`;
+        link.download = `${b.divulgacao ? 'Termo de parceria' : 'Contrato'} - ${b.nome}.pdf`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       },

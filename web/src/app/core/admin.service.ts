@@ -86,6 +86,8 @@ export interface BarbeariaAdmin {
   dono: { id: number; nome: string; email: string } | null;
   ultima_assinatura: Pick<Assinatura, 'periodo' | 'forma_pagamento' | 'valor' | 'inicio' | 'fim'> | null;
   pagina_url: string;
+  /** Parceria de divulgação: uso gratuito e sem vencimento. */
+  divulgacao?: boolean;
   /** O dono avisou pelo painel que pagou a fatura por Pix (só na lista). */
   pagamento_informado?: boolean;
 }

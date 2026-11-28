@@ -24,6 +24,9 @@ return [
         '3m' => ['rotulo' => '3 meses', 'meses' => 3],
         '6m' => ['rotulo' => '6 meses', 'meses' => 6],
         '12m' => ['rotulo' => '12 meses', 'meses' => 12],
+        // Parceria: uso gratuito em troca de divulgação, sem mensalidade, sem taxa e sem vencimento
+        // (o acesso fica liberado até o administrador suspender ou mudar o plano). Gera o termo de parceria.
+        'divulgacao' => ['rotulo' => 'Divulgação (parceria, sem mensalidade)', 'sem_prazo' => true],
     ],
 
     /*
